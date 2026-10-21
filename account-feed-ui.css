@@ -65,3 +65,70 @@
 .rail-active-indicator:before{position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:#83f1dc;box-shadow:0 0 11px #83f1dcb0;content:""}
 @media(max-width:1150px){.rail-active-indicator{right:11px;left:11px}}
 @media(prefers-reduced-motion:reduce){.rail-active-indicator{transition:none}}
+
+/* Improve reading size in the profile overview without changing other dialogs. */
+.modal.account-modal:has(.profile-page) .account-status{font-size:10px}
+.modal.account-modal:has(.profile-page) .profile-identity-copy h2{font-size:24px}
+.modal.account-modal:has(.profile-page) .profile-identity-copy p{font-size:12px}
+.modal.account-modal:has(.profile-page) .profile-bio{font-size:13px;line-height:1.8}
+.modal.account-modal:has(.profile-page) .profile-location{font-size:11px}
+.modal.account-modal:has(.profile-page) .profile-stats b{font-size:18px}
+.modal.account-modal:has(.profile-page) .profile-stats span{font-size:10px}
+.modal.account-modal:has(.profile-page) .account-eyebrow{font-size:9px}
+.modal.account-modal:has(.profile-page) .profile-work-heading h3{font-size:16px;line-height:1.4}
+.modal.account-modal:has(.profile-page) .profile-work>p{font-size:12px;line-height:1.75}
+.modal.account-modal:has(.profile-page) .profile-first-work{font-size:11px}
+.modal.account-modal:has(.profile-page) .profile-account-note p{font-size:10px;line-height:1.7}
+.modal.account-modal:has(.profile-page) .profile-edit-button{font-size:12px}
+.modal.account-modal:has(.profile-page) .profile-logout,
+.modal.account-modal:has(.profile-page) .profile-auth-links{font-size:10px}
+.modal.account-modal:has(.profile-page) .profile-auth-links button{font-size:11px}
+@media(max-width:390px){
+  .modal.account-modal:has(.profile-page) .profile-identity-copy h2{font-size:22px}
+  .modal.account-modal:has(.profile-page) .profile-work-heading h3{font-size:15px}
+  .modal.account-modal:has(.profile-page) .profile-work>p{font-size:11px}
+}
+
+/* Keep the account UI's decorative labels on the selected site font too. */
+.auth-brand>span,.profile-cover-tag{font-family:var(--font)!important}
+
+/* Profile card: premium glass finish and restrained 3D hover tilt. */
+.modal.account-modal:has(.profile-page){
+  transform:perspective(1400px) rotateX(0deg) rotateY(0deg);
+  transform-style:preserve-3d;
+  transition:transform .38s cubic-bezier(.2,.75,.25,1),box-shadow .38s ease;
+  box-shadow:0 34px 100px #06142680,0 0 0 1px #ffffff80 inset;
+}
+.modal.account-modal:has(.profile-page):hover{
+  transform:perspective(1400px) rotateX(1deg) rotateY(-.65deg) translateY(-2px);
+  box-shadow:0 42px 115px #0614268c,0 0 0 1px #ffffffa8 inset;
+}
+.profile-cover{
+  background:radial-gradient(ellipse at 78% 14%,#75e5d64d 0,transparent 34%),radial-gradient(ellipse at 20% 120%,#3186a64f 0,transparent 52%),linear-gradient(122deg,#12273f 0%,#193751 58%,#20505c 100%);
+  box-shadow:inset 0 1px #92ffedaa,inset 0 -1px #ffffff1a;
+}
+.profile-cover:before{
+  position:absolute;z-index:1;inset:0;content:"";pointer-events:none;
+  background:linear-gradient(112deg,transparent 25%,#ffffff0a 47%,#9dfff019 52%,transparent 74%);
+}
+.profile-avatar{
+  transform:translateZ(22px);
+  box-shadow:0 12px 26px #10283c2c,0 0 0 1px #ffffffbd inset;
+}
+.profile-work{
+  position:relative;overflow:hidden;
+  border-color:#d5e5eb;
+  background:linear-gradient(145deg,#ffffff 0%,#fbfdff 62%,#f2faf9 100%);
+  box-shadow:0 10px 24px #1539540d,0 1px 0 #fff inset;
+  transition:transform .28s ease,box-shadow .28s ease,border-color .28s ease;
+}
+.profile-work:before{
+  position:absolute;top:0;right:0;left:0;height:1px;content:"";
+  background:linear-gradient(90deg,transparent,#62d8c8a8,transparent);
+}
+.profile-work:hover{transform:translateY(-2px);border-color:#b9dcd9;box-shadow:0 14px 30px #15395416,0 1px 0 #fff inset}
+.profile-first-work{box-shadow:0 2px 5px #173a4e0a;transition:transform .2s ease,box-shadow .2s ease,background .2s ease}
+.profile-first-work:hover{transform:translateY(-2px);box-shadow:0 7px 15px #173a4e16}
+.profile-edit-button{box-shadow:0 8px 18px #194f7b2b!important}
+@media(max-width:700px){.modal.account-modal:has(.profile-page):hover{transform:none}.profile-work:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){.modal.account-modal:has(.profile-page),.profile-work,.profile-first-work{transition:none}.modal.account-modal:has(.profile-page):hover,.profile-work:hover,.profile-first-work:hover{transform:none}}

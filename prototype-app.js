@@ -1,4 +1,4 @@
-/* Sourcewav app interactions, backed by the local SQLite API. */
+/* Sourcewav app interactions, persisted per authenticated account in Supabase. */
 (function () {
   const store = window.SourcewavStore;
   if (!store) return;
@@ -69,6 +69,7 @@
   }
 
   function renderPosts() {
+    if (window.SourcewavPlatform?.isLive) return;
     const filterBar = $('.feed-filters');
     if (!filterBar) return;
     $$('.user-post', $('.section-block')).forEach(post => post.remove());
@@ -84,6 +85,7 @@
   }
 
   function renderListings() {
+    if (window.SourcewavPlatform?.isLive) return;
     const host = $('#userListings');
     if (!host) return;
     host.innerHTML = state().listings.map(listing => `<article class="market-item user-listing"><div class="market-image listing-image"><span>ลงโดยคุณ</span><b>${escapeHTML(listing.categoryLabel)}</b></div><strong>${escapeHTML(listing.title)}</strong><small>${escapeHTML(listing.description || 'ผลงานจากสมาชิก Sourcewav')}</small><b>${listing.price ? `฿${Number(listing.price).toLocaleString('th-TH')}` : 'สอบถามราคา'}</b></article>`).join('');
@@ -263,7 +265,7 @@
     badge.classList.toggle('is-offline', current === 'offline');
     badge.classList.toggle('is-connecting', current === 'connecting');
     $('span', badge).textContent = current === 'online' ? 'ฐานข้อมูลเชื่อมต่อแล้ว' : current === 'offline' ? 'ออฟไลน์ · เก็บชั่วคราว' : 'กำลังเชื่อมฐานข้อมูล';
-    badge.title = current === 'online' ? 'บันทึกข้อมูลลง SQLite ผ่านเว็บเซิร์ฟเวอร์' : 'กำลังใช้ข้อมูลสำรองในเบราว์เซอร์';
+    badge.title = current === 'online' ? 'บัญชีเชื่อมต่อ Supabase แล้ว; โพสต์ แชท ตลาด และบัตรใช้บริการแยกตามระบบ' : 'กำลังใช้ข้อมูลสำรองในเบราว์เซอร์';
   }
   document.addEventListener('click', handleClick, true);
   window.addEventListener('sourcewav:store', refreshStatus);

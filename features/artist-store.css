@@ -1,0 +1,222 @@
+/* Sourcewav Features 5-8 — Artist Store */
+/* --------------------------------------------------------------------------
+   8. ARTIST STORE (ร้านขายของศิลปิน)
+--------------------------------------------------------------------------- */
+.artist-store-section {
+  margin-top: 36px;
+  padding: 26px 28px;
+  background: #ffffff;
+  border: 1px solid #d9e2ec;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(23, 41, 64, 0.05);
+}
+.store-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.store-header h2 {
+  font-size: 24px;
+  margin: 4px 0 6px;
+  letter-spacing: -0.5px;
+  color: #172a40;
+}
+.store-header p {
+  color: #61788c;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 580px;
+}
+
+.store-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #edf2f7;
+}
+.store-chip {
+  flex: none;
+  background: #f8fafc;
+  border: 1px solid #d5e1ec;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #556c82;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.store-chip:hover {
+  border-color: #8bb2cf;
+  color: #172a40;
+}
+.store-chip.selected {
+  background: #172a40;
+  border-color: #172a40;
+  color: #ffffff;
+}
+
+/* Store Products Grid */
+.store-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+}
+.store-product-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.store-product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(16, 32, 51, 0.08);
+}
+.product-image-wrap {
+  height: 160px;
+  background: #f1f5f9;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.product-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.product-vinyl-graphic {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle at center, #171916 0 12px, #333 13px 14px);
+  border: 4px solid #111;
+  display: grid;
+  place-items: center;
+  color: #d7fa48;
+  font-size: 20px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+.product-tag-floating {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+}
+.product-demo-btn {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: rgba(23, 42, 64, 0.88);
+  color: #d7fa48;
+  border: 0;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font: 700 11px var(--font);
+  cursor: pointer;
+  backdrop-filter: blur(4px);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.product-demo-btn:hover {
+  background: #172a40;
+}
+
+.product-info {
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  justify-content: space-between;
+}
+.product-category-sub {
+  font-size: 10px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.product-info h4 {
+  font-size: 14px;
+  color: #172a40;
+  margin: 3px 0 6px;
+  line-height: 1.4;
+}
+.product-info p {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+.product-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+}
+.product-price-row b {
+  font-size: 17px;
+  color: #172a40;
+}
+.product-price-row small {
+  font-size: 10px;
+  color: #94a3b8;
+}
+.buy-product-btn {
+  width: 100%;
+  background: #172a40;
+  color: #ffffff;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px;
+  font: 600 12px var(--font);
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.buy-product-btn:hover {
+  background: #24466b;
+  color: #d7fa48;
+}
+
+/* Digital Download Unlock Box */
+.download-unlocked-box {
+  background: #f0fdf4;
+  border: 2px dashed #86efac;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+  margin: 16px 0;
+}
+.download-unlocked-box h3 {
+  color: #15803d;
+  margin: 0 0 8px;
+}
+.instant-download-btn {
+  background: #15803d;
+  color: #ffffff;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font: 700 13px var(--font);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  box-shadow: 0 4px 14px rgba(21, 128, 61, 0.25);
+}
+.instant-download-btn:hover {
+  background: #166534;
+}
+

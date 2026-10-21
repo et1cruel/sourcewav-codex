@@ -1,0 +1,111 @@
+/* Sourcewav Features 5-8 — shared tokens, badges, responsive */
+/* Sourcewav Features 5-8 Styling:
+   5. Booking Board — ระบบหาคนร่วมงานและรับจ้าง
+   6. Follow & Drop Alert — ติดตามศิลปินและแจ้งงานใหม่
+   7. Event Command Center — หลังบ้านผู้จัดงาน
+   8. Artist Store — ร้านขายของศิลปิน
+*/
+
+/* --------------------------------------------------------------------------
+   SHARED BADGES & UTILITIES
+--------------------------------------------------------------------------- */
+.badge-pro {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(135deg, #10243a, #1a3c60);
+  color: #72ded0;
+  border: 1px solid #48b8a9;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.badge-pro span {
+  color: #d7fa48;
+}
+
+.badge-sponsored {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #171916;
+  font-weight: 800;
+  font-size: 10px;
+  letter-spacing: 0.6px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+  text-transform: uppercase;
+}
+
+.badge-digital {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.badge-physical {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  border-radius: 999px;
+  padding: 2px 7px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* Drop Alert indicator on topbar notification button */
+.notification i.badge-active {
+  display: block;
+  background: #ea6844;
+  box-shadow: 0 0 0 2px #171916, 0 0 8px #ea6844;
+}
+
+/* Topbar Command Center button (style only — element removed from topbar) */
+#commandCenterBtn {
+  display: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 900px) {
+  .command-columns {
+    grid-template-columns: 1fr;
+  }
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 680px) {
+  .booking-section, .artist-store-section {
+    padding: 18px 16px;
+    margin-top: 20px;
+  }
+  .kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .summary-retro-grid {
+    grid-template-columns: 1fr;
+  }
+  .store-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (max-width: 460px) {
+  .store-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

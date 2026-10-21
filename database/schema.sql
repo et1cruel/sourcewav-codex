@@ -19,6 +19,29 @@ create table public.profiles (
   deleted_at timestamptz
 );
 
+-- Create the user's profile from Supabase Auth metadata at signup. The function runs
+-- as its owner so the profiles RLS policy can remain closed to anonymous inserts.
+create function public.handle_new_user() returns trigger
+language plpgsql security definer set search_path = '' as $$
+begin
+  insert into public.profiles (user_id, username, display_name, province, roles)
+  values (
+    new.id,
+    coalesce(nullif(new.raw_user_meta_data ->> 'username', ''), 'user_' || substr(replace(new.id::text, '-', ''), 1, 24)),
+    coalesce(nullif(trim(new.raw_user_meta_data ->> 'display_name'), ''), 'New artist'),
+    nullif(trim(new.raw_user_meta_data ->> 'province'), ''),
+    array(select jsonb_array_elements_text(coalesce(new.raw_user_meta_data -> 'roles', '[]'::jsonb)))
+  );
+  return new;
+end;
+$$;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+revoke all on function public.handle_new_user() from public;
+
 create table public.follows (
   follower_id uuid not null references public.profiles(user_id) on delete cascade,
   followed_id uuid not null references public.profiles(user_id) on delete cascade,
@@ -476,6 +499,18 @@ create policy notifications_self on public.notifications for select using (user_
 create policy notifications_update_self on public.notifications for update using (user_id = auth.uid()) with check (user_id = auth.uid());
 create policy reports_insert_self on public.reports for insert with check (reporter_id = auth.uid());
 create policy reports_read_self on public.reports for select using (reporter_id = auth.uid());
+
+-- Transitional per-account persistence for the current client store. Move data to
+-- the normalized domain tables as each feature gains its Supabase service layer.
+create table public.user_states (
+  user_id uuid primary key references public.profiles(user_id) on delete cascade,
+  state jsonb not null default '{}'::jsonb check (jsonb_typeof(state) = 'object'),
+  updated_at timestamptz not null default now()
+);
+alter table public.user_states enable row level security;
+create policy user_states_read_self on public.user_states for select using ((select auth.uid()) = user_id);
+create policy user_states_insert_self on public.user_states for insert with check ((select auth.uid()) = user_id);
+create policy user_states_update_self on public.user_states for update using ((select auth.uid()) = user_id) with check ((select auth.uid()) = user_id);
 
 -- Order/payment/ticket/refund rows are read-only to their owners. No browser write policy exists for
 -- orders, order items, payments, webhook events, tickets, refunds, check-ins, moderation, or audit logs.

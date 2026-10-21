@@ -11,7 +11,7 @@ const maxBody = 1024 * 1024;
 const maxAudioBytes = 50 * 1024 * 1024;
 const uploadDirectory = path.join(root, 'database', 'uploads');
 fs.mkdirSync(uploadDirectory, { recursive: true });
-const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp' };
+const mime = { '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.ttf': 'font/ttf' };
 
 database.exec(`
   PRAGMA journal_mode = WAL;
@@ -26,6 +26,12 @@ database.exec(`
   CREATE TABLE IF NOT EXISTS listings (id TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at TEXT NOT NULL);
   CREATE TABLE IF NOT EXISTS tracks (id TEXT PRIMARY KEY, title TEXT NOT NULL, artist TEXT NOT NULL, genre TEXT NOT NULL, filename TEXT NOT NULL, mime_type TEXT NOT NULL, size_bytes INTEGER NOT NULL, created_at TEXT NOT NULL);
   CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+  CREATE TABLE IF NOT EXISTS booking_cards (id TEXT PRIMARY KEY, payload TEXT NOT NULL);
+  CREATE TABLE IF NOT EXISTS booking_offers (id TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at TEXT NOT NULL);
+  CREATE TABLE IF NOT EXISTS drop_alerts (id TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at TEXT NOT NULL);
+  CREATE TABLE IF NOT EXISTS event_commands (id TEXT PRIMARY KEY, payload TEXT NOT NULL);
+  CREATE TABLE IF NOT EXISTS artist_products (id TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at TEXT NOT NULL);
+  CREATE TABLE IF NOT EXISTS artist_orders (id TEXT PRIMARY KEY, payload TEXT NOT NULL, created_at TEXT NOT NULL);
 `);
 
 const audioTypes = { '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.flac': 'audio/flac', '.ogg': 'audio/ogg', '.m4a': 'audio/mp4', '.aac': 'audio/aac', '.webm': 'audio/webm' };
@@ -77,12 +83,29 @@ function parseMultipart(buffer, boundary) {
   return { fields, file };
 }
 
-const empty = () => ({ schemaVersion: 1, posts: [], interactions: {}, comments: {}, follows: [], bookmarks: [], messages: [], listings: [], profile: {} });
+const empty = () => ({ schemaVersion: 1, posts: [], interactions: {}, comments: {}, follows: [], bookmarks: [], messages: [], listings: [], profile: {}, bookingCards: [], bookingOffers: [], dropAlerts: [], followedVenues: [], eventCommand: {}, artistStoreProducts: [], artistStoreOrders: [] });
 const normalize = (value) => {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Invalid data');
   const list = (key, max) => Array.isArray(value[key]) && value[key].length <= max ? value[key] : [];
   const obj = (key) => value[key] && typeof value[key] === 'object' && !Array.isArray(value[key]) ? value[key] : {};
-  const state = { schemaVersion: 1, posts: list('posts', 500), interactions: obj('interactions'), comments: obj('comments'), follows: list('follows', 1000), bookmarks: list('bookmarks', 1000), messages: list('messages', 2000), listings: list('listings', 500), profile: obj('profile') };
+  const state = {
+    schemaVersion: 1,
+    posts: list('posts', 500),
+    interactions: obj('interactions'),
+    comments: obj('comments'),
+    follows: list('follows', 1000),
+    bookmarks: list('bookmarks', 1000),
+    messages: list('messages', 2000),
+    listings: list('listings', 500),
+    profile: obj('profile'),
+    bookingCards: list('bookingCards', 200),
+    bookingOffers: list('bookingOffers', 500),
+    dropAlerts: list('dropAlerts', 500),
+    followedVenues: list('followedVenues', 1000),
+    eventCommand: obj('eventCommand'),
+    artistStoreProducts: list('artistStoreProducts', 500),
+    artistStoreOrders: list('artistStoreOrders', 1000)
+  };
   const text = (v, max) => typeof v === 'string' && v.length <= max;
   if (!text(state.profile.displayName || '', 60) || !text(state.profile.bio || '', 500)) throw new Error('Invalid profile');
   for (const post of state.posts) if (!post || !text(post.id, 100) || !text(post.body, 3000) || !text(post.title || '', 120)) throw new Error('Invalid post');
@@ -101,6 +124,12 @@ function loadState() {
   state.bookmarks = database.prepare('SELECT id FROM bookmarks').all().map(row => row.id);
   state.messages = database.prepare('SELECT payload FROM messages ORDER BY created_at, rowid').all().map(row => JSON.parse(row.payload));
   state.listings = database.prepare('SELECT payload FROM listings ORDER BY created_at, rowid').all().map(row => JSON.parse(row.payload));
+  state.bookingCards = database.prepare('SELECT payload FROM booking_cards').all().map(row => JSON.parse(row.payload));
+  state.bookingOffers = database.prepare('SELECT payload FROM booking_offers ORDER BY created_at DESC').all().map(row => JSON.parse(row.payload));
+  state.dropAlerts = database.prepare('SELECT payload FROM drop_alerts ORDER BY created_at DESC').all().map(row => JSON.parse(row.payload));
+  state.eventCommand = JSON.parse(database.prepare("SELECT payload FROM event_commands WHERE id='current'").get()?.payload || '{}');
+  state.artistStoreProducts = database.prepare('SELECT payload FROM artist_products ORDER BY created_at DESC').all().map(row => JSON.parse(row.payload));
+  state.artistStoreOrders = database.prepare('SELECT payload FROM artist_orders ORDER BY created_at DESC').all().map(row => JSON.parse(row.payload));
   return state;
 }
 
@@ -108,7 +137,7 @@ function saveState(input) {
   const state = normalize(input);
   database.exec('BEGIN IMMEDIATE');
   try {
-    for (const table of ['posts','interactions','comments','follows','bookmarks','messages','listings','profiles']) database.exec(`DELETE FROM ${table}`);
+    for (const table of ['posts','interactions','comments','follows','bookmarks','messages','listings','profiles','booking_cards','booking_offers','drop_alerts','event_commands','artist_products','artist_orders']) database.exec(`DELETE FROM ${table}`);
     database.prepare('INSERT INTO profiles(id,payload,updated_at) VALUES(?,?,?)').run('current', JSON.stringify(state.profile), new Date().toISOString());
     const post = database.prepare('INSERT INTO posts(id,payload,created_at) VALUES(?,?,?)');
     for (const item of state.posts) post.run(item.id, JSON.stringify(item), item.createdAt || new Date().toISOString());
@@ -124,6 +153,17 @@ function saveState(input) {
     for (const item of state.messages) message.run(item.id, item.person, JSON.stringify(item), item.createdAt || new Date().toISOString());
     const listing = database.prepare('INSERT INTO listings(id,payload,created_at) VALUES(?,?,?)');
     for (const item of state.listings) listing.run(item.id, JSON.stringify(item), item.createdAt || new Date().toISOString());
+    const card = database.prepare('INSERT INTO booking_cards(id,payload) VALUES(?,?)');
+    for (const item of state.bookingCards) if (item?.id) card.run(item.id, JSON.stringify(item));
+    const offer = database.prepare('INSERT INTO booking_offers(id,payload,created_at) VALUES(?,?,?)');
+    for (const item of state.bookingOffers) if (item?.id) offer.run(item.id, JSON.stringify(item), item.createdAt || new Date().toISOString());
+    const alert = database.prepare('INSERT INTO drop_alerts(id,payload,created_at) VALUES(?,?,?)');
+    for (const item of state.dropAlerts) if (item?.id) alert.run(item.id, JSON.stringify(item), item.timestamp || new Date().toISOString());
+    if (Object.keys(state.eventCommand).length) database.prepare('INSERT INTO event_commands(id,payload) VALUES(?,?)').run('current', JSON.stringify(state.eventCommand));
+    const prod = database.prepare('INSERT INTO artist_products(id,payload,created_at) VALUES(?,?,?)');
+    for (const item of state.artistStoreProducts) if (item?.id) prod.run(item.id, JSON.stringify(item), new Date().toISOString());
+    const order = database.prepare('INSERT INTO artist_orders(id,payload,created_at) VALUES(?,?,?)');
+    for (const item of state.artistStoreOrders) if (item?.id) order.run(item.id, JSON.stringify(item), item.createdAt || new Date().toISOString());
     database.exec('COMMIT');
     return state;
   } catch (error) { database.exec('ROLLBACK'); throw error; }
@@ -213,7 +253,7 @@ const server = http.createServer(async (req, res) => {
   }
   let pathname;
   try { pathname = decodeURIComponent(url.pathname); } catch { res.writeHead(400); return res.end('Bad request'); }
-  if (pathname === '/') pathname = '/index.html';
+  if (pathname === '/' || pathname === '/scan') pathname = '/index.html';
   if (pathname.split('/').some(part => part === 'database' || part.startsWith('.'))) { res.writeHead(404); return res.end('Not found'); }
   const filename = path.resolve(root, `.${pathname}`);
   if (!filename.startsWith(root + path.sep) || !fs.existsSync(filename) || !fs.statSync(filename).isFile()) { res.writeHead(404); return res.end('Not found'); }

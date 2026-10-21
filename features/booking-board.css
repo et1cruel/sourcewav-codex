@@ -1,0 +1,291 @@
+/* Sourcewav Features 5-8 — Booking Board */
+/* --------------------------------------------------------------------------
+   5. BOOKING BOARD SECTION & CARDS
+--------------------------------------------------------------------------- */
+.booking-section {
+  margin-top: 36px;
+  padding: 26px 28px;
+  background: #ffffff;
+  border: 1px solid #d9e2ec;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(23, 41, 64, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+.booking-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #172a40, #5cd6c6 40%, #d7fa48 85%);
+}
+.booking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.booking-header h2 {
+  font-size: 24px;
+  margin: 4px 0 6px;
+  letter-spacing: -0.5px;
+  color: #172a40;
+}
+.booking-header p {
+  color: #61788c;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 580px;
+}
+.booking-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.booking-primary-btn {
+  background: #172a40;
+  color: #d7fa48;
+  border: 1px solid #2a4768;
+  border-radius: 10px;
+  padding: 10px 16px;
+  font: 600 12px var(--font);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(23, 42, 64, 0.16);
+  transition: all 0.18s ease;
+}
+.booking-primary-btn:hover {
+  background: #1f3754;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+.booking-inbox-btn {
+  background: #f1f5f9;
+  color: #27435f;
+  border: 1px solid #d0dce7;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font: 600 12px var(--font);
+  cursor: pointer;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.booking-inbox-btn .inbox-count {
+  background: #2858ef;
+  color: #fff;
+  border-radius: 999px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+/* Category Filter Chips */
+.booking-filters {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid #edf2f7;
+}
+.booking-chip {
+  flex: none;
+  background: #f8fafc;
+  border: 1px solid #d5e1ec;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #556c82;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.booking-chip:hover {
+  border-color: #8bb2cf;
+  color: #172a40;
+  background: #ffffff;
+}
+.booking-chip.selected {
+  background: #172a40;
+  border-color: #172a40;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(23, 42, 64, 0.15);
+}
+
+/* Booking Cards Grid */
+.booking-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 16px;
+}
+.booking-card {
+  background: #ffffff;
+  border: 1px solid #e1e9f0;
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 16px rgba(16, 32, 51, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.booking-card:hover {
+  transform: translateY(-2px);
+  border-color: #79bfd0;
+  box-shadow: 0 12px 28px rgba(16, 32, 51, 0.08);
+}
+.booking-card-top {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.booking-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #172a40, #274b6b);
+  color: #d7fa48;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  font-weight: 700;
+  flex: none;
+}
+.booking-meta {
+  flex: 1;
+  min-width: 0;
+}
+.booking-meta strong {
+  display: block;
+  font-size: 15px;
+  color: #14283d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.booking-meta small {
+  display: block;
+  font-size: 11px;
+  color: #6b7e91;
+  margin-top: 1px;
+}
+.booking-role-tag {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: #eef5fb;
+  color: #245580;
+}
+.booking-role-tag.dj { background: #fdf2f8; color: #be185d; }
+.booking-role-tag.rapper { background: #fef3c7; color: #b45309; }
+.booking-role-tag.producer { background: #f3e8ff; color: #7e22ce; }
+.booking-role-tag.photographer { background: #e0f2fe; color: #0369a1; }
+.booking-role-tag.vj { background: #ccfbf1; color: #0f766e; }
+.booking-role-tag.crew { background: #f1f5f9; color: #475569; }
+
+.booking-avail-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 9px;
+  border-radius: 6px;
+  margin: 8px 0;
+}
+.booking-avail-pill.ready {
+  background: #ecfdf5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+.booking-avail-pill.busy {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+.booking-avail-pill i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.booking-rate-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 8px 11px;
+  margin: 8px 0 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.booking-rate-box b {
+  font-size: 15px;
+  color: #172a40;
+}
+.booking-rate-box span {
+  font-size: 10px;
+  color: #718497;
+}
+
+.booking-portfolio-snippet {
+  font-size: 11px;
+  color: #475a6c;
+  line-height: 1.5;
+  margin-bottom: 12px;
+  background: #ffffff;
+  padding: 6px 8px;
+  border-left: 3px solid #5cd6c6;
+  border-radius: 0 6px 6px 0;
+}
+
+.booking-card-foot {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid #edf2f7;
+}
+.hire-btn {
+  background: #172a40;
+  color: #ffffff;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font: 600 12px var(--font);
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.16s ease;
+}
+.hire-btn:hover {
+  background: #254467;
+  color: #d7fa48;
+}
+.booking-chat-btn {
+  background: #edf2f7;
+  color: #3b5066;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.booking-chat-btn:hover {
+  background: #e2e8f0;
+}
+

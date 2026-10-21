@@ -1,0 +1,16 @@
+project_id = "gzlxkkyeijsukywvsekx"
+
+[functions.create-ticket-checkout]
+verify_jwt = true
+
+[functions.omise-webhook]
+verify_jwt = false
+
+[functions.my-tickets]
+verify_jwt = true
+
+[functions.validate-ticket]
+verify_jwt = true
+
+[functions.create-event]
+verify_jwt = true

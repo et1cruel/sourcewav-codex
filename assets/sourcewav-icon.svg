@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Sourcewav">
+  <rect width="64" height="64" rx="14" fill="#130f13"/>
+  <path fill="#e928cf" d="M0,-24.8L4,-17.6L10.8,-22.4L11.3,-14.1L19.5,-15.5L16.4,-7.8L24.2,-5.5L18.1,0L24.2,5.5L16.4,7.8L19.5,15.5L11.3,14.1L10.8,22.4L4,17.6L0,24.8L-4,17.6L-10.8,22.4L-11.3,14.1L-19.5,15.5L-16.4,7.8L-24.2,5.5L-18.1,0L-24.2,-5.5L-16.4,-7.8L-19.5,-15.5L-11.3,-14.1L-10.8,-22.4L-4,-17.6Z" transform="translate(32 32) rotate(-8)"/>
+  <text x="32" y="41" text-anchor="middle" font-family="Arial Black, Arial, Helvetica, sans-serif" font-size="21" font-weight="900" fill="#fff">SW</text>
+</svg>

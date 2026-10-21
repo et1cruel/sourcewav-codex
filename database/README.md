@@ -2,9 +2,11 @@
 
 ## Current state
 
-The current local MVP runs through `../server.js`. It serves the site and a same-origin JSON API; the API stores profiles, posts, reactions, comments, follows, bookmarks, listings, messages, and audio-track metadata in `sourcewav.sqlite` beside this README. Audio files are stored under `uploads/` and streamed through a byte-range endpoint so seeking works. `../data-store.js` hydrates community data from this API and keeps a browser cache for temporary offline use. Run `node server.js` (or `node server.js 4174` if port 4173 is already occupied). The server binds to loopback; this is a single local installation, not a public multi-account service.
+The current local MVP still runs through `../server.js`. It serves the site and a same-origin JSON API; posts, reactions, comments, follows, bookmarks, listings, messages, and audio-track metadata are stored in `sourcewav.sqlite`. Audio files are stored under `uploads/` and streamed through a byte-range endpoint. `../data-store.js` keeps a browser cache for temporary offline use. Run `node server.js` (or `node server.js 4174` if port 4173 is already occupied). This local data service is not a public multi-account backend.
 
-`schema.sql` remains the future PostgreSQL/Supabase-compatible production data model. It has not been applied. It assumes Supabase Auth's `auth.users` table. Review policies against actual product roles and run migrations in a disposable environment before production.
+The initial PostgreSQL schema, per-account state migration, and live-community/ticket migration have been applied to the Supabase project `sourcewav` (`gzlxkkyeijsukywvsekx`). Follow-up migrations `20261021000300_validate_order_release_status.sql` and `20261021000400_listing_art_uploads.sql` add order-state validation and artwork image storage with owner-scoped upload policies. Migration 002 adds transactional inventory reservation, idempotent payment settlement, one-use ticket codes, and direct-message creation.
+
+Supabase Auth is connected to the Register/Login and profile screens. The Supabase Auth site URL is currently configured for local development ports 4173 and 4174; add the production URL before going live. Community posts/reactions/comments, direct messages, artist listings and uploaded artwork, and public event/ticket-tier data use normalized Supabase tables with RLS and realtime subscriptions. Authenticated user state remains in `user_states` for non-core preferences. Audio uploads still use the local Node/SQLite service and are not production-ready on Cloudflare.
 
 ## Entity relationships
 
@@ -21,15 +23,17 @@ auth.users ──1:1── profiles ──1:N── posts ──1:N── post_m
 venues ──1:N── events; notifications, reports, moderation_actions, audit_logs support platform operations
 ```
 
-## Apply in development
+## Migration workflow
 
-1. Create a disposable PostgreSQL/Supabase project and configure its migration tooling.
-2. Apply `schema.sql` as the first migration, then review the generated policies using at least two regular accounts and one moderator account.
-3. Create a server/API that owns privileged operations. Do not put a database service-role key, payment secret, webhook secret, or ticket-signing key in `index.html`, `app.js`, or `data-store.js`.
-4. Add seed records separately from migrations. Keep demo records visibly marked and never copy them into production as real events or inventory.
-5. Configure automated backups, restore drills, log retention, and account export/deletion procedures before inviting real users.
+1. Keep each schema change in a new immutable file under `../supabase/migrations/`.
+2. Apply future migrations through Supabase CLI/deployment tooling; the initial migration was executed in the dashboard SQL Editor because the project had no prior migrations.
+3. Review RLS with multiple accounts and a moderator role before widening access.
+4. Keep seed records separate and visibly marked. Do not copy demo records into the real event calendar or inventory.
+5. Deploy the Supabase Edge Functions in `../supabase/functions/` with Supabase CLI and set `OMISE_SECRET_KEY`, `OMISE_WEBHOOK_SECRET`, and a random `TICKET_QR_SECRET` (at least 32 random bytes, used as text). Set the Omise HTTPS webhook endpoint to `https://gzlxkkyeijsukywvsekx.supabase.co/functions/v1/omise-webhook` and ensure PromptPay is enabled in the Omise account. Never place these secrets in browser code or Git.
+6. Assign `organizer` role only to verified organizers; the `create-event` function checks that role. Add the production app origin to Supabase Auth URL configuration and set the `APP_ORIGIN` function secret to the exact origin.
+7. Configure automated backups, restore drills, log retention, and account export/deletion procedures before inviting real users.
 
-The local MVP requires no external database URL or credentials. It still has no account system, hosted deployment, media storage, or payment provider credentials, so no migration was run and no external account was created.
+The publishable Supabase key is intended for browser use and is restricted by RLS. Database migrations 002–004 have been applied, but the Edge Functions are not deployed and the project has no Omise keys or ticket-signing secret configured. Therefore checkout cannot issue a payable PromptPay QR yet. Set these secrets directly in Supabase (never in browser code or Git), deploy the functions, configure Omise's webhook URL above, and verify test-mode payment/webhook before enabling ticket sales. Do not enable live-mode sales before testing payment, order reconciliation, QR scan, ticket reuse rejection, and failed/expired payment handling.
 
 ## API boundary for replacing local storage
 
