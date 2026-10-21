@@ -132,21 +132,24 @@
     swUpdateProfileChrome(profile);
     swShow(`<section class="profile-page">
       <div class="profile-cover"><div class="profile-soundwave" aria-hidden="true">${Array.from({ length: 34 }, (_, i) => `<i style="--wave:${10 + ((i * 17 + 9) % 29)}px"></i>`).join('')}</div><span class="profile-cover-tag">SOURCEWAV / PROFILE</span></div>
+      <div class="profile-grid"><section class="profile-identity-card" aria-label="ข้อมูลโปรไฟล์">
       <div class="profile-identity"><div class="profile-avatar">${profile.avatarUrl ? '<img src="' + swEscape(profile.avatarUrl) + '" alt="" />' : swEscape([...profile.name][0] || 'S')}</div><div class="profile-identity-copy"><span class="account-status"><i></i>${sessionActive ? 'บัญชี Sourcewav' : 'โปรไฟล์ตัวอย่าง'}</span><h2 id="modalTitle">${swEscape(profile.name)}</h2><p>@${swEscape(profile.handle)} <span>·</span> ${swEscape(profile.role)}</p></div><button class="profile-edit-icon" type="button" data-account-action="edit" aria-label="แก้ไขโปรไฟล์">✎</button></div>
       <p class="profile-bio">${swEscape(profile.bio)}</p>
       <div class="profile-location"><span aria-hidden="true">⌖</span> ${swEscape(profile.city)} <span class="profile-location-note">· บ้านของคอมมูนิตี้</span></div>
       <div class="profile-stats"><div><b>0</b><span>เพลง</span></div><div><b>0</b><span>ผลงาน</span></div><div><b>0</b><span>กำลังติดตาม</span></div></div>
-      <div class="profile-work">
-        <div class="profile-work-heading"><div><span class="account-eyebrow">YOUR CORNER & STORE</span><h3>พื้นที่ผลงานและร้านค้าของคุณ</h3></div><span class="profile-work-mark">♫</span></div>
+      </section><section class="profile-work" aria-labelledby="profileWorkTitle">
+        <div class="profile-work-heading"><div><span class="account-eyebrow">YOUR CORNER & STORE</span><h3 id="profileWorkTitle">พื้นที่ผลงานและร้านค้าของคุณ</h3></div><span class="profile-work-mark">♫</span></div>
         <p>เพลง เดโม สินค้า Merch เทป ซีดี และบีทที่คุณเปิดขาย รวมทั้งการตั้งค่ารับงาน Booking อยู่ตรงนี้</p>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;">
+        <div class="profile-work-actions">
           <a href="#music" class="profile-first-work" data-account-action="close">＋ ปล่อยเพลงแรก</a>
-          <button type="button" class="profile-first-work" style="background: #eef2ff; border-color: #c7d2fe; color: #4338ca; cursor: pointer;" data-account-action="open-store">🛍 ร้านค้าศิลปิน</button>
-          <button type="button" class="profile-first-work" style="background: #fdf2f8; border-color: #fbcfe8; color: #be185d; cursor: pointer;" data-account-action="open-booking">⚡ การ์ดรับงาน Booking</button>
+          <button type="button" class="profile-first-work profile-store-action" data-account-action="open-store">🛍 ร้านค้าศิลปิน</button>
+          <button type="button" class="profile-first-work profile-booking-action" data-account-action="open-booking">⚡ การ์ดรับงาน Booking</button><button type="button" class="profile-first-work profile-organizer-action" data-account-action="organizer"><span aria-hidden="true">▦</span> หลังบ้านผู้จัด</button>
         </div>
-      </div>
+      </section></div>
+      <div class="profile-footer">
       <div class="profile-account-note"><span>ⓘ</span><p>${sessionActive ? 'บัญชีและโปรไฟล์เชื่อมต่อกับ Supabase แล้ว' : window.SourcewavSupabaseStatus === 'online' ? 'เชื่อมต่อฐานข้อมูล Supabase แล้ว · เข้าสู่ระบบเพื่อบันทึกโปรไฟล์ของคุณ' : 'กำลังเชื่อมต่อฐานข้อมูล Supabase'}</p></div>
       <div class="profile-actions"><button type="button" class="modal-primary profile-edit-button" data-account-action="edit">แก้ไขโปรไฟล์</button>${sessionActive ? '<button type="button" class="profile-logout" data-account-action="logout">ออกจากระบบ</button>' : ''}</div>
+      </div>
       ${sessionActive ? '' : '<div class="profile-auth-links"><span>จัดการบัญชี</span><button type="button" data-account-action="register">สร้างบัญชี</button><button type="button" data-account-action="login">เข้าสู่ระบบ</button></div>'}
     </section>`);
   }
@@ -170,11 +173,11 @@
     const credentialFields = isRecovery
       ? `<label class="account-field"><span>รหัสผ่านใหม่</span><input name="password" type="password" autocomplete="new-password" minlength="8" placeholder="อย่างน้อย 8 ตัวอักษร" required /></label><label class="account-field"><span>ยืนยันรหัสผ่านใหม่</span><input name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" placeholder="กรอกรหัสผ่านอีกครั้ง" required /></label>`
       : `<label class="account-field"><span>อีเมล</span><input name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label><label class="account-field"><span>รหัสผ่าน</span><span class="password-control"><input name="password" type="password" autocomplete="${isRegister ? 'new-password' : 'current-password'}" placeholder="${isRegister ? 'อย่างน้อย 8 ตัวอักษร' : 'กรอกรหัสผ่าน'}" minlength="${isRegister ? '8' : '1'}" required /><button type="button" data-account-action="toggle-password" aria-label="แสดงรหัสผ่าน">แสดง</button></span></label>`;
-    swShow(`<section class="auth-shell">
-      <aside class="auth-art">${swAuthBrandMarkup()}<div class="auth-art-center"><div class="auth-disc" aria-hidden="true"><i></i><i></i><i></i></div><span class="auth-art-note">เสียงของเมืองนี้</span><h2>พื้นที่ของคน<br />ที่ทำจริง</h2><p>เดโมที่ยังไม่เสร็จ งานที่ยังไม่ลงตัว และคนที่อยากเจอคนแบบเดียวกัน</p></div><div class="auth-wave" aria-hidden="true">${Array.from({ length: 42 }, (_, i) => `<i style="--wave:${8 + ((i * 11 + 13) % 40)}px"></i>`).join('')}</div><span class="auth-art-foot">เพลง · ศิลปะ · คนของเรา</span></aside>
+    swShow(`<section class="auth-shell auth-${mode}">
+      <aside class="auth-art">${swAuthBrandMarkup()}<div class="auth-art-center"><div class="auth-disc" aria-hidden="true"><i></i><i></i><i></i></div><span class="auth-art-note">เสียงของเมืองนี้</span><h2>${isRegister ? 'พื้นที่อิสระ<br />ของศิลปิน' : 'พื้นที่ของคน<br />ที่ทำจริง'}</h2><p>เดโมที่ยังไม่เสร็จ งานที่ยังไม่ลงตัว และคนที่อยากเจอคนแบบเดียวกัน</p></div><div class="auth-wave" aria-hidden="true">${Array.from({ length: 42 }, (_, i) => `<i style="--wave:${8 + ((i * 11 + 13) % 40)}px"></i>`).join('')}</div><span class="auth-art-foot">เพลง · ศิลปะ · คนของเรา</span></aside>
       <div class="auth-panel"><div class="auth-panel-head"><span class="account-status"><i></i> COMMUNITY ACCESS</span><span class="auth-step">${isRecovery ? 'ตั้งรหัสผ่านใหม่' : isRegister ? 'เข้าร่วมคอมมูนิตี้' : 'กลับมาเจอกันอีก'}</span></div>${isRecovery ? '' : `<div class="auth-tabs" role="tablist" aria-label="บัญชีผู้ใช้"><button type="button" role="tab" aria-selected="${isRegister}" class="${isRegister ? 'active' : ''}" data-account-action="register">สมัครสมาชิก</button><button type="button" role="tab" aria-selected="${!isRegister}" class="${!isRegister ? 'active' : ''}" data-account-action="login">เข้าสู่ระบบ</button></div>`}
-      <h1 id="modalTitle">${isRecovery ? 'ตั้งรหัสผ่านใหม่' : isRegister ? 'มาเป็นส่วนหนึ่ง' : 'ดีใจที่ได้เจอกันอีก'}</h1><p class="auth-intro">${isRecovery ? 'เลือกรหัสผ่านใหม่เพื่อกลับเข้าสู่ Sourcewav' : isRegister ? 'สร้างพื้นที่ของคุณ แล้วเริ่มรู้จักคนทำเพลงและศิลปะในวงการ' : 'เข้าสู่พื้นที่ของคุณ แล้วไปต่อจากที่ค้างไว้'}</p>
-      <form id="accountForm" data-auth-mode="${mode}" novalidate>${fields}${credentialFields}${isRegister ? '<label class="account-consent"><input name="terms" type="checkbox" required /><span>ฉันยอมรับ <a href="#community" data-account-action="close">แนวทางชุมชน</a> และต้องการเข้าร่วม Sourcewav</span></label>' : isRecovery ? '' : '<button type="button" class="auth-forgot" data-account-action="forgot">ลืมรหัสผ่าน?</button>'}<p class="auth-error" id="accountError" role="alert" hidden></p><button type="submit" class="auth-submit">${isRecovery ? 'บันทึกรหัสผ่านใหม่' : isRegister ? 'สร้างโปรไฟล์' : 'เข้าสู่ระบบ'} <span aria-hidden="true">↗</span></button></form>
+      <h1 id="modalTitle">${isRecovery ? 'ตั้งรหัสผ่านใหม่' : isRegister ? 'เข้าร่วมชุมชนดนตรี' : 'ยินดีต้อนรับกลับ'}</h1><p class="auth-intro">${isRecovery ? 'เลือกรหัสผ่านใหม่เพื่อกลับเข้าสู่ Sourcewav' : isRegister ? 'สร้างบัญชีเพื่อพบเพื่อนร่วมวงการ แชร์ผลงาน และค้นหาโอกาสใหม่ ๆ' : 'เข้าสู่บัญชีเพื่อกลับไปพบผลงานและผู้คนที่คุณติดตาม'}</p>
+      <form id="accountForm" data-auth-mode="${mode}" novalidate>${fields}${credentialFields}${isRegister ? '<label class="account-consent"><input name="terms" type="checkbox" required /><span>ฉันยอมรับ <a href="#community" data-account-action="close">แนวทางชุมชน</a> และต้องการเข้าร่วม Sourcewav</span></label>' : isRecovery ? '' : '<button type="button" class="auth-forgot" data-account-action="forgot">ลืมรหัสผ่าน?</button>'}<p class="auth-error" id="accountError" role="alert" hidden></p><button type="submit" class="auth-submit">${isRecovery ? 'บันทึกรหัสผ่านใหม่' : isRegister ? 'สร้างโปรไฟล์' : 'เข้าสู่ระบบ'} <span aria-hidden="true">↗</span></button>${!isRegister && !isRecovery ? `<div class="auth-google-divider" aria-hidden="true"><span>หรือ</span></div><button type="button" class="auth-google-button" data-account-action="google-login" aria-label="เข้าสู่ระบบด้วย Google"><svg viewBox="0 0 48 48" aria-hidden="true"><path fill="#4285F4" d="M43.6 24.5c0-1.4-.1-2.8-.4-4.1H24v7.8h11a9.4 9.4 0 0 1-4.1 6.2v5.1h6.7c3.9-3.6 6-8.9 6-15Z"/><path fill="#34A853" d="M24 44c5.5 0 10.1-1.8 13.5-4.8l-6.7-5.1c-1.8 1.2-4 1.9-6.8 1.9-5.2 0-9.6-3.5-11.2-8.2H5.9v5.3A20 20 0 0 0 24 44Z"/><path fill="#FBBC05" d="M12.8 27.8a12 12 0 0 1 0-7.6v-5.3H5.9a20 20 0 0 0 0 18.2l6.9-5.3Z"/><path fill="#EA4335" d="M24 12c3 0 5.7 1 7.8 3.1l5.9-5.9C34.1 5.9 29.5 4 24 4A20 20 0 0 0 5.9 14.9l6.9 5.3C14.4 15.5 18.8 12 24 12Z"/></svg><span class="google-label">เข้าสู่ระบบด้วย Google</span></button>` : ''}</form>
       <div class="auth-local-note"><span>ⓘ</span><p>บัญชีของคุณใช้ Supabase Auth และรหัสผ่านจะไม่ถูกเก็บใน Sourcewav</p></div><p class="auth-bottom">${isRecovery ? 'จำรหัสผ่านได้แล้ว?' : isRegister ? 'มีบัญชีอยู่แล้ว?' : 'ยังไม่มีบัญชี?'} <button type="button" data-account-action="${isRegister || isRecovery ? 'login' : 'register'}">${isRegister || isRecovery ? 'เข้าสู่ระบบ' : 'สมัครสมาชิก'}</button></p></div>
     </section>`);
   }
@@ -182,7 +185,7 @@
   function swEditView() {
     const profile = swGetProfile();
     const sessionActive = Boolean(window.SourcewavAuthUser);
-    swShow(`<section class="profile-editor"><div class="editor-heading"><span class="account-status"><i></i> PROFILE SETTINGS</span><h2 id="modalTitle">ทำโปรไฟล์ให้เป็นคุณ</h2><p>บอกคนในวงการว่าคุณเป็นใคร และอยากทำอะไรต่อไป</p></div><form id="profileForm"><div class="editor-avatar-row"><div class="editor-avatar ${profile.avatarUrl ? 'has-avatar-image' : ''}" id="profileAvatarPreview" aria-hidden="true">${profile.avatarUrl ? '<img src="' + swEscape(profile.avatarUrl) + '" alt="" />' : swEscape([...profile.name][0] || 'S')}</div><div class="editor-avatar-field"><div class="editor-avatar-field-title">รูปโปรไฟล์</div><label class="avatar-camera-pick" for="profileAvatarFile" aria-label="เลือกหรือเปลี่ยนรูปโปรไฟล์"><svg viewBox="0 0 48 48" aria-hidden="true"><path class="camera-body" d="M8 16h7l3-5h12l3 5h7a3 3 0 0 1 3 3v17a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V19a3 3 0 0 1 3-3Z"/><circle class="camera-lens" cx="24" cy="27" r="8"/><circle class="camera-glint" cx="27" cy="24" r="2"/></svg><span>เปลี่ยนรูป</span></label><input class="avatar-file-input" id="profileAvatarFile" name="avatar" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="profileAvatarHelp"  /><small id="profileAvatarHelp">เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB · บัญชีตัวอย่างจะบันทึกไว้ในเบราว์เซอร์นี้</small></div></div><label class="account-field"><span>ชื่อที่แสดง</span><input name="displayName" value="${swEscape(profile.name)}" minlength="2" maxlength="32" required /></label><label class="account-field"><span>ชื่อผู้ใช้</span><div class="handle-control"><span>@</span><input name="handle" value="${swEscape(profile.handle)}" pattern="[A-Za-z0-9_]{3,30}" minlength="3" maxlength="30" required /></div><small>ใช้ตัวอักษรอังกฤษ ตัวเลข หรือขีดล่าง 3–30 ตัว</small></label><div class="account-field-row"><label class="account-field"><span>บทบาทในวงการ</span><select name="role">${['Rapper / MC','Producer / Beatmaker','DJ','ศิลปิน / นักวาด','คนทำงานเบื้องหลัง','นักฟังเพลง'].map(role => `<option ${profile.role === role ? 'selected' : ''}>${role}</option>`).join('')}</select></label><label class="account-field"><span>เมือง</span><input name="city" value="${swEscape(profile.city)}" maxlength="40" required /></label></div><label class="account-field"><span>แนะนำตัว</span><textarea name="bio" maxlength="160" rows="3" placeholder="บอกสั้น ๆ ว่าคุณกำลังทำอะไร หรืออยากเจอใคร">${swEscape(profile.bio)}</textarea><small class="field-counter">ไม่เกิน 160 ตัวอักษร</small></label><p class="editor-save-note"><span>ⓘ</span> ${sessionActive ? 'โปรไฟล์ของคุณบันทึกไว้ใน Supabase' : 'โปรไฟล์ตัวอย่างบันทึกไว้ในเบราว์เซอร์นี้'}</p><div class="editor-actions"><button type="button" class="editor-cancel" data-account-action="profile">ยกเลิก</button><button type="submit" class="auth-submit">บันทึกโปรไฟล์ <span aria-hidden="true">↗</span></button></div></form></section>`);
+    swShow(`<section class="profile-editor"><div class="editor-heading"><span class="account-status"><i></i> PROFILE SETTINGS</span><h2 id="modalTitle">ทำโปรไฟล์ให้เป็นคุณ</h2><p>บอกคนในวงการว่าคุณเป็นใคร และอยากทำอะไรต่อไป</p></div><form id="profileForm" aria-labelledby="modalTitle"><div class="editor-layout"><div class="editor-avatar-row"><div class="editor-avatar-stage"><div class="editor-avatar ${profile.avatarUrl ? 'has-avatar-image' : ''}" id="profileAvatarPreview" aria-hidden="true">${profile.avatarUrl ? '<img src="' + swEscape(profile.avatarUrl) + '" alt="" />' : swEscape([...profile.name][0] || 'S')}</div><label class="avatar-camera-pick" for="profileAvatarFile" aria-label="เลือกหรือเปลี่ยนรูปโปรไฟล์"><svg viewBox="0 0 48 48" aria-hidden="true"><path class="camera-body" d="M8 16h7l3-5h12l3 5h7a3 3 0 0 1 3 3v17a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V19a3 3 0 0 1 3-3Z"/><circle class="camera-lens" cx="24" cy="27" r="8"/><circle class="camera-glint" cx="27" cy="24" r="2"/></svg><span>เปลี่ยนรูป</span></label></div><div class="editor-avatar-field"><div class="editor-avatar-field-title">รูปโปรไฟล์</div><input class="avatar-file-input" id="profileAvatarFile" name="avatar" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="profileAvatarHelp"  /><small id="profileAvatarHelp">เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB · บัญชีตัวอย่างจะบันทึกไว้ในเบราว์เซอร์นี้</small></div><div class="editor-profile-fields"><label class="account-field"><span>ชื่อที่แสดง</span><input name="displayName" value="${swEscape(profile.name)}" minlength="2" maxlength="32" required /></label><label class="account-field"><span>ชื่อผู้ใช้</span><div class="handle-control"><span>@</span><input name="handle" value="${swEscape(profile.handle)}" pattern="[A-Za-z0-9_]{3,30}" minlength="3" maxlength="30" required /></div><small>ใช้ตัวอักษรอังกฤษ ตัวเลข หรือขีดล่าง 3–30 ตัว</small></label><div class="account-field-row"><label class="account-field"><span>บทบาทในวงการ</span><select name="role">${['Rapper / MC','Producer / Beatmaker','DJ','ศิลปิน / นักวาด','คนทำงานเบื้องหลัง','นักฟังเพลง'].map(role => `<option ${profile.role === role ? 'selected' : ''}>${role}</option>`).join('')}</select></label><label class="account-field"><span>เมือง</span><input name="city" value="${swEscape(profile.city)}" maxlength="40" required /></label></div><label class="account-field"><span>แนะนำตัว</span><textarea name="bio" maxlength="160" rows="3" placeholder="บอกสั้น ๆ ว่าคุณกำลังทำอะไร หรืออยากเจอใคร">${swEscape(profile.bio)}</textarea><small class="field-counter">ไม่เกิน 160 ตัวอักษร</small></label></div><p class="editor-save-note"><span>ⓘ</span> ${sessionActive ? 'โปรไฟล์ของคุณบันทึกไว้ใน Supabase' : 'โปรไฟล์ตัวอย่างบันทึกไว้ในเบราว์เซอร์นี้'}</p><div class="editor-actions"><button type="button" class="editor-cancel" data-account-action="profile">ยกเลิก</button><button type="submit" class="auth-submit">บันทึกโปรไฟล์ <span aria-hidden="true">↗</span></button></div></div></form></section>`);
   }
 
   function swHandleAction(action, event) {
@@ -194,6 +197,40 @@
     if (action === 'login') swAuthView('login');
     if (action === 'profile') swProfileView();
     if (action === 'edit') swEditView();
+    if (action === 'google-login') {
+      const button = target?.closest('[data-account-action="google-login"]');
+      const error = document.querySelector('#accountError');
+      const client = window.SourcewavSupabase;
+      if (!client) {
+        if (error) { error.hidden = false; error.textContent = 'ยังเชื่อมต่อ Supabase ไม่ได้ ตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง'; }
+        return;
+      }
+      if (button) {
+        button.disabled = true;
+        const label = button.querySelector('.google-label');
+        if (label) label.textContent = 'กำลังเชื่อมต่อ Google…';
+      }
+      if (error) error.hidden = true;
+      client.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: `${window.location.origin}${window.location.pathname}` }
+      }).then(({ error: oauthError }) => {
+        if (oauthError) throw oauthError;
+      }).catch(oauthError => {
+        if (error) {
+          error.hidden = false;
+          error.textContent = /provider.*(not enabled|unsupported)|unsupported provider/i.test(oauthError.message || '')
+            ? 'Google Login ยังไม่ได้เปิดใน Supabase Auth กรุณาเปิด Google provider และตั้งค่า redirect URL ก่อน'
+            : 'เข้าสู่ระบบด้วย Google ไม่สำเร็จ ลองอีกครั้ง';
+        }
+      }).finally(() => {
+        if (button?.isConnected) {
+          button.disabled = false;
+          const label = button.querySelector('.google-label');
+          if (label) label.textContent = 'เข้าสู่ระบบด้วย Google';
+        }
+      });
+    }
     if (action === 'open-store') {
       closeModal();
       location.hash = '#artist-store';
@@ -204,6 +241,10 @@
       closeModal();
       location.hash = '#booking';
       window.SourcewavFeatures?.openJoinBookingModal();
+      return;
+    }
+    if (action === 'organizer') {
+      window.SourcewavFeatures?.openCommandCenterModal();
       return;
     }
     if (action === 'logout') {

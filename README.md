@@ -1,6 +1,6 @@
-# Sourcewav local MVP
+# Sourcewav community site
 
-Sourcewav is a local community prototype for Thai hip-hop and independent art. Run it with Node.js 24 or later:
+Sourcewav is a static community site for Thai hip-hop and independent art. The web app uses Supabase Auth, Postgres, Realtime, and Storage for online accounts and features. For local preview, run the optional Node.js 24+ server:
 
 ```powershell
 node server.js
@@ -8,16 +8,22 @@ node server.js
 
 The server listens on `http://localhost:4173` and binds to loopback only. If another local preview already uses that port, choose an unused port explicitly, for example `node server.js 4174`, then open `http://localhost:4174`.
 
-## What works
+## Current data services
 
-- Posts, likes, comments, bookmarks, follows, profile edits, chat messages, and artist listings save through the API into `database/sourcewav.sqlite`.
-- Artists can upload MP3, WAV, FLAC, OGG, M4A, AAC, and WEBM audio (up to 50 MB per track). Audio is stored under `database/uploads/` and streamed with HTTP byte-range support for seeking.
-- Track title, artist, genre, and file metadata are saved in SQLite. Uploads are type-checked by their file signatures and limited to five per minute on this local server.
-- The music player streams from the local server and supports seeking. This prototype does not transcode audio, generate waveforms, identify rights, or store files in cloud object storage.
-- SQLite data remains after reloads and can be shared by browser tabs on this computer.
+- Accounts, profiles, posts, reactions, comments, bookmarks, follows, direct messages, listings, events, bookings, and tickets use Supabase tables with row-level security.
+- Event ticket payments use organizer-owned PromptPay QR codes and SlipOK slip verification. The site does not use Omise.
+- Audio uses the `audio_tracks` table and the `sourcewav-audio` Supabase Storage bucket after migration `20261021000800_rooms_and_audio_storage.sql` is applied.
+- Community rooms and room messages use Supabase after migration `20261021000800_rooms_and_audio_storage.sql` is applied.
+- `data-store.js` keeps a per-browser/per-account cache for non-core preferences. It is not the source of truth for the normalized live features.
+- The local Node server's older SQLite `/api/state` and `/api/tracks` endpoints are retained for local compatibility only; the current web UI does not use them.
 - The Bangkok venue map is interactive and uses Leaflet with OpenStreetMap tiles.
-- If the API is offline, browser storage serves as a temporary cache and the header shows the connection state.
 
-## Before public launch
+## Cloudflare preview deployment
 
-This local MVP has one shared local profile and no account system, hosted database, image upload service, moderation console, or real-time multi-user chat. Event cards and sample marketplace entries are illustrative. Ticket tracking saves an interest marker only; there is no payment provider, valid PromptPay QR, order verification, or ticket issuance. Connect an authentication service, remote database, event data source, and licensed payment gateway before exposing this app publicly or accepting money.
+The repository is configured for Cloudflare Workers Static Assets. Install Wrangler or run it through `npx`, then deploy from the project root with `npx wrangler deploy`. `.assetsignore` excludes source, local database, and project metadata from public assets. The app continues to use the configured Supabase project for auth and data.
+
+After deployment, add the resulting `https://<worker-name>.<workers-subdomain>.workers.dev` URL to Supabase Auth's Site URL and Redirect URLs before testing registration or login. Apply and review pending SQL migrations first. Production registration also depends on Supabase Auth email confirmation and SMTP settings.
+
+## Remaining launch work
+
+Apply migration `20261021000800_rooms_and_audio_storage.sql` to the configured Supabase project. Verify the public audio bucket policies and account rules. Test registration, login, password recovery, Cloudflare redirect handling, SlipOK against an organizer's real branch, order reconciliation, and ticket QR scan in a controlled environment before taking real payments. Keep the local Node/SQLite endpoints off the public deployment.

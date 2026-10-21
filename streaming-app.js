@@ -1,4 +1,4 @@
-/* Sourcewav audio library: secure uploads are stored by the local API and streamed with HTTP byte ranges. */
+/* Sourcewav cloud audio library backed by Supabase Storage and audio_tracks. */
 (function () {
   const $ = (selector, root = document) => root.querySelector(selector);
   const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
@@ -55,7 +55,7 @@
     $('#streamPlay').disabled = false;
     $('#streamSeek').disabled = false;
     $('#streamMute').disabled = false;
-    audio.src = `/api/tracks/${encodeURIComponent(track.id)}/audio`;
+    audio.src = track.audio_url;
     audio.load();
     renderTracks();
     if (autoplay) audio.play().catch(() => toast('ไฟล์นี้เล่นไม่ได้ในเบราว์เซอร์ ลองไฟล์ MP3, WAV หรือ OGG'));
@@ -116,15 +116,24 @@
   }
 
   async function loadTracks() {
-    try {
-      const response = await fetch('/api/tracks', { cache: 'no-store' });
-      if (!response.ok) throw new Error('โหลดคลังเพลงไม่สำเร็จ');
-      const result = await response.json();
-      tracks = Array.isArray(result.tracks) ? result.tracks : [];
-      renderTracks();
-    } catch (_) {
-      list.innerHTML = '<div class="track-empty"><span>♫</span><b>เชื่อมต่อคลังเพลงไม่ได้</b><p>ตรวจสอบว่า Sourcewav server กำลังทำงาน แล้วโหลดหน้าใหม่</p></div>';
+    const db = window.SourcewavSupabase;
+    if (!db || window.SourcewavSupabaseStatus !== 'online') {
+      list.innerHTML = '<div class="track-empty"><span>♫</span><b>เชื่อมต่อคลังเพลงไม่ได้</b><p>ตรวจสอบการเชื่อมต่อ Supabase แล้วโหลดหน้าใหม่</p></div>';
+      return;
     }
+    const { data, error } = await db.from('audio_tracks')
+      .select('id,title,artist_name,genre,storage_key,mime_type,byte_size,created_at')
+      .eq('status', 'published').eq('visibility', 'public').is('deleted_at', null)
+      .order('created_at', { ascending: false }).limit(100);
+    if (error) {
+      list.innerHTML = `<div class="track-empty"><span>♫</span><b>โหลดคลังเพลงไม่ได้</b><p>${escapeHTML(error.message)}</p></div>`;
+      return;
+    }
+    tracks = (data || []).map(track => ({ ...track,
+      artist: track.artist_name, size_bytes: Number(track.byte_size),
+      audio_url: db.storage.from('sourcewav-audio').getPublicUrl(track.storage_key).data.publicUrl
+    }));
+    renderTracks();
   }
 
   document.addEventListener('click', event => {
@@ -152,13 +161,32 @@
     error.hidden = true;
     if (!file) { error.textContent = 'เลือกไฟล์เสียงก่อนอัปโหลด'; error.hidden = false; return; }
     if (file.size > 50 * 1024 * 1024) { error.textContent = 'ไฟล์มีขนาดใหญ่เกิน 50 MB'; error.hidden = false; return; }
+    const db = window.SourcewavSupabase;
+    const auth = await db?.auth.getUser();
+    if (!db || auth?.error || !auth?.data?.user) { error.textContent = 'เข้าสู่ระบบก่อนอัปโหลดเพลง'; error.hidden = false; submit.disabled = false; submit.textContent = 'ปล่อยเพลงเข้าสู่วง'; return; }
+    const mimeByExtension = { mp3: 'audio/mpeg', wav: 'audio/wav', flac: 'audio/flac', ogg: 'audio/ogg', m4a: 'audio/mp4', aac: 'audio/aac', webm: 'audio/webm' };
+    const extension = file.name.split('.').pop()?.toLowerCase();
+    const mime = mimeByExtension[extension];
+    if (!mime) { error.textContent = 'รองรับเฉพาะ MP3, WAV, FLAC, OGG, M4A, AAC หรือ WEBM'; error.hidden = false; submit.disabled = false; submit.textContent = 'ปล่อยเพลงเข้าสู่วง'; return; }
     submit.disabled = true; submit.textContent = 'กำลังอัปโหลด…';
     try {
-      const response = await fetch('/api/tracks', { method: 'POST', body: new FormData(form) });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'อัปโหลดไม่สำเร็จ');
+      const user = auth.data.user;
+      const trackId = crypto.randomUUID();
+      const storageKey = `${user.id}/${trackId}.${extension}`;
+      const { error: uploadError } = await db.storage.from('sourcewav-audio').upload(storageKey, file, { contentType: mime, cacheControl: '3600', upsert: false });
+      if (uploadError) throw new Error('อัปโหลดไฟล์เพลงไม่ได้: ' + uploadError.message);
+      const { error: insertError } = await db.from('audio_tracks').insert({
+        id: trackId, owner_id: user.id, title: form.elements.title.value.trim(),
+        artist_name: form.elements.artist.value.trim(), genre: form.elements.genre.value,
+        storage_key: storageKey, mime_type: mime, byte_size: file.size,
+        visibility: 'public', status: 'published'
+      });
+      if (insertError) {
+        await db.storage.from('sourcewav-audio').remove([storageKey]);
+        throw new Error('บันทึกข้อมูลเพลงไม่ได้: ' + insertError.message);
+      }
       await loadTracks();
-      const created = tracks.find(track => track.id === result.track.id);
+      const created = tracks.find(track => track.id === trackId);
       if (created) selectTrack(created, false);
       $('#modalClose').click();
       toast('อัปโหลดเพลงแล้ว กดเล่นเพื่อฟังได้เลย');
@@ -179,5 +207,6 @@
   $('#streamMute').addEventListener('click', () => { audio.muted = !audio.muted; $('#streamMute').textContent = audio.muted ? '×' : '◖'; $('#streamMute').setAttribute('aria-label', audio.muted ? 'เปิดเสียง' : 'ปิดเสียง'); });
   ['play', 'pause', 'timeupdate', 'loadedmetadata', 'durationchange', 'ended'].forEach(name => audio.addEventListener(name, updatePlayer));
   audio.addEventListener('error', () => { if (currentTrack) toast('ไม่สามารถเล่นไฟล์เสียงนี้ได้'); });
-  loadTracks();
+  window.SourcewavSupabaseReady?.then(client => client && loadTracks());
+  window.addEventListener('sourcewav:auth', loadTracks);
 })();

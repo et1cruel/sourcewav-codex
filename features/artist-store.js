@@ -17,9 +17,12 @@
     const filtered = state.artistStoreProducts.filter(p => activeStoreCategory === 'all' || p.category === activeStoreCategory);
 
     if (!filtered.length) {
-      host.innerHTML = `<div style="grid-column: 1 / -1; padding: 40px; text-align: center; color: #64748b; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
-        <p>ยังไม่มีสินค้าในหมวดหมู่นี้</p>
-        <button class="booking-primary-btn" id="emptyAddStoreBtn" style="margin-top: 10px;">＋ ลงขายสินค้าชิ้นแรก</button>
+      host.innerHTML = `<div class="store-empty">
+        <div class="store-empty-art" aria-hidden="true"><svg viewBox="0 0 190 140" role="presentation"><defs><linearGradient id="storeBag" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#bdfaff" stop-opacity=".92"/><stop offset=".45" stop-color="#4dbadd" stop-opacity=".52"/><stop offset="1" stop-color="#164b77" stop-opacity=".82"/></linearGradient><radialGradient id="storeVinyl"><stop stop-color="#a6f2ff" stop-opacity=".85"/><stop offset=".15" stop-color="#256181"/><stop offset=".72" stop-color="#132b43"/><stop offset=".9" stop-color="#81e6f2" stop-opacity=".9"/><stop offset="1" stop-color="#16344d"/></radialGradient><filter id="storeGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="6"/></filter></defs><ellipse cx="94" cy="124" rx="62" ry="8" fill="#26c9ed" opacity=".25" filter="url(#storeGlow)"/><g transform="rotate(-12 61 71)"><circle cx="58" cy="73" r="43" fill="url(#storeVinyl)" stroke="#a5edf8" stroke-width="2"/><circle cx="58" cy="73" r="34" fill="none" stroke="#a5edf84d"/><circle cx="58" cy="73" r="27" fill="none" stroke="#a5edf84d"/><circle cx="58" cy="73" r="18" fill="none" stroke="#a5edf84d"/><circle cx="58" cy="73" r="7" fill="#c8f9ff" stroke="#1a6c8e" stroke-width="2"/></g><g transform="rotate(5 126 78)"><path d="M96 53h59l7 62H89z" fill="url(#storeBag)" stroke="#a9f4fb" stroke-width="2.5"/><path d="M108 54c0-19 35-19 35 0" fill="none" stroke="#a9f4fb" stroke-width="5"/><path d="M108 54c0-19 35-19 35 0" fill="none" stroke="#256988" stroke-width="1.4"/><path d="m105 76 8-8 8 8-8 8zM130 91l6-6 6 6-6 6z" fill="#d9ff75" opacity=".9"/><path d="m131 66 2 4 4 2-4 2-2 4-2-4-4-2 4-2z" fill="#fff"/></g><path d="m28 26 3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#d9ff75"/><circle cx="172" cy="41" r="2" fill="#71e8fa"/><circle cx="81" cy="26" r="1.7" fill="#d9ff75"/></svg></div>
+        <span class="store-empty-kicker">MAKE SOMETHING. PUT IT OUT THERE.</span>
+        <h3>ยังไม่มีสินค้าในหมวดหมู่นี้</h3>
+        <p>เปิดหน้าร้านของคุณ แล้วให้ผลงานชิ้นต่อไปได้เจอเจ้าของคนใหม่</p>
+        <button class="booking-primary-btn store-empty-cta" id="emptyAddStoreBtn" type="button"><span aria-hidden="true">＋</span> ลงขายสินค้าชิ้นแรก</button>
       </div>`;
       $('#emptyAddStoreBtn')?.addEventListener('click', openAddProductModal);
       return;

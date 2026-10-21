@@ -5,6 +5,7 @@ database/uploads/
 
 # Local design iterations and generated workspace artifacts.
 .superpowers/
+.wrangler-dry-run/
 .env
 .env.*
 !.env.example

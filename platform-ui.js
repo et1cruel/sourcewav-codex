@@ -2,7 +2,7 @@
 (() => {
   const db = window.SourcewavSupabase;
   if (!db) return;
-  window.SourcewavPlatform = { isLive: true };
+  window.SourcewavPlatform = { isLive: false };
   const $ = (s, r = document) => r.querySelector(s);
   const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const money = n => `฿${(Number(n || 0) / 100).toLocaleString('th-TH', { maximumFractionDigits: 0 })}`;
@@ -32,6 +32,72 @@
     return data;
   };
   let feedFilter = 'all', activeConversation = null, chatChannel = null, paymentTimer = null, scannerStream = null, scannerRunning = false;
+
+  async function searchSourcewav() {
+    const input = $('#modalContent .modal-field input');
+    const term = input?.value.trim();
+    if (!term || term.length < 2) return toast('พิมพ์คำค้นอย่างน้อย 2 ตัวอักษร');
+    const host = $('#modalContent');
+    const pattern = `%${term.replace(/[\\%_,]/g, '\\$&')}%`;
+    const [people, postsByTitle, postsByBody, events, listings] = await Promise.all([
+      db.from('profiles').select('user_id,username,display_name,roles,province').ilike('display_name', pattern).is('deleted_at', null).limit(5),
+      db.from('posts').select('id,title,body,kind,created_at').eq('status', 'published').eq('visibility', 'public').is('deleted_at', null).ilike('title', pattern).limit(5),
+      db.from('posts').select('id,title,body,kind,created_at').eq('status', 'published').eq('visibility', 'public').is('deleted_at', null).ilike('body', pattern).limit(5),
+      db.from('events').select('id,title,venue_name,starts_at').eq('status', 'published').is('deleted_at', null).ilike('title', pattern).limit(5),
+      db.from('listings').select('id,seller_id,title,category,profiles!listings_seller_id_fkey(display_name)').eq('status', 'published').is('deleted_at', null).ilike('title', pattern).limit(5),
+    ]);
+    const failure = [people, postsByTitle, postsByBody, events, listings].find(result => result.error);
+    if (failure) return toast(`ค้นหาไม่ได้: ${failure.error.message}`);
+    const { data: rooms } = await db.from('community_rooms').select('id,name,description').is('archived_at', null).ilike('name', pattern).limit(5);
+    const posts = [...new Map([...(postsByTitle.data || []), ...(postsByBody.data || [])].map(post => [post.id, post])).values()];
+    const section = (title, rows, render) => rows.length ? `<section class="source-search-group"><h3>${title}</h3>${rows.map(render).join('')}</section>` : '';
+    const results = [
+      section('สมาชิก', people.data || [], p => `<button class="chat-search-result" data-search-chat="${esc(p.user_id)}" data-name="${esc(p.display_name)}"><b>${esc(p.display_name)}</b><small>@${esc(p.username)} · ${esc(p.province || 'ไม่ระบุพื้นที่')}</small></button>`),
+      section('โพสต์', posts, p => `<article class="source-search-result"><b>${esc(p.title || p.kind)}</b><p>${esc(p.body.slice(0, 220))}</p></article>`),
+      section('อีเวนต์', events.data || [], e => `<article class="source-search-result"><b>${esc(e.title)}</b><small>${esc(e.venue_name || 'ไม่ระบุสถานที่')} · ${esc(new Date(e.starts_at).toLocaleDateString('th-TH'))}</small></article>`),
+      section('ตลาดงานศิลปะ', listings.data || [], l => `<button class="source-search-result" data-contact-seller="${esc(l.seller_id)}" data-seller-name="${esc(l.profiles?.display_name || 'ผู้ขาย')}"><b>${esc(l.title)}</b><small>${esc(l.profiles?.display_name || 'ศิลปิน')} · แตะเพื่อทัก</small></button>`),
+      section('ห้องคุย', rooms || [], r => `<button class="source-search-result" data-open-room="${esc(r.id)}" data-room-name="${esc(r.name)}"><b>${esc(r.name)}</b><small>${esc(r.description || 'ห้องคุยสาธารณะ')}</small></button>`),
+    ].filter(Boolean).join('');
+    host.innerHTML = `<h2 id="modalTitle">ผลการค้นหา</h2><p>ผลลัพธ์สำหรับ “${esc(term)}”</p>${results || '<p class="platform-empty">ยังไม่พบรายการที่ตรงกับคำค้น</p>'}`;
+  }
+
+  async function loadRooms() {
+    document.querySelectorAll('.left-rail .room-item:not([data-live-room])').forEach(node => node.remove());
+    const { data, error } = await db.from('community_rooms').select('id,name,description').is('archived_at', null).order('created_at', { ascending: false }).limit(20);
+    if (error) return;
+    const rail = $('.left-rail');
+    const button = $('#roomBtn');
+    if (!rail || !button) return;
+    rail.querySelectorAll('[data-live-room]').forEach(node => node.remove());
+    (data || []).forEach(room => button.insertAdjacentHTML('beforebegin', `<button type="button" class="room-item" data-live-room="${esc(room.id)}" data-room-name="${esc(room.name)}" title="${esc(room.description)}"><i class="room-dot lime"></i><span>${esc(room.name)}</span></button>`));
+  }
+
+  async function openRoom(roomId, roomName) {
+    const { data, error } = await db.from('community_room_messages').select('id,body,author_id,created_at,profiles!community_room_messages_author_id_fkey(display_name)').eq('room_id', roomId).order('created_at', { ascending: true }).limit(100);
+    if (error) return toast('เปิดห้องคุยไม่ได้: ' + error.message);
+    const rows = data || [];
+    const messages = rows.map(m => `<p class="local-message"><b>${esc(m.profiles?.display_name || 'สมาชิก')}</b><br>${esc(m.body)}<small>${esc(new Date(m.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }))}</small></p>`).join('');
+    modal(`<h2 id="modalTitle">${esc(roomName)}</h2><div class="chat-thread">${messages || '<p>ยังไม่มีข้อความ เริ่มคุยได้เลย</p>'}</div><form id="roomMessageForm"><label class="modal-field">ข้อความ<textarea id="roomMessage" maxlength="2000" required></textarea></label><button class="modal-primary">ส่งข้อความ</button></form>`);
+    $('#roomMessageForm').onsubmit = async event => {
+      event.preventDefault();
+      const user = await needUser(); if (!user) return;
+      const body = $('#roomMessage').value.trim(); if (!body) return;
+      const result = await db.from('community_room_messages').insert({ room_id: roomId, author_id: user.id, body });
+      if (result.error) return toast('ส่งข้อความไม่ได้: ' + result.error.message);
+      await openRoom(roomId, roomName);
+    };
+  }
+
+  async function createRoom() {
+    const user = await needUser(); if (!user) return;
+    const name = $('#newRoomName')?.value.trim().replace(/^#+\s*/, '');
+    const description = $('#newRoomDescription')?.value.trim() || '';
+    if (!name || name.length < 2) return toast('ตั้งชื่อห้องอย่างน้อย 2 ตัวอักษร');
+    const { data, error } = await db.from('community_rooms').insert({ created_by: user.id, name: `# ${name}`, description }).select('id,name').single();
+    if (error) return toast('สร้างห้องไม่ได้: ' + error.message);
+    closeModal(); await loadRooms(); toast('สร้างห้องคุยแล้ว');
+    await openRoom(data.id, data.name);
+  }
 
   function postCard(post, userId, savedSet) {
     const author = post.profiles || {};
@@ -89,8 +155,8 @@
     if (!tiers.length) return toast('บัตรหมดหรือยังไม่เปิดขาย');
     const method = Array.isArray(event.event_payment_methods) ? event.event_payment_methods[0] : event.event_payment_methods;
     const checkoutAction = method
-      ? '<p>ชำระตรงเข้าบัญชีผู้จัด SlipOK ตรวจผู้รับ ยอดเงิน และสลิปซ้ำให้อัตโนมัติ บัตรออกทันทีเมื่อผ่าน</p><button class="modal-primary" id="startManualCheckout">ดู QR และชำระเงิน</button>'
-      : '<p>ชำระด้วย PromptPay ผ่าน Omise · ระบบออกบัตรหลัง webhook ยืนยันยอดเท่านั้น</p><button class="modal-primary" id="startCheckout">สร้าง QR เพื่อชำระ</button>';
+      ? '<p>ชำระตรงเข้าบัญชีผู้จัด ระบบใช้ SlipOK ตรวจผู้รับ ยอดเงิน และสลิปซ้ำ ก่อนออกบัตร</p><button class="modal-primary" id="startManualCheckout">ดู QR และชำระเงิน</button>'
+      : '<p>งานนี้ยังไม่ได้ตั้งค่าบัญชีรับเงิน SlipOK จึงยังเปิดขายบัตรไม่ได้</p><button class="modal-primary" disabled>ยังไม่พร้อมรับชำระ</button>';
     modal(`<h2 id="modalTitle">เลือกบัตร · ${esc(event.title)}</h2><p>${esc(event.venue_name || '')} · ${esc(new Date(event.starts_at).toLocaleString('th-TH'))}</p><label class="modal-field">ประเภทบัตร<select id="ticketTier">${tiers.map(t => `<option value="${esc(t.id)}" data-price="${t.price_minor}" data-left="${t.quantity_total - t.quantity_sold - t.quantity_reserved}">${esc(t.name)} · ${money(t.price_minor)} · เหลือ ${t.quantity_total - t.quantity_sold - t.quantity_reserved} ใบ</option>`).join('')}</select></label><label class="modal-field">จำนวน<input id="ticketQuantity" type="number" min="1" max="10" value="1" /></label><div class="checkout-event"><div class="checkout-row"><span>ยอดรวม</span><b id="ticketTotal">${money(tiers[0].price_minor)}</b></div>${checkoutAction}</div>`);
     const updateTotal = () => { const selected = $('#ticketTier')?.selectedOptions[0]; const qty = Math.max(1, Math.min(10, Number($('#ticketQuantity')?.value || 1), Number(selected?.dataset.left || 1))); if ($('#ticketQuantity')) $('#ticketQuantity').value = qty; if ($('#ticketTotal')) $('#ticketTotal').textContent = money(Number(selected?.dataset.price) * qty); };
     $('#ticketTier').addEventListener('change', updateTotal); $('#ticketQuantity').addEventListener('input', updateTotal);
@@ -101,7 +167,7 @@
     if (!tier || !await needUser()) return;
     const button = $('#startManualCheckout'); button.disabled = true; button.textContent = 'กำลังสร้างรายการ…';
     try {
-      const checkout = await call('create-manual-ticket-order', { ticketTypeId: tier, quantity, idempotencyKey: crypto.randomUUID() });
+      const checkout = await call('create-manual-ticket-order', { ticketTypeId: tier, quantity, idempotencyKey: button.dataset.idempotencyKey ||= crypto.randomUUID() });
       showManualPayment(checkout);
     } catch (error) { button.disabled = false; button.textContent = 'ดู QR และชำระเงิน'; toast(error.message); }
   }
@@ -172,36 +238,49 @@
     } finally { button.disabled = false; }
   }
 
-  async function beginCheckout() {
-    const tier = $('#ticketTier')?.value, quantity = Number($('#ticketQuantity')?.value || 1);
-    if (!tier || !await needUser()) return;
-    const idempotencyKey = crypto.randomUUID();
-    const button = $('#startCheckout'); button.disabled = true; button.textContent = 'กำลังสร้างรายการ…';
-    try {
-      const checkout = await call('create-ticket-checkout', { ticketTypeId: tier, quantity, idempotencyKey });
-      showPayment(checkout);
-    } catch (error) { button.disabled = false; button.textContent = 'สร้าง QR เพื่อชำระ'; toast(error.message); }
-  }
-
-  function showPayment(checkout) {
-    clearInterval(paymentTimer);
-    const until = new Date(checkout.expiresAt).getTime();
-    modal(`<h2 id="modalTitle">สแกน PromptPay เพื่อชำระ</h2><p>${esc(checkout.eventTitle)} · ${esc(checkout.tierName)} × ${checkout.quantity}</p><div class="real-payment-qr"><img src="${esc(checkout.qrUrl)}" alt="QR PromptPay จาก Omise สำหรับรายการ ${esc(checkout.orderId)}" /></div><div class="checkout-event"><div class="checkout-row"><span>ยอดชำระ</span><b>${money(checkout.totalMinor)}</b></div><div class="checkout-row"><span>Order</span><code>${esc(checkout.orderId)}</code></div><div class="checkout-row"><span>หมดอายุ</span><b id="paymentCountdown">—</b></div></div><p class="payment-note">บัตรจะเข้าบัญชีหลัง Omise ส่ง webhook ยืนยันการชำระ ระบบกำลังตรวจสอบอัตโนมัติ</p><button class="modal-primary" id="refreshPayment">ตรวจสถานะ</button>`);
-    const poll = async () => {
-      if (Date.now() >= until) { clearInterval(paymentTimer); $('#paymentCountdown') && ($('#paymentCountdown').textContent = 'หมดเวลา'); return; }
-      const remain = Math.max(0, until - Date.now()); const timer = $('#paymentCountdown'); if (timer) timer.textContent = `${Math.floor(remain / 60000)}:${String(Math.floor(remain % 60000 / 1000)).padStart(2, '0')}`;
-      const { data, error } = await db.from('orders').select('status').eq('id', checkout.orderId).maybeSingle();
-      if (!error && data?.status === 'paid') { clearInterval(paymentTimer); closeModal(); toast('ชำระแล้ว — บัตรของคุณอยู่ใน “บัตรของฉัน”'); openMyTickets(); }
-    };
-    poll(); paymentTimer = setInterval(poll, 4000);
-  }
-
   async function openMyTickets() {
     const user = await needUser(); if (!user) return;
     try {
       const { tickets = [] } = await call('my-tickets', {});
-      modal(`<h2 id="modalTitle">บัตรของฉัน</h2><div class="my-ticket-list">${tickets.map(ticket => `<article class="my-ticket" data-ticket-id="${esc(ticket.id)}"><div><span class="section-kicker">${esc(ticket.status === 'valid' ? 'พร้อมเข้างาน' : ticket.status === 'checked_in' ? 'ใช้สิทธิ์แล้ว' : 'ยกเลิก')}</span><h3>${esc(ticket.events?.title || 'อีเวนต์')}</h3><p>${esc(ticket.order_items?.ticket_types?.name || '')} · ${esc(ticket.events?.venue_name || ticket.events?.venues?.name || '')}</p><small>${esc(ticket.events?.venue_address || ticket.events?.venues?.address || '')} · ${esc(new Date(ticket.events?.starts_at || ticket.issued_at).toLocaleString('th-TH'))}</small></div><div class="ticket-qr" data-qr="${esc(ticket.qr_payload)}"></div></article>`).join('') || '<p class="platform-empty">ยังไม่มีบัตรที่ซื้อ</p>'}</div>`);
-      document.querySelectorAll('.ticket-qr').forEach(node => { if (window.QRCode) new QRCode(node, { text: node.dataset.qr, width: 132, height: 132, correctLevel: QRCode.CorrectLevel.M }); });
+      const classify = ticket => {
+        if (ticket.status === 'checked_in') return 'used';
+        if (ticket.status !== 'valid' || (ticket.events?.starts_at && new Date(ticket.events.starts_at) < new Date())) return 'expired';
+        return 'valid';
+      };
+      const when = value => value && !Number.isNaN(new Date(value).getTime())
+        ? new Date(value).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : 'ยังไม่ระบุวันเวลา';
+      const ticketCards = tickets.map(ticket => {
+        const state = classify(ticket);
+        const status = state === 'valid' ? 'ใช้งานได้' : state === 'used' ? 'ใช้แล้ว' : 'หมดอายุ';
+        const venue = ticket.events?.venue_name || ticket.events?.venues?.name || 'ยังไม่ระบุสถานที่';
+        const address = ticket.events?.venue_address || ticket.events?.venues?.address || '';
+        const date = when(ticket.events?.starts_at || ticket.issued_at);
+        return `<article class="my-ticket ticket-state-${state}" data-ticket-id="${esc(ticket.id)}" data-ticket-state="${state}">
+          <div class="ticket-art" aria-hidden="true"><span class="ticket-vinyl"><i></i></span><small>SOURCEWAV<br>LIVE PASS</small></div>
+          <div class="ticket-copy"><span class="ticket-status"><i></i>${status}</span><h3>${esc(ticket.events?.title || 'อีเวนต์')}</h3>
+            <p class="ticket-type">${esc(ticket.order_items?.ticket_types?.name || 'บัตรเข้าชม')} <span>·</span> ${esc(venue)}</p>
+            <div class="ticket-meta"><span><b>วันและเวลา</b>${esc(date)}</span><span><b>สถานที่</b>${esc(address || venue)}</span></div>
+            <div class="ticket-actions"><button type="button" class="ticket-detail-toggle" aria-expanded="false">รายละเอียดบัตร <span>＋</span></button>${state === 'valid' ? `<button type="button" class="ticket-show-qr" aria-expanded="false">แสดง QR <span>⌗</span></button>` : ''}</div>
+            <div class="ticket-extra" hidden><span>ประเภทบัตร</span><strong>${esc(ticket.order_items?.ticket_types?.name || 'บัตรเข้าชม')}</strong><span>ออกบัตรเมื่อ</span><strong>${esc(when(ticket.issued_at))}</strong></div>
+            ${state === 'valid' ? `<div class="ticket-qr-wrap" hidden><div class="ticket-qr" data-qr="${esc(ticket.qr_payload)}"></div><small>แสดง QR นี้ที่ทางเข้างาน · ห้ามแชร์รหัสบัตร</small></div>` : ''}
+          </div><span class="ticket-notch ticket-notch-top" aria-hidden="true"></span><span class="ticket-notch ticket-notch-bottom" aria-hidden="true"></span>
+        </article>`;
+      }).join('');
+      modal(`<div class="my-tickets-page"><header class="my-tickets-heading"><span class="my-tickets-kicker">SOURCEWAV · YOUR PASSES</span><h2 id="modalTitle">บัตรของฉัน <span>— ตั๋วที่ซื้อแล้ว</span></h2><p>รวมบัตรอีเวนต์ของคุณ พร้อมรายละเอียดและ QR สำหรับเข้างาน</p><div class="ticket-filters" role="group" aria-label="กรองบัตรตามสถานะ">${[['all','ทั้งหมด'],['valid','ใช้งานได้'],['used','ใช้แล้ว'],['expired','หมดอายุ']].map(([key,label]) => `<button type="button" class="ticket-filter${key === 'all' ? ' is-active' : ''}" data-ticket-filter="${key}" aria-pressed="${key === 'all'}"><span>${label}</span><b>${key === 'all' ? tickets.length : tickets.filter(ticket => classify(ticket) === key).length}</b></button>`).join('')}</div></header>
+        <div class="my-ticket-list">${ticketCards || '<div class="tickets-empty"><span class="empty-record" aria-hidden="true">◉</span><h3>ยังไม่มีบัตรในกระเป๋า</h3><p>บัตรที่คุณซื้อสำเร็จจะแสดงอยู่ตรงนี้ พร้อม QR สำหรับเข้างาน</p></div>'}</div><footer class="tickets-footnote"><span>◈</span> บัตรนี้ผูกกับบัญชีของคุณ · กรุณาเตรียม QR ก่อนเข้างาน</footer></div>`);
+      const host = $('#modalContent');
+      host.querySelectorAll('.ticket-qr').forEach(node => { if (window.QRCode && node.dataset.qr) new QRCode(node, { text: node.dataset.qr, width: 148, height: 148, correctLevel: QRCode.CorrectLevel.M }); });
+      host.querySelectorAll('[data-ticket-filter]').forEach(button => button.addEventListener('click', () => {
+        host.querySelectorAll('[data-ticket-filter]').forEach(filter => { const active = filter === button; filter.classList.toggle('is-active', active); filter.setAttribute('aria-pressed', String(active)); });
+        host.querySelectorAll('.my-ticket').forEach(card => { card.hidden = button.dataset.ticketFilter !== 'all' && card.dataset.ticketState !== button.dataset.ticketFilter; });
+      }));
+      host.querySelectorAll('.ticket-detail-toggle,.ticket-show-qr').forEach(button => button.addEventListener('click', () => {
+        const card = button.closest('.my-ticket');
+        const target = button.classList.contains('ticket-show-qr') ? card.querySelector('.ticket-qr-wrap') : card.querySelector('.ticket-extra');
+        const expanded = button.getAttribute('aria-expanded') === 'true';
+        target.hidden = expanded; button.setAttribute('aria-expanded', String(!expanded));
+        button.querySelector('span').textContent = button.classList.contains('ticket-show-qr') ? (expanded ? '⌗' : '×') : (expanded ? '＋' : '−');
+      }));
     } catch (error) { toast(error.message); }
   }
 
@@ -352,10 +431,23 @@
     if (target.dataset.liveShare) { const url = `${location.origin}${location.pathname}#post-${target.dataset.liveShare}`; try { await navigator.clipboard.writeText(url); toast('คัดลอกลิงก์โพสต์แล้ว'); } catch (_) { toast(url); } return; }
     if (target.dataset.buyEvent) { event.preventDefault(); event.stopImmediatePropagation(); return ticketPicker(target.dataset.buyEvent); }
     if (target.id === 'startManualCheckout') { event.preventDefault(); event.stopImmediatePropagation(); return beginManualCheckout(); }
-    if (target.id === 'startCheckout') { event.preventDefault(); event.stopImmediatePropagation(); return beginCheckout(); }
-
-
-    if (target.id === 'refreshPayment') { event.preventDefault(); const { data: order } = await db.from('orders').select('status').eq('id', $('#modalContent code')?.textContent || '').maybeSingle(); toast(order?.status === 'paid' ? 'ชำระแล้ว' : 'รอ Omise ยืนยันการชำระ'); return; }
+    if (target.id === 'searchGo') { event.preventDefault(); event.stopImmediatePropagation(); return searchSourcewav(); }
+    if (target.id === 'createRoomBtn') { event.preventDefault(); event.stopImmediatePropagation(); return createRoom(); }
+    if (target.dataset.liveRoom || target.dataset.openRoom) { event.preventDefault(); event.stopImmediatePropagation(); return openRoom(target.dataset.liveRoom || target.dataset.openRoom, target.dataset.roomName || target.textContent.trim()); }
+    if (target.dataset.chatArtist) {
+      event.preventDefault(); event.stopImmediatePropagation();
+      const user = await needUser(); if (!user) return;
+      if (user.id === target.dataset.chatArtist) return toast('นี่คือบัญชีของคุณ');
+      $('#chatPanel').classList.add('open'); $('#chatPanel').dataset.liveBound = '1';
+      await loadChatList(); return startConversation(target.dataset.chatArtist, target.dataset.artistName || 'ศิลปิน');
+    }
+    if (target.dataset.searchChat) {
+      event.preventDefault(); event.stopImmediatePropagation();
+      const user = await needUser(); if (!user) return;
+      if (user.id === target.dataset.searchChat) return toast('นี่คือบัญชีของคุณ');
+      $('#chatPanel').classList.add('open'); $('#chatPanel').dataset.liveBound = '1';
+      await loadChatList(); return startConversation(target.dataset.searchChat, target.dataset.name || 'สมาชิก');
+    }
     if (target.dataset.contactSeller) { event.preventDefault(); const user = await needUser(); if (user) { if (user.id === target.dataset.contactSeller) return toast('นี่คือผลงานของคุณ'); $('#chatPanel').classList.add('open'); await loadChatList(); await startConversation(target.dataset.contactSeller, target.dataset.sellerName); } return; }
     if (target.id === 'createListingBtn') { event.preventDefault(); event.stopImmediatePropagation(); return openCreateListing(); }
     if (target.id === 'listingPublishBtn') { event.preventDefault(); event.stopImmediatePropagation(); return createListing(); }
@@ -403,7 +495,11 @@
   $('#modalClose')?.addEventListener('click', stopCamera);
   $('#modalBackdrop')?.addEventListener('click', event => { if (event.target.id === 'modalBackdrop') stopCamera(); });
   if (location.pathname === '/scan') openScan();
-  db.auth.getSession().then(() => Promise.all([loadFeed(), loadListings(), loadEvents()]));
+  window.SourcewavSupabaseReady?.then(client => {
+    if (!client) return;
+    window.SourcewavPlatform.isLive = true;
+    return Promise.all([loadFeed(), loadListings(), loadEvents(), loadRooms()]);
+  });
   db.channel('sourcewav-public-feed').on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, loadFeed).subscribe();
   db.channel('sourcewav-post-activity').on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, loadFeed).on('postgres_changes', { event: '*', schema: 'public', table: 'reactions' }, loadFeed).subscribe();
   db.channel('sourcewav-public-market').on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, loadListings).subscribe();

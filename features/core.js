@@ -88,15 +88,14 @@
     const unreadCount = state.dropAlerts.filter(a => !a.read).length;
     const btn = $('#notificationBtn');
     if (btn) {
+      const count = $('.notification-count', btn);
+      if (count) count.textContent = String(unreadCount);
+      btn.setAttribute('aria-label', unreadCount ? `Drop Alerts · ${unreadCount} รายการใหม่` : 'Drop Alerts');
       const dot = $('i', btn);
       if (dot) {
         dot.classList.toggle('badge-active', unreadCount > 0);
         dot.title = unreadCount > 0 ? `${unreadCount} แจ้งเตือนใหม่` : '';
       }
-    }
-    const leftRailDropCount = $('#leftRailDropCount');
-    if (leftRailDropCount) {
-      leftRailDropCount.textContent = unreadCount || '0';
     }
   }
 

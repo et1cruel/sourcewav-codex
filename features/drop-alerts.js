@@ -261,10 +261,6 @@
       renderDropAlertsCenter();
     });
     $('#openDropCenterBtn')?.addEventListener('click', renderDropAlertsCenter);
-    $('#leftRailDropBtn')?.addEventListener('click', e => {
-      e.preventDefault();
-      renderDropAlertsCenter();
-    });
   }
 
   Object.assign(F, { renderDropAlertsCenter, renderDropPreview, toggleFollowVenue, toggleFollowArtist, isFollowingArtist, openBoostDropModal });

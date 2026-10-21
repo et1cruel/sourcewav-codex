@@ -17,9 +17,12 @@
     const filtered = state.bookingCards.filter(card => activeBookingRole === 'all' || card.role === activeBookingRole);
 
     if (!filtered.length) {
-      host.innerHTML = `<div class="booking-empty" style="grid-column: 1 / -1; padding: 40px; text-align: center; color: #64748b; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1;">
-        <p>ยังไม่มีการ์ดศิลปินในหมวดนี้</p>
-        <button class="booking-primary-btn" id="emptyJoinBookingBtn" style="margin-top: 10px;">＋ ลงทะเบียนการ์ดของคุณ</button>
+      host.innerHTML = `<div class="booking-empty">
+        <div class="booking-empty-art" aria-hidden="true"><svg viewBox="0 0 160 140" role="presentation"><defs><linearGradient id="bookingGlass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c9f9ff" stop-opacity=".95"/><stop offset=".48" stop-color="#4ab6dd" stop-opacity=".56"/><stop offset="1" stop-color="#164c79" stop-opacity=".78"/></linearGradient><linearGradient id="bookingPage" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#183d5d"/><stop offset="1" stop-color="#0a2036"/></linearGradient><filter id="bookingGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter></defs><ellipse cx="82" cy="124" rx="49" ry="8" fill="#28c8ec" opacity=".25" filter="url(#bookingGlow)"/><g transform="rotate(-7 80 70)"><rect x="33" y="28" width="94" height="83" rx="12" fill="#061728" stroke="#38b8df" stroke-width="3"/><rect x="38" y="33" width="84" height="73" rx="9" fill="url(#bookingGlass)" stroke="#a7eff8" stroke-width="1.5"/><path d="M39 51h82" stroke="#b9f4fc" stroke-width="2"/><path d="M55 26v14M104 26v14" stroke="#d8fbff" stroke-width="7" stroke-linecap="round"/><path d="M55 26v14M104 26v14" stroke="#1a759d" stroke-width="2" stroke-linecap="round"/><rect x="48" y="61" width="14" height="12" rx="2" fill="#82e8f2"/><rect x="70" y="61" width="14" height="12" rx="2" fill="#275a7d" stroke="#92eaf4"/><rect x="92" y="61" width="14" height="12" rx="2" fill="#275a7d" stroke="#92eaf4"/><rect x="48" y="81" width="14" height="12" rx="2" fill="#275a7d" stroke="#92eaf4"/><rect x="70" y="81" width="14" height="12" rx="2" fill="#a4ed81"/><rect x="92" y="81" width="14" height="12" rx="2" fill="#275a7d" stroke="#92eaf4"/><path d="M54 65h3M76 65h3M98 65h3M54 85h3M76 85h3M98 85h3" stroke="#e0ffff" stroke-width="2"/></g><path d="m128 31 3 7 7 3-7 3-3 7-3-7-7-3 7-3z" fill="#d9ff75"/><circle cx="27" cy="67" r="2" fill="#72edff"/><circle cx="137" cy="90" r="2" fill="#b9f487"/></svg></div>
+        <span class="booking-empty-kicker">YOUR NEXT COLLAB STARTS HERE</span>
+        <h3>ยังไม่มีงานจองในหมวดหมู่นี้</h3>
+        <p>ลองเลือกหมวดอื่น หรือเปิดรับงานเพื่อให้คนในวงการค้นพบคุณ</p>
+        <button class="booking-primary-btn" id="emptyJoinBookingBtn" type="button"><span aria-hidden="true">＋</span> เปิดรับงานใหม่</button>
       </div>`;
       $('#emptyJoinBookingBtn')?.addEventListener('click', openJoinBookingModal);
       return;
@@ -72,7 +75,7 @@
             <button class="hire-btn" data-hire-artist="${esc(card.id)}" data-artist-name="${esc(card.artistName)}" data-rate="${card.rate}">
               ส่งข้อเสนอจ้างงาน ↗
             </button>
-            <button class="booking-chat-btn" data-chat-artist="${esc(card.handle)}" title="ส่งข้อความคุย">
+            <button class="booking-chat-btn" data-chat-artist="${esc(card.artistId)}" data-artist-name="${esc(card.artistName)}" title="ส่งข้อความคุย">
               ✉
             </button>
           </div>
