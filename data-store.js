@@ -2,7 +2,7 @@
 (function (global) {
   const STORAGE_KEY = 'sourcewav.prototype.v1';
   const VERSION = 1;
-  const empty = () => ({ schemaVersion: VERSION, posts: [], interactions: {}, comments: {}, follows: [], bookmarks: [], messages: [], listings: [], profile: {}, bookingCards: [], bookingOffers: [], dropAlerts: [], followedVenues: [], eventCommand: {}, artistStoreProducts: [], artistStoreOrders: [] });
+  const empty = () => ({ schemaVersion: VERSION, posts: [], interactions: {}, comments: {}, follows: [], bookmarks: [], messages: [], listings: [], profile: {}, bookingCards: [], bookingOffers: [], dropAlerts: [], followedVenues: [], followedArtists: [], eventCommand: {}, artistStoreProducts: [], artistStoreOrders: [] });
   const memory = empty();
   let readOnly = false;
   let status = 'connecting';
@@ -26,6 +26,7 @@
       bookingOffers: Array.isArray(source.bookingOffers) ? source.bookingOffers : [],
       dropAlerts: Array.isArray(source.dropAlerts) ? source.dropAlerts : [],
       followedVenues: Array.isArray(source.followedVenues) ? source.followedVenues : [],
+      followedArtists: Array.isArray(source.followedArtists) ? source.followedArtists : [],
       eventCommand: source.eventCommand && typeof source.eventCommand === 'object' ? source.eventCommand : {},
       artistStoreProducts: Array.isArray(source.artistStoreProducts) ? source.artistStoreProducts : [],
       artistStoreOrders: Array.isArray(source.artistStoreOrders) ? source.artistStoreOrders : []

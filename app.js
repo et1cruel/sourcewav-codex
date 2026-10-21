@@ -108,6 +108,7 @@ const bangkokMapConfig = {
   tileUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
 };
+const emptyMapTile = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
 
 let activeMapFilter = 'all';
 let activeVenueId = null;
@@ -135,8 +136,8 @@ function offlineMapMessage() {
 
 function mapLoadErrorMessage() {
   return navigator.onLine
-    ? 'โหลดแผนที่ไม่ได้ อาจติดปัญหาเครือข่ายหรือเซิร์ฟเวอร์แผนที่ ลองใหม่อีกครั้ง'
-    : offlineMapMessage();
+    ? 'โหลดแผนที่ถนนไม่ได้ ลองใหม่อีกครั้ง หรือเลือกรายชื่อสถานที่ด้านล่างเพื่อเปิดเส้นทาง'
+    : `${offlineMapMessage()} รายชื่อสถานที่ยังเปิดดูได้`;
 }
 
 function venueIcon(venue) {
@@ -153,7 +154,8 @@ function venuePopup(venue) {
   const directions = `https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}`;
   const area = venue.areaLabel || `เขต${venue.district} · ${venue.province || 'กรุงเทพมหานคร'}`;
   const status = venue.status === 'closed' ? '<span class="popup-status closed">ปิดถาวร · ตรวจสอบก่อนเดินทาง</span>' : '';
-  return `<article class="map-popup"><span class="popup-category ${venue.category}">${escapeMapHtml(venue.categoryLabel)}</span>${status}<h3>${escapeMapHtml(venue.name)}</h3><p>${escapeMapHtml(venue.address)}<br>${escapeMapHtml(area)}</p><div class="popup-links"><a href="${directions}" target="_blank" rel="noopener noreferrer">เปิดเส้นทาง ↗</a><a href="${escapeMapHtml(venue.url)}" target="_blank" rel="noopener noreferrer">${escapeMapHtml(venue.linkLabel || 'เว็บไซต์ทางการ')} ↗</a></div><button type="button" class="venue-follow-btn" data-follow-venue="${venue.id}" data-venue-name="${escapeMapHtml(venue.name)}" style="margin-top: 8px; width: 100%; background: #172a40; color: #d7fa48; border: 0; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 600; cursor: pointer;">＋ ติดตามสถานที่นี้ (รับ Drop Alert)</button></article>`;
+  const followed = window.SourcewavFeaturesCore?.state.followedVenues?.includes(venue.id);
+  return `<article class="map-popup"><span class="popup-category ${venue.category}">${escapeMapHtml(venue.categoryLabel)}</span>${status}<h3>${escapeMapHtml(venue.name)}</h3><p>${escapeMapHtml(venue.address)}<br>${escapeMapHtml(area)}</p><div class="popup-links"><a href="${directions}" target="_blank" rel="noopener noreferrer">เปิดเส้นทาง ↗</a><a href="${escapeMapHtml(venue.url)}" target="_blank" rel="noopener noreferrer">${escapeMapHtml(venue.linkLabel || 'เว็บไซต์ทางการ')} ↗</a></div><button type="button" class="venue-follow-btn" data-follow-venue="${venue.id}" data-venue-name="${escapeMapHtml(venue.name)}" aria-pressed="${Boolean(followed)}" style="margin-top: 8px; width: 100%; background: #172a40; color: #d7fa48; border: 0; border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 600; cursor: pointer;">${followed ? '✓ กำลังติดตาม' : '＋ ติดตามสถานที่นี้ (รับ Drop Alert)'}</button></article>`;
 }
 
 function filterButtonsMarkup() {
@@ -189,7 +191,8 @@ function renderVenueList(containerId = 'venueList') {
       const active = activeVenueId === venue.id;
       const area = venue.areaLabel || `เขต${venue.district} · ${venue.province || 'กรุงเทพมหานคร'}`;
       const closed = venue.status === 'closed' ? ' · ปิดถาวร' : '';
-      return `<button class="venue-row ${active ? 'is-active' : ''}" type="button" data-venue-id="${escapeMapHtml(venue.id)}" aria-pressed="${active}" aria-label="ดู ${escapeMapHtml(venue.name)} บนแผนที่"><span class="venue-type ${venue.category}" aria-hidden="true">${venueCategoryMark(venue.category)}</span><span class="venue-copy"><strong>${escapeMapHtml(venue.name)}</strong><small>${escapeMapHtml(venue.categoryLabel)} · ${escapeMapHtml(area)}${closed}</small></span><span class="venue-arrow" aria-hidden="true">→</span></button>`;
+      const directions = `https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}`;
+      return `<article class="venue-row ${active ? 'is-active' : ''}" data-venue-id="${escapeMapHtml(venue.id)}"><button class="venue-select" type="button" aria-pressed="${active}" aria-label="ดู ${escapeMapHtml(venue.name)} บนแผนที่"><span class="venue-type ${venue.category}" aria-hidden="true">${venueCategoryMark(venue.category)}</span><span class="venue-copy"><strong>${escapeMapHtml(venue.name)}</strong><small>${escapeMapHtml(venue.categoryLabel)} · ${escapeMapHtml(area)}${closed}</small></span><span class="venue-arrow" aria-hidden="true">⌖</span></button><a class="venue-directions" href="${directions}" target="_blank" rel="noopener noreferrer" aria-label="เปิดเส้นทางไป ${escapeMapHtml(venue.name)} ใน Google Maps" title="เปิดเส้นทาง">↗</a></article>`;
     }).join('')
     : '<p class="venue-empty">ไม่พบสถานที่ในหมวดนี้</p>';
   updateMapCounts(matches.length);
@@ -205,7 +208,8 @@ function setActiveVenue(venueId) {
   $$('.venue-row').forEach(row => {
     const active = row.dataset.venueId === venueId;
     row.classList.toggle('is-active', active);
-    row.setAttribute('aria-pressed', String(active));
+    const select = row.querySelector('.venue-select');
+    if (select) select.setAttribute('aria-pressed', String(active));
   });
   sourceMaps.forEach(map => {
     Object.entries(map.venueMarkers || {}).forEach(([id, marker]) => toggleMarkerActive(marker, id === venueId));
@@ -252,6 +256,12 @@ function renderMapMarkers(map) {
   });
 }
 
+window.SourcewavMap = {
+  refreshVenueFollows() {
+    sourceMaps.forEach(map => renderMapMarkers(map));
+  }
+};
+
 function fitMapToVenues(map) {
   if (!map) return;
   const venues = filteredVenues();
@@ -285,6 +295,7 @@ function createBangkokMap(elementId, options = {}) {
   const element = document.getElementById(elementId);
   if (!element) return null;
   element.replaceChildren();
+  element.classList.remove('map-tiles-unavailable');
   const isFull = Boolean(options.full);
   const errorId = isFull ? 'fullMapError' : 'mapError';
   const map = L.map(elementId, {
@@ -303,6 +314,7 @@ function createBangkokMap(elementId, options = {}) {
   const tiles = L.tileLayer(bangkokMapConfig.tileUrl, {
     minZoom: 10,
     maxZoom: 19,
+    errorTileUrl: emptyMapTile,
     attribution: bangkokMapConfig.attribution
   }).addTo(map);
   if (map.attributionControl) {
@@ -314,25 +326,35 @@ function createBangkokMap(elementId, options = {}) {
   map._offline = !navigator.onLine;
   let loadedTiles = 0;
   let tileErrors = 0;
+  let tileFallbackShown = false;
+  const showTileFallback = message => {
+    if (!isCurrentMap() || tileFallbackShown) return;
+    tileFallbackShown = true;
+    tiles.setOpacity(0);
+    element.classList.add('map-tiles-unavailable');
+    showMapError(errorId, message || 'โหลดแผนที่ถนนไม่ได้ แต่ยังเลือกรายชื่อสถานที่และเปิดเส้นทางได้');
+  };
   const errorTimer = setTimeout(() => {
-    if (!isCurrentMap() || loadedTiles) return;
-    showMapError(errorId, mapLoadErrorMessage());
+    if (!isCurrentMap() || (loadedTiles && tileErrors < 3)) return;
+    showTileFallback(mapLoadErrorMessage());
   }, 8000);
   tiles.on('tileload', () => {
     if (!isCurrentMap()) return;
     loadedTiles += 1;
     map._tilesLoaded = true;
-    if (navigator.onLine) hideMapError(errorId);
-    else showMapError(errorId, offlineMapMessage());
+    if (!tileFallbackShown) {
+      if (navigator.onLine) hideMapError(errorId);
+      else showTileFallback(offlineMapMessage());
+    }
   });
   tiles.on('tileerror', () => {
     if (!isCurrentMap()) return;
     tileErrors += 1;
     if (!navigator.onLine) {
-      showMapError(errorId, offlineMapMessage());
+      showTileFallback(offlineMapMessage());
       return;
     }
-    if (!loadedTiles && tileErrors >= 3) showMapError(errorId, mapLoadErrorMessage());
+    if (tileErrors >= 3) showTileFallback(mapLoadErrorMessage());
   });
   map.on('remove', () => {
     clearTimeout(errorTimer);
@@ -509,8 +531,8 @@ document.addEventListener('click', event => {
     applyMapFilter(filter.dataset.mapFilter);
     return;
   }
-  const row = target.closest('.venue-row');
-  if (row) selectVenue(row.dataset.venueId);
+  const venueButton = target.closest('.venue-select');
+  if (venueButton) selectVenue(venueButton.closest('.venue-row')?.dataset.venueId);
 });
 
 function toast(message){toastEl.textContent=message;toastEl.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastEl.classList.remove('show'),2500)}

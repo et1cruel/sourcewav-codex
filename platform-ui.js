@@ -18,6 +18,9 @@
         const messages = {
           'create-ticket-checkout': 'ระบบชำระเงินค่าบัตรยังไม่เปิดให้บริการในขณะนี้ ยังไม่มีการเรียกเก็บเงิน',
           'create-event': 'ระบบเปิดขายบัตรยังไม่พร้อมใช้งานในขณะนี้',
+          'create-manual-ticket-order': 'ระบบสร้างรายการบัตรยังไม่พร้อมใช้งานในขณะนี้',
+          'submit-ticket-payment': 'ระบบตรวจสอบสลิปยังไม่พร้อมใช้งานในขณะนี้',
+          'finalize-ticket-payment': 'ระบบออกบัตรอัตโนมัติยังไม่พร้อมใช้งานในขณะนี้',
           'my-tickets': 'ระบบบัตรของฉันยังไม่พร้อมใช้งานในขณะนี้',
           'validate-ticket': 'ระบบตรวจบัตรเข้างานยังไม่พร้อมใช้งานในขณะนี้',
         };
@@ -80,13 +83,93 @@
 
   async function ticketPicker(eventId) {
     const user = await needUser(); if (!user) return;
-    const { data: event, error } = await db.from('events').select('id,title,starts_at,venue_name,venue_address,ticket_types(id,name,price_minor,quantity_total,quantity_sold,quantity_reserved,sales_start,sales_end)').eq('id', eventId).single();
+    const { data: event, error } = await db.from('events').select('id,title,starts_at,venue_name,venue_address,ticket_types(id,name,price_minor,quantity_total,quantity_sold,quantity_reserved,sales_start,sales_end),event_payment_methods(qr_storage_key,bank_name,beneficiary_name,account_last4)').eq('id', eventId).single();
     if (error) return toast('เปิดรายละเอียดงานไม่ได้');
     const tiers = (event.ticket_types || []).filter(t => t.quantity_total > t.quantity_sold + t.quantity_reserved && (!t.sales_start || new Date(t.sales_start) <= new Date()) && (!t.sales_end || new Date(t.sales_end) >= new Date()));
     if (!tiers.length) return toast('บัตรหมดหรือยังไม่เปิดขาย');
-    modal(`<h2 id="modalTitle">เลือกบัตร · ${esc(event.title)}</h2><p>${esc(event.venue_name || '')} · ${esc(new Date(event.starts_at).toLocaleString('th-TH'))}</p><label class="modal-field">ประเภทบัตร<select id="ticketTier">${tiers.map(t => `<option value="${esc(t.id)}" data-price="${t.price_minor}" data-left="${t.quantity_total - t.quantity_sold - t.quantity_reserved}">${esc(t.name)} · ${money(t.price_minor)} · เหลือ ${t.quantity_total - t.quantity_sold - t.quantity_reserved} ใบ</option>`).join('')}</select></label><label class="modal-field">จำนวน<input id="ticketQuantity" type="number" min="1" max="10" value="1" /></label><div class="checkout-event"><div class="checkout-row"><span>ยอดรวม</span><b id="ticketTotal">${money(tiers[0].price_minor)}</b></div><p>ชำระด้วย PromptPay ผ่าน Omise · ระบบออกบัตรหลัง webhook ยืนยันยอดเท่านั้น</p></div><button class="modal-primary" id="startCheckout">สร้าง QR เพื่อชำระ</button>`);
+    const method = Array.isArray(event.event_payment_methods) ? event.event_payment_methods[0] : event.event_payment_methods;
+    const checkoutAction = method
+      ? '<p>ชำระตรงเข้าบัญชีผู้จัด SlipOK ตรวจผู้รับ ยอดเงิน และสลิปซ้ำให้อัตโนมัติ บัตรออกทันทีเมื่อผ่าน</p><button class="modal-primary" id="startManualCheckout">ดู QR และชำระเงิน</button>'
+      : '<p>ชำระด้วย PromptPay ผ่าน Omise · ระบบออกบัตรหลัง webhook ยืนยันยอดเท่านั้น</p><button class="modal-primary" id="startCheckout">สร้าง QR เพื่อชำระ</button>';
+    modal(`<h2 id="modalTitle">เลือกบัตร · ${esc(event.title)}</h2><p>${esc(event.venue_name || '')} · ${esc(new Date(event.starts_at).toLocaleString('th-TH'))}</p><label class="modal-field">ประเภทบัตร<select id="ticketTier">${tiers.map(t => `<option value="${esc(t.id)}" data-price="${t.price_minor}" data-left="${t.quantity_total - t.quantity_sold - t.quantity_reserved}">${esc(t.name)} · ${money(t.price_minor)} · เหลือ ${t.quantity_total - t.quantity_sold - t.quantity_reserved} ใบ</option>`).join('')}</select></label><label class="modal-field">จำนวน<input id="ticketQuantity" type="number" min="1" max="10" value="1" /></label><div class="checkout-event"><div class="checkout-row"><span>ยอดรวม</span><b id="ticketTotal">${money(tiers[0].price_minor)}</b></div>${checkoutAction}</div>`);
     const updateTotal = () => { const selected = $('#ticketTier')?.selectedOptions[0]; const qty = Math.max(1, Math.min(10, Number($('#ticketQuantity')?.value || 1), Number(selected?.dataset.left || 1))); if ($('#ticketQuantity')) $('#ticketQuantity').value = qty; if ($('#ticketTotal')) $('#ticketTotal').textContent = money(Number(selected?.dataset.price) * qty); };
     $('#ticketTier').addEventListener('change', updateTotal); $('#ticketQuantity').addEventListener('input', updateTotal);
+  }
+
+  async function beginManualCheckout() {
+    const tier = $('#ticketTier')?.value, quantity = Number($('#ticketQuantity')?.value || 1);
+    if (!tier || !await needUser()) return;
+    const button = $('#startManualCheckout'); button.disabled = true; button.textContent = 'กำลังสร้างรายการ…';
+    try {
+      const checkout = await call('create-manual-ticket-order', { ticketTypeId: tier, quantity, idempotencyKey: crypto.randomUUID() });
+      showManualPayment(checkout);
+    } catch (error) { button.disabled = false; button.textContent = 'ดู QR และชำระเงิน'; toast(error.message); }
+  }
+
+  function showManualPayment(checkout) {
+    const until = new Date(checkout.expiresAt).getTime();
+    modal(`<div class="manual-payment"><h2 id="modalTitle">ชำระเงินและส่งสลิปตรวจสอบ</h2><p>${esc(checkout.eventTitle)} · ${esc(checkout.tierName)} × ${checkout.quantity}</p><div class="real-payment-qr"><img src="${esc(checkout.paymentQrUrl)}" alt="QR รับชำระเงินของผู้จัดงาน ${esc(checkout.eventTitle)}" /></div><div class="checkout-event"><div class="checkout-row"><span>ยอดที่ต้องโอน</span><b>${money(checkout.totalMinor)}</b></div><div class="checkout-row"><span>ธนาคาร</span><b>${esc(checkout.bankName)}</b></div><div class="checkout-row"><span>ชื่อผู้รับ</span><b>${esc(checkout.beneficiaryName)}</b></div>${checkout.accountLast4 ? `<div class="checkout-row"><span>เลขบัญชีลงท้าย</span><b>•••• ${esc(checkout.accountLast4)}</b></div>` : ''}<div class="checkout-row"><span>หมดเวลาจองบัตร</span><b>${esc(new Date(until).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}))}</b></div><div class="checkout-row"><span>Order</span><code>${esc(checkout.orderId)}</code></div></div><form id="ticketSlipForm"><label class="modal-field">แนบสลิปโอนเงิน<input id="ticketSlipFile" type="file" accept="image/jpeg,image/png,image/webp,image/jfif" required /><small>SlipOK ตรวจบัญชีผู้รับ ยอดเงิน และสลิปซ้ำ · JPG, PNG, JFIF หรือ WebP ไม่เกิน 5 MB</small></label><button class="modal-primary" id="submitTicketSlip" type="submit">ตรวจสลิปด้วย SlipOK</button></form><div id="ticketSlipResult" role="status" aria-live="polite"></div><p class="payment-note">เมื่อ SlipOK ยืนยันว่าผู้รับและยอดเงินถูกต้อง ระบบจะออกบัตรให้ทันที</p></div>`);
+    clearInterval(paymentTimer);
+    paymentTimer = setInterval(async () => {
+      if (!$('#ticketSlipForm')) { clearInterval(paymentTimer); return; }
+      if (Date.now() >= until) {
+        clearInterval(paymentTimer);
+        const result = $('#ticketSlipResult'); if (result) result.textContent = 'เวลาจองหมดแล้ว กรุณาเลือกบัตรใหม่';
+        const submit = $('#submitTicketSlip'); if (submit) submit.disabled = true;
+        return;
+      }
+      const { data } = await db.from('orders').select('status').eq('id', checkout.orderId).maybeSingle();
+      if (data?.status === 'paid') {
+        clearInterval(paymentTimer); closeModal(); toast('SlipOK ตรวจผ่าน · บัตรของคุณพร้อมใช้งาน'); openMyTickets();
+      }
+    }, 5000);
+  }
+
+  async function submitTicketSlip(event) {
+    event.preventDefault();
+    const orderId = $('#modalContent code')?.textContent;
+    const input = $('#ticketSlipFile');
+    const file = input?.files?.[0];
+    const button = $('#submitTicketSlip');
+    const result = $('#ticketSlipResult');
+    if (!orderId || !file) return toast('เลือกไฟล์สลิปก่อนส่งตรวจ');
+    const extensions = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/jfif': 'jfif' };
+    if (!extensions[file.type] || file.size > 5 * 1024 * 1024) return toast('เลือกรูป JPG, PNG, JFIF หรือ WebP ไม่เกิน 5 MB');
+    const user = await needUser(); if (!user) return;
+    button.disabled = true; button.textContent = 'กำลังตรวจสลิป…';
+    const storageKey = `${user.id}/${orderId}/${crypto.randomUUID()}.${extensions[file.type]}`;
+    try {
+      const { error: uploadError } = await db.storage.from('sourcewav-ticket-slips').upload(storageKey, file, {
+        contentType: file.type, cacheControl: '3600', upsert: false,
+      });
+      if (uploadError) throw new Error('อัปโหลดสลิปไม่สำเร็จ: ' + uploadError.message);
+      const verification = await call('submit-ticket-payment', { orderId, slipStorageKey: storageKey });
+      if (verification.status === 'paid') {
+        clearInterval(paymentTimer);
+        closeModal(); toast('SlipOK ตรวจผู้รับและยอดผ่าน · ออกบัตรอัตโนมัติแล้ว'); openMyTickets();
+        return;
+      } else if (verification.status === 'verified_pending') {
+        result.innerHTML = `<div class="slip-check-result is-verified"><strong>SlipOK ตรวจผ่าน · กำลังออกบัตร</strong><span>${esc(verification.message || 'สลิปผ่านแล้ว')}</span><small>กดปุ่มด้านล่างเพื่อลองออกบัตรอีกครั้งได้ โดยไม่ต้องส่งสลิปใหม่</small></div>`;
+        button.type = 'button'; button.textContent = 'ลองออกบัตรอีกครั้ง';
+        button.onclick = async () => {
+          button.disabled = true; button.textContent = 'กำลังออกบัตร…';
+          try {
+            const issued = await call('finalize-ticket-payment', { submissionId: verification.submissionId });
+            if (issued.status === 'paid') { clearInterval(paymentTimer); closeModal(); toast('บัตรของคุณพร้อมใช้งานแล้ว'); openMyTickets(); }
+            else throw new Error('ยังออกบัตรไม่ได้ กรุณาลองอีกครั้ง');
+          } catch (error) { button.disabled = false; button.textContent = 'ลองออกบัตรอีกครั้ง'; toast(error.message); }
+        };
+        input.value = '';
+      } else {
+        result.innerHTML = `<div class="slip-check-result is-rejected"><strong>SlipOK ยังยืนยันสลิปไม่ได้</strong><span>${esc(verification.message || 'ตรวจยอดหรือ QR ไม่ผ่าน')}</span><small>ตรวจสอบยอดและเลือกสลิปต้นฉบับให้ถูกต้อง แล้วส่งใหม่</small></div>`;
+        button.textContent = 'ตรวจสลิปอีกครั้ง';
+        input.value = '';
+      }
+    } catch (error) {
+      await db.storage.from('sourcewav-ticket-slips').remove([storageKey]);
+      result.textContent = error.message;
+      button.textContent = 'ลองตรวจอีกครั้ง';
+    } finally { button.disabled = false; }
   }
 
   async function beginCheckout() {
@@ -149,7 +232,7 @@
 
   async function openCreateEvent() {
     if (!await needUser()) return;
-    modal(`<div class="ticket-sell-modal"><div class="ticket-sell-heading"><span>SELL YOUR EVENT</span><h2 id="modalTitle">เปิดขายบัตรงานของคุณ</h2><p>เพิ่มข้อมูลงาน ตั้งราคาและจำนวนบัตร แล้วให้ผู้ชมเลือกซื้อจากหน้าอีเวนต์</p></div><div class="ticket-sell-section"><strong>รายละเอียดอีเวนต์</strong><label class="modal-field">ชื่องาน<input id="newEventTitle" maxlength="180" required placeholder="ชื่ออีเวนต์" /></label><div class="ticket-sell-grid"><label class="modal-field">ประเภท<select id="newEventCategory"><option value="music">ดนตรี</option><option value="art">ศิลปะ</option><option value="community">คอมมูนิตี้</option><option value="market">ตลาด</option></select></label><label class="modal-field">ชื่อสถานที่<input id="newEventVenue" maxlength="160" required placeholder="เช่น Warehouse 30" /></label><label class="modal-field">วันเริ่มงาน<input id="newEventStarts" type="datetime-local" required /></label><label class="modal-field">วันจบงาน<input id="newEventEnds" type="datetime-local" required /></label></div><label class="modal-field">ที่อยู่<input id="newEventAddress" maxlength="400" required placeholder="ที่อยู่สถานที่จัดงาน" /></label><label class="modal-field">รายละเอียด<textarea id="newEventDescription" maxlength="5000" placeholder="บอกผู้ชมว่าในงานมีอะไรบ้าง"></textarea></label></div><div class="ticket-sell-section ticket-sell-inventory"><strong>ตั้งค่าบัตร</strong><div class="ticket-sell-grid"><label class="modal-field">ชื่อประเภทบัตร<input id="newTierName" value="บัตรทั่วไป" maxlength="100" /></label><label class="modal-field">ราคา (บาท)<input id="newTierPrice" type="number" min="20" max="150000" step="1" value="250" /></label><label class="modal-field">จำนวนบัตร<input id="newTierStock" type="number" min="1" max="10000" value="100" /></label></div><p>ขายได้เฉพาะบัญชีผู้จัดงานที่ผ่านการยืนยัน · PromptPay ขั้นต่ำ ฿20 ต่อคำสั่งซื้อ</p></div><button class="modal-primary" id="publishEvent">เผยแพร่งานและเปิดขายบัตร</button></div>`);
+    modal(`<div class="ticket-sell-modal"><div class="ticket-sell-heading"><span>SELL YOUR EVENT</span><h2 id="modalTitle">เปิดขายบัตรงานของคุณ</h2><p>เพิ่มข้อมูลงาน ตั้งราคาและจำนวนบัตร แล้วให้ผู้ชมเลือกซื้อจากหน้าอีเวนต์</p></div><div class="ticket-sell-section"><strong>รายละเอียดอีเวนต์</strong><label class="modal-field">ชื่องาน<input id="newEventTitle" maxlength="180" required placeholder="ชื่ออีเวนต์" /></label><div class="ticket-sell-grid"><label class="modal-field">ประเภท<select id="newEventCategory"><option value="music">ดนตรี</option><option value="art">ศิลปะ</option><option value="community">คอมมูนิตี้</option><option value="market">ตลาด</option></select></label><label class="modal-field">ชื่อสถานที่<input id="newEventVenue" maxlength="160" required placeholder="เช่น Warehouse 30" /></label><label class="modal-field">วันเริ่มงาน<input id="newEventStarts" type="datetime-local" required /></label><label class="modal-field">วันจบงาน<input id="newEventEnds" type="datetime-local" required /></label></div><label class="modal-field">ที่อยู่<input id="newEventAddress" maxlength="400" required placeholder="ที่อยู่สถานที่จัดงาน" /></label><label class="modal-field">รายละเอียด<textarea id="newEventDescription" maxlength="5000" placeholder="บอกผู้ชมว่าในงานมีอะไรบ้าง"></textarea></label></div><div class="ticket-sell-section ticket-sell-inventory"><strong>ตั้งค่าบัตร</strong><div class="ticket-sell-grid"><label class="modal-field">ชื่อประเภทบัตร<input id="newTierName" value="บัตรทั่วไป" maxlength="100" /></label><label class="modal-field">ราคา (บาท)<input id="newTierPrice" type="number" min="20" max="150000" step="1" value="250" /></label><label class="modal-field">จำนวนบัตร<input id="newTierStock" type="number" min="1" max="10000" value="100" /></label></div><p>ขายได้เฉพาะบัญชี Organizer ที่ผ่านการยืนยัน · ผู้จัดรับเงินตรง · SlipOK ตรวจสลิปและระบบออกบัตรอัตโนมัติ</p></div><div class="ticket-sell-section ticket-payment-settings"><strong>บัญชีรับเงินสำหรับบัตร</strong><div class="ticket-sell-grid"><label class="modal-field">ธนาคาร / PromptPay<input id="newPaymentBank" maxlength="80" required placeholder="เช่น กสิกรไทย / PromptPay" /></label><label class="modal-field">ชื่อบัญชีผู้รับเงิน<input id="newPaymentBeneficiary" maxlength="120" required placeholder="ชื่อที่ตรงกับบัญชี" /></label><label class="modal-field">เลขบัญชี 4 ตัวท้าย<input id="newPaymentLast4" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="ไม่บังคับ" /></label></div><label class="modal-field">QR Code รับเงิน<input id="newPaymentQr" type="file" accept="image/jpeg,image/png,image/webp" required /><small>อัปโหลด QR จากบัญชีที่ลงทะเบียนเป็นผู้รับกับ SlipOK</small></label><div class="ticket-sell-grid"><label class="modal-field">SlipOK Branch ID<input id="newSlipOkBranch" maxlength="20" inputmode="numeric" autocomplete="off" required placeholder="Branch ID ของบัญชีผู้รับ" /></label><label class="modal-field">SlipOK API Key<input id="newSlipOkApiKey" type="password" maxlength="512" autocomplete="new-password" required placeholder="API Key ของ Branch นี้" /></label></div><small class="payment-credential-note">ระบบจะส่ง API Key ไปเข้ารหัสที่เซิร์ฟเวอร์ ไม่เก็บไว้ในหน้าเว็บ กรอก Branch ID และ API Key ที่ SlipOK ออกให้สำหรับบัญชีเดียวกับ QR รับเงิน</small></div><button class="modal-primary" id="publishEvent">เผยแพร่งานและเปิดขายบัตร</button></div>`);
   }
   async function publishEvent() {
     const value = id => $(`#${id}`).value;
@@ -161,6 +244,13 @@
     const quantity = Number(value('newTierStock'));
     const venue = value('newEventVenue').trim();
     const address = value('newEventAddress').trim();
+    const bankName = value('newPaymentBank').trim();
+    const beneficiaryName = value('newPaymentBeneficiary').trim();
+    const accountLast4 = value('newPaymentLast4').trim();
+    const slipokBranchId = value('newSlipOkBranch').trim();
+    const slipokApiKeyInput = $('#newSlipOkApiKey');
+    const slipokApiKey = slipokApiKeyInput.value.trim();
+    const qrFile = $('#newPaymentQr')?.files?.[0];
     const invalid = (id, message) => { $(`#${id}`)?.focus(); toast(message); };
     if (title.length < 4) return invalid('newEventTitle', 'ใส่ชื่องานอย่างน้อย 4 ตัวอักษร');
     if (!Number.isFinite(+startsAt) || startsAt <= new Date()) return invalid('newEventStarts', 'เลือกวันเริ่มงานในอนาคต');
@@ -168,11 +258,21 @@
     if (venue.length < 2 || !address) return invalid(venue.length < 2 ? 'newEventVenue' : 'newEventAddress', 'กรอกชื่อและที่อยู่สถานที่จัดงาน');
     if (!Number.isInteger(price) || price < 20 || price > 150000) return invalid('newTierPrice', 'ราคาบัตรต้องอยู่ระหว่าง ฿20 ถึง ฿150,000');
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10000) return invalid('newTierStock', 'จำนวนบัตรต้องอยู่ระหว่าง 1 ถึง 10,000 ใบ');
+    if (!bankName || !beneficiaryName || (accountLast4 && !/^\d{4}$/.test(accountLast4))) return invalid('newPaymentBank', 'กรอกธนาคารและชื่อบัญชี และเลขท้าย 4 หลักถ้าต้องการแสดง');
+    if (!/^\d{1,20}$/.test(slipokBranchId)) return invalid('newSlipOkBranch', 'กรอก SlipOK Branch ID เป็นตัวเลข');
+    if (slipokApiKey.length < 8 || slipokApiKey.length > 512) return invalid('newSlipOkApiKey', 'กรอก SlipOK API Key ของบัญชีผู้รับ');
+    if (!qrFile || !['image/jpeg', 'image/png', 'image/webp'].includes(qrFile.type) || qrFile.size > 5 * 1024 * 1024) return invalid('newPaymentQr', 'อัปโหลด QR Code เป็น JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
     button.disabled = true; button.textContent = 'กำลังเผยแพร่…';
+    const user = await needUser(); if (!user) { button.disabled = false; button.textContent = 'เผยแพร่งานและเปิดขายบัตร'; return; }
+    const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[qrFile.type];
+    const paymentQrKey = `${user.id}/${crypto.randomUUID()}.${extension}`;
     try {
-      await call('create-event', { title, category: value('newEventCategory'), startsAt: value('newEventStarts'), endsAt: value('newEventEnds'), venueName: venue, venueAddress: address, description: value('newEventDescription'), tierName: value('newTierName'), priceBaht: price, quantity });
+      const { error: uploadError } = await db.storage.from('sourcewav-event-payment-qr').upload(paymentQrKey, qrFile, { contentType: qrFile.type, cacheControl: '3600', upsert: false });
+      if (uploadError) throw new Error('อัปโหลด QR รับเงินไม่สำเร็จ: ' + uploadError.message);
+      await call('create-event', { title, category: value('newEventCategory'), startsAt: value('newEventStarts'), endsAt: value('newEventEnds'), venueName: venue, venueAddress: address, description: value('newEventDescription'), tierName: value('newTierName'), priceBaht: price, quantity, paymentQrKey, bankName, beneficiaryName, accountLast4, slipokBranchId, slipokApiKey });
+      slipokApiKeyInput.value = '';
       closeModal(); await loadEvents(); toast('สร้างอีเวนต์และ Tier บัตรแล้ว');
-    } catch (error) { button.disabled = false; button.textContent = 'เผยแพร่งานและเปิดขายบัตร'; toast(error.message); }
+    } catch (error) { slipokApiKeyInput.value = ''; await db.storage.from('sourcewav-event-payment-qr').remove([paymentQrKey]); button.disabled = false; button.textContent = 'เผยแพร่งานและเปิดขายบัตร'; toast(error.message); }
   }
 
   async function loadChatList() {
@@ -251,7 +351,10 @@
     if (target.dataset.liveComment) { event.preventDefault(); event.stopImmediatePropagation(); const postId = target.dataset.liveComment; const { data } = await db.from('comments').select('body,created_at,profiles!comments_author_id_fkey(display_name)').eq('post_id', postId).is('deleted_at', null).order('created_at'); const entries = data || []; modal(`<h2 id="modalTitle">คุยกันใต้โพสต์</h2><div class="comment-list">${entries.map(c => `<p class="local-message"><b>${esc(c.profiles?.display_name || 'สมาชิก')}</b><br>${esc(c.body)}</p>`).join('') || '<p>ยังไม่มีความคิดเห็น เริ่มคุยได้เลย</p>'}</div><form id="commentForm"><label class="modal-field">เขียนความคิดเห็น<textarea id="liveCommentBody" maxlength="2000" required></textarea></label><button class="modal-primary">ส่งความคิดเห็น</button></form>`); $('#commentForm').onsubmit = async e => { e.preventDefault(); const user = await needUser(); if (!user) return; const body = $('#liveCommentBody').value.trim(); const { error } = await db.from('comments').insert({ post_id: postId, author_id: user.id, body }); if (error) return toast(error.message); closeModal(); await loadFeed(); }; return; }
     if (target.dataset.liveShare) { const url = `${location.origin}${location.pathname}#post-${target.dataset.liveShare}`; try { await navigator.clipboard.writeText(url); toast('คัดลอกลิงก์โพสต์แล้ว'); } catch (_) { toast(url); } return; }
     if (target.dataset.buyEvent) { event.preventDefault(); event.stopImmediatePropagation(); return ticketPicker(target.dataset.buyEvent); }
+    if (target.id === 'startManualCheckout') { event.preventDefault(); event.stopImmediatePropagation(); return beginManualCheckout(); }
     if (target.id === 'startCheckout') { event.preventDefault(); event.stopImmediatePropagation(); return beginCheckout(); }
+
+
     if (target.id === 'refreshPayment') { event.preventDefault(); const { data: order } = await db.from('orders').select('status').eq('id', $('#modalContent code')?.textContent || '').maybeSingle(); toast(order?.status === 'paid' ? 'ชำระแล้ว' : 'รอ Omise ยืนยันการชำระ'); return; }
     if (target.dataset.contactSeller) { event.preventDefault(); const user = await needUser(); if (user) { if (user.id === target.dataset.contactSeller) return toast('นี่คือผลงานของคุณ'); $('#chatPanel').classList.add('open'); await loadChatList(); await startConversation(target.dataset.contactSeller, target.dataset.sellerName); } return; }
     if (target.id === 'createListingBtn') { event.preventDefault(); event.stopImmediatePropagation(); return openCreateListing(); }
@@ -265,6 +368,12 @@
     if (target.id === 'validateManual') { event.preventDefault(); return validateQR($('#manualTicketCode').value.trim()); }
     if (target.dataset.startChat) { event.preventDefault(); const { data: me } = await db.auth.getUser(); if (me.user?.id === target.dataset.startChat) return toast('นี่คือบัญชีของคุณ'); return startConversation(target.dataset.startChat, target.dataset.name); }
     if (target.dataset.openConversation) { event.preventDefault(); const label = target.querySelector('b')?.textContent; return openConversation(target.dataset.openConversation, label); }
+  }, true);
+
+  document.addEventListener('submit', event => {
+    if (event.target?.id !== 'ticketSlipForm') return;
+    event.stopImmediatePropagation();
+    submitTicketSlip(event);
   }, true);
 
   document.addEventListener('click', async event => {

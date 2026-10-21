@@ -2,8 +2,9 @@
 (function (global) {
   'use strict';
   const Core = global.SourcewavFeaturesCore;
-  const { $, $$, esc, money, toast, state, saveFeaturesState } = Core;
+  const { $, $$, toast, state } = Core;
   const F = global.SourcewavFeatures || (global.SourcewavFeatures = {});
+  F.data = global.SourcewavFeatureData;
   const {
     renderBookingBoard, openJoinBookingModal, openHireModal, openBookingInboxModal,
     renderDropAlertsCenter, renderDropPreview, toggleFollowVenue, toggleFollowArtist, openBoostDropModal,
@@ -11,7 +12,11 @@
     renderArtistStore, openAddProductModal, openBuyProductModal
   } = F;
 
-  function setupFeaturesUI() {
+  async function setupFeaturesUI() {
+    await F.data.load().catch(error => console.error('Sourcewav feature data failed to load:', error.message));
+    global.addEventListener('sourcewav:auth', () => {
+      F.data.load().then(() => F.renderAll()).catch(error => console.error('Sourcewav feature data refresh failed:', error.message));
+    });
     F.booking.bindStatic();
     F.drops.bindStatic();
     F.command.bindStatic();
@@ -54,57 +59,40 @@
       // Booking Inbox Actions
       if (target.dataset.acceptOffer) {
         e.preventDefault();
-        const offer = state.bookingOffers.find(o => o.id === target.dataset.acceptOffer);
-        if (offer) {
-          offer.status = 'accepted';
-          saveFeaturesState();
+        F.data.respondBookingOffer(target.dataset.acceptOffer, 'accepted').then(ok => {
+          if (!ok) return;
           openBookingInboxModal();
-          toast('ยอมรับข้อเสนอจ้างงานแล้ว! เตรียมขึ้นโชว์');
-        }
-        return;
-      }
-
-      if (target.dataset.closeDeal) {
-        e.preventDefault();
-        const offer = state.bookingOffers.find(o => o.id === target.dataset.closeDeal);
-        if (offer) {
-          offer.status = 'closed';
-          // increase artist completed gigs
-          const card = state.bookingCards.find(c => c.id === offer.cardId);
-          if (card) card.gigsCompleted = (card.gigsCompleted || 0) + 1;
-          saveFeaturesState();
-          openBookingInboxModal();
-          toast(`ปิดงานสำเร็จ! ออกใบเสร็จคอมมิชชัน ${money(offer.commissionAmount)} เรียบร้อย`);
-        }
+          toast('บันทึกการตอบรับลงฐานข้อมูลแล้ว');
+        }).catch(error => toast(`ตอบรับไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
         return;
       }
 
       if (target.dataset.declineOffer) {
         e.preventDefault();
-        const offer = state.bookingOffers.find(o => o.id === target.dataset.declineOffer);
-        if (offer) {
-          offer.status = 'declined';
-          saveFeaturesState();
+        F.data.respondBookingOffer(target.dataset.declineOffer, 'declined').then(ok => {
+          if (!ok) return;
           openBookingInboxModal();
-          toast('ปฏิเสธข้อเสนอแล้ว');
-        }
+          toast('บันทึกการปฏิเสธลงฐานข้อมูลแล้ว');
+        }).catch(error => toast(`ปฏิเสธไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
         return;
       }
 
       // Follow Venue toggle
       if (target.dataset.followVenue) {
         e.preventDefault();
-        toggleFollowVenue(target.dataset.followVenue, target.dataset.venueName || 'สถานที่');
-        const isFollowed = state.followedVenues.includes(target.dataset.followVenue);
-        target.textContent = isFollowed ? '✓ กำลังติดตาม' : '＋ ติดตามสถานที่';
-        target.classList.toggle('following', isFollowed);
+        toggleFollowVenue(target.dataset.followVenue, target.dataset.venueName || 'สถานที่').then(isFollowed => {
+          if (isFollowed === null) return;
+          target.textContent = isFollowed ? '✓ กำลังติดตาม' : '＋ ติดตามสถานที่';
+          target.classList.toggle('following', isFollowed);
+        }).catch(error => toast(`ติดตามไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
         return;
       }
 
       // Follow artist toggle (booking cards)
       if (target.dataset.followArtist) {
         e.preventDefault();
-        toggleFollowArtist(target.dataset.followArtist);
+        toggleFollowArtist(target.dataset.followArtist, target.dataset.artistName)
+          .catch(error => toast(`ติดตามไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
         return;
       }
 

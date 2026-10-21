@@ -6,7 +6,8 @@
     handle: 'min.wav',
     role: 'นักฟังเพลง',
     city: 'กรุงเทพฯ',
-    bio: 'อยู่ตรงนี้เพื่อฟังเพลงใหม่ ๆ และเจอคนทำของน่าสนใจ'
+    bio: 'อยู่ตรงนี้เพื่อฟังเพลงใหม่ ๆ และเจอคนทำของน่าสนใจ',
+    avatarUrl: ''
   };
 
   function swEscape(value) {
@@ -15,6 +16,22 @@
     }[char]));
   }
 
+  async function swCompressAvatar(file) {
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const image = new Image();
+      image.src = objectUrl;
+      await image.decode();
+      const scale = Math.min(1, 512 / Math.max(image.naturalWidth, image.naturalHeight));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL('image/jpeg', 0.82);
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  }
   function swGetProfile() {
     try {
       const stored = swProfileCache || window.SourcewavStore?.getState?.().profile || JSON.parse(localStorage.getItem(swProfileKey) || '{}');
@@ -24,7 +41,8 @@
         handle: stored.handle || swDefaultProfile.handle,
         role: stored.role || swDefaultProfile.role,
         city: stored.province || stored.city || swDefaultProfile.city,
-        bio: stored.bio || swDefaultProfile.bio
+        bio: stored.bio || swDefaultProfile.bio,
+        avatarUrl: stored.avatarUrl || stored.avatar_url || swDefaultProfile.avatarUrl
       };
     } catch {
       return { ...swDefaultProfile };
@@ -34,7 +52,7 @@
   function swSaveProfile(profile) {
     if (window.SourcewavStore?.update) {
       return window.SourcewavStore.update(state => {
-        state.profile = { ...state.profile, displayName: profile.name, handle: profile.handle, role: profile.role, province: profile.city, bio: profile.bio };
+        state.profile = { ...state.profile, displayName: profile.name, handle: profile.handle, role: profile.role, province: profile.city, bio: profile.bio, avatarUrl: profile.avatarUrl };
       });
     }
     localStorage.setItem(swProfileKey, JSON.stringify(profile));
@@ -48,11 +66,12 @@
       handle: row.username,
       role: row.roles?.[0] || 'นักฟังเพลง',
       province: row.province || row.city || 'กรุงเทพฯ',
-      bio: row.bio || ''
+      bio: row.bio || '',
+      avatarUrl: row.avatar_url || ''
     };
     localStorage.setItem(swProfileKey, JSON.stringify(swProfileCache));
     window.SourcewavStore?.update(state => {
-      state.profile = { ...state.profile, displayName: swProfileCache.displayName, handle: swProfileCache.handle, role: swProfileCache.role, province: swProfileCache.province, bio: swProfileCache.bio };
+      state.profile = { ...state.profile, displayName: swProfileCache.displayName, handle: swProfileCache.handle, role: swProfileCache.role, province: swProfileCache.province, bio: swProfileCache.bio, avatarUrl: swProfileCache.avatarUrl };
     });
     swUpdateProfileChrome(swGetProfile());
   }
@@ -62,7 +81,7 @@
     const user = window.SourcewavAuthUser;
     if (!client || !user) return null;
     const { data, error } = await client.from('profiles')
-      .select('username,display_name,roles,province,bio')
+      .select('username,display_name,roles,province,bio,avatar_url')
       .eq('user_id', user.id)
       .maybeSingle();
     if (error) throw error;
@@ -71,18 +90,34 @@
   }
 
   function swUpdateProfileChrome(profile) {
+    const renderAvatar = (node, label) => {
+      if (!node) return;
+      node.replaceChildren();
+      if (profile.avatarUrl) {
+        const image = document.createElement('img');
+        image.src = profile.avatarUrl;
+        image.alt = '';
+        image.loading = 'lazy';
+        image.referrerPolicy = 'no-referrer';
+        node.append(image);
+        node.classList.add('has-avatar-image');
+      } else {
+        node.textContent = label;
+        node.classList.remove('has-avatar-image');
+      }
+    };
     const trigger = document.querySelector('#profileBtn');
     if (trigger) {
       const avatar = trigger.querySelector('.avatar');
       const label = trigger.querySelector('span:last-child');
-      if (avatar) avatar.textContent = [...profile.name][0] || 'S';
+      renderAvatar(avatar, [...profile.name][0] || 'S');
       if (label) label.textContent = profile.name.split(/\s+/)[0];
       trigger.setAttribute('aria-label', `โปรไฟล์ ${profile.name}`);
     }
     const railAvatar = document.querySelector('.rail-profile .avatar');
     const railName = document.querySelector('.rail-profile strong');
     const railMeta = document.querySelector('.rail-profile small');
-    if (railAvatar) railAvatar.textContent = [...profile.name][0] || 'S';
+    renderAvatar(railAvatar, [...profile.name][0] || 'S');
     if (railName) railName.textContent = profile.name;
     if (railMeta) railMeta.textContent = `@${profile.handle} · ${profile.city}`;
   }
@@ -97,7 +132,7 @@
     swUpdateProfileChrome(profile);
     swShow(`<section class="profile-page">
       <div class="profile-cover"><div class="profile-soundwave" aria-hidden="true">${Array.from({ length: 34 }, (_, i) => `<i style="--wave:${10 + ((i * 17 + 9) % 29)}px"></i>`).join('')}</div><span class="profile-cover-tag">SOURCEWAV / PROFILE</span></div>
-      <div class="profile-identity"><div class="profile-avatar">${swEscape([...profile.name][0] || 'S')}</div><div class="profile-identity-copy"><span class="account-status"><i></i>${sessionActive ? 'บัญชี Sourcewav' : 'โปรไฟล์ตัวอย่าง'}</span><h2 id="modalTitle">${swEscape(profile.name)}</h2><p>@${swEscape(profile.handle)} <span>·</span> ${swEscape(profile.role)}</p></div><button class="profile-edit-icon" type="button" data-account-action="edit" aria-label="แก้ไขโปรไฟล์">✎</button></div>
+      <div class="profile-identity"><div class="profile-avatar">${profile.avatarUrl ? '<img src="' + swEscape(profile.avatarUrl) + '" alt="" />' : swEscape([...profile.name][0] || 'S')}</div><div class="profile-identity-copy"><span class="account-status"><i></i>${sessionActive ? 'บัญชี Sourcewav' : 'โปรไฟล์ตัวอย่าง'}</span><h2 id="modalTitle">${swEscape(profile.name)}</h2><p>@${swEscape(profile.handle)} <span>·</span> ${swEscape(profile.role)}</p></div><button class="profile-edit-icon" type="button" data-account-action="edit" aria-label="แก้ไขโปรไฟล์">✎</button></div>
       <p class="profile-bio">${swEscape(profile.bio)}</p>
       <div class="profile-location"><span aria-hidden="true">⌖</span> ${swEscape(profile.city)} <span class="profile-location-note">· บ้านของคอมมูนิตี้</span></div>
       <div class="profile-stats"><div><b>0</b><span>เพลง</span></div><div><b>0</b><span>ผลงาน</span></div><div><b>0</b><span>กำลังติดตาม</span></div></div>
@@ -116,6 +151,16 @@
     </section>`);
   }
 
+  function swAuthBrandMarkup() {
+    const sourceLogo = document.querySelector('.topbar .brand-logo');
+    if (!sourceLogo) return '<a class="auth-brand" href="#home" data-account-action="close"><span>SW</span> sourcewav</a>';
+    const logo = sourceLogo.outerHTML
+      .replaceAll('swRough', 'authSwRough')
+      .replaceAll('swDots', 'authSwDots')
+      .replaceAll('swSpeckle', 'authSwSpeckle');
+    return `<a class="auth-brand auth-brand-logo" href="#home" aria-label="Sourcewav หน้าแรก" data-account-action="close">${logo}</a>`;
+  }
+
   function swAuthView(mode = 'register') {
     const isRegister = mode === 'register';
     const isRecovery = mode === 'recovery';
@@ -126,7 +171,7 @@
       ? `<label class="account-field"><span>รหัสผ่านใหม่</span><input name="password" type="password" autocomplete="new-password" minlength="8" placeholder="อย่างน้อย 8 ตัวอักษร" required /></label><label class="account-field"><span>ยืนยันรหัสผ่านใหม่</span><input name="passwordConfirm" type="password" autocomplete="new-password" minlength="8" placeholder="กรอกรหัสผ่านอีกครั้ง" required /></label>`
       : `<label class="account-field"><span>อีเมล</span><input name="email" type="email" autocomplete="email" placeholder="you@example.com" required /></label><label class="account-field"><span>รหัสผ่าน</span><span class="password-control"><input name="password" type="password" autocomplete="${isRegister ? 'new-password' : 'current-password'}" placeholder="${isRegister ? 'อย่างน้อย 8 ตัวอักษร' : 'กรอกรหัสผ่าน'}" minlength="${isRegister ? '8' : '1'}" required /><button type="button" data-account-action="toggle-password" aria-label="แสดงรหัสผ่าน">แสดง</button></span></label>`;
     swShow(`<section class="auth-shell">
-      <aside class="auth-art"><a class="auth-brand" href="#home" data-account-action="close"><span>SW</span> sourcewav</a><div class="auth-art-center"><div class="auth-disc" aria-hidden="true"><i></i><i></i><i></i></div><span class="auth-art-note">เสียงของเมืองนี้</span><h2>พื้นที่ของคน<br />ที่ทำจริง</h2><p>เดโมที่ยังไม่เสร็จ งานที่ยังไม่ลงตัว และคนที่อยากเจอคนแบบเดียวกัน</p></div><div class="auth-wave" aria-hidden="true">${Array.from({ length: 42 }, (_, i) => `<i style="--wave:${8 + ((i * 11 + 13) % 40)}px"></i>`).join('')}</div><span class="auth-art-foot">เพลง · ศิลปะ · คนของเรา</span></aside>
+      <aside class="auth-art">${swAuthBrandMarkup()}<div class="auth-art-center"><div class="auth-disc" aria-hidden="true"><i></i><i></i><i></i></div><span class="auth-art-note">เสียงของเมืองนี้</span><h2>พื้นที่ของคน<br />ที่ทำจริง</h2><p>เดโมที่ยังไม่เสร็จ งานที่ยังไม่ลงตัว และคนที่อยากเจอคนแบบเดียวกัน</p></div><div class="auth-wave" aria-hidden="true">${Array.from({ length: 42 }, (_, i) => `<i style="--wave:${8 + ((i * 11 + 13) % 40)}px"></i>`).join('')}</div><span class="auth-art-foot">เพลง · ศิลปะ · คนของเรา</span></aside>
       <div class="auth-panel"><div class="auth-panel-head"><span class="account-status"><i></i> COMMUNITY ACCESS</span><span class="auth-step">${isRecovery ? 'ตั้งรหัสผ่านใหม่' : isRegister ? 'เข้าร่วมคอมมูนิตี้' : 'กลับมาเจอกันอีก'}</span></div>${isRecovery ? '' : `<div class="auth-tabs" role="tablist" aria-label="บัญชีผู้ใช้"><button type="button" role="tab" aria-selected="${isRegister}" class="${isRegister ? 'active' : ''}" data-account-action="register">สมัครสมาชิก</button><button type="button" role="tab" aria-selected="${!isRegister}" class="${!isRegister ? 'active' : ''}" data-account-action="login">เข้าสู่ระบบ</button></div>`}
       <h1 id="modalTitle">${isRecovery ? 'ตั้งรหัสผ่านใหม่' : isRegister ? 'มาเป็นส่วนหนึ่ง' : 'ดีใจที่ได้เจอกันอีก'}</h1><p class="auth-intro">${isRecovery ? 'เลือกรหัสผ่านใหม่เพื่อกลับเข้าสู่ Sourcewav' : isRegister ? 'สร้างพื้นที่ของคุณ แล้วเริ่มรู้จักคนทำเพลงและศิลปะในวงการ' : 'เข้าสู่พื้นที่ของคุณ แล้วไปต่อจากที่ค้างไว้'}</p>
       <form id="accountForm" data-auth-mode="${mode}" novalidate>${fields}${credentialFields}${isRegister ? '<label class="account-consent"><input name="terms" type="checkbox" required /><span>ฉันยอมรับ <a href="#community" data-account-action="close">แนวทางชุมชน</a> และต้องการเข้าร่วม Sourcewav</span></label>' : isRecovery ? '' : '<button type="button" class="auth-forgot" data-account-action="forgot">ลืมรหัสผ่าน?</button>'}<p class="auth-error" id="accountError" role="alert" hidden></p><button type="submit" class="auth-submit">${isRecovery ? 'บันทึกรหัสผ่านใหม่' : isRegister ? 'สร้างโปรไฟล์' : 'เข้าสู่ระบบ'} <span aria-hidden="true">↗</span></button></form>
@@ -136,7 +181,8 @@
 
   function swEditView() {
     const profile = swGetProfile();
-    swShow(`<section class="profile-editor"><div class="editor-heading"><span class="account-status"><i></i> PROFILE SETTINGS</span><h2 id="modalTitle">ทำโปรไฟล์ให้เป็นคุณ</h2><p>บอกคนในวงการว่าคุณเป็นใคร และอยากทำอะไรต่อไป</p></div><form id="profileForm"><div class="editor-avatar-row"><div class="editor-avatar">${swEscape([...profile.name][0] || 'S')}</div><div><b>รูปโปรไฟล์</b><small>อัปโหลดรูปภาพจะเปิดให้ใช้ในเวอร์ชันถัดไป</small></div><span class="editor-avatar-pending">เร็ว ๆ นี้</span></div><label class="account-field"><span>ชื่อที่แสดง</span><input name="displayName" value="${swEscape(profile.name)}" minlength="2" maxlength="32" required /></label><label class="account-field"><span>ชื่อผู้ใช้</span><div class="handle-control"><span>@</span><input name="handle" value="${swEscape(profile.handle)}" pattern="[A-Za-z0-9_]{3,30}" minlength="3" maxlength="30" required /></div><small>ใช้ตัวอักษรอังกฤษ ตัวเลข หรือขีดล่าง 3–30 ตัว</small></label><div class="account-field-row"><label class="account-field"><span>บทบาทในวงการ</span><select name="role">${['Rapper / MC','Producer / Beatmaker','DJ','ศิลปิน / นักวาด','คนทำงานเบื้องหลัง','นักฟังเพลง'].map(role => `<option ${profile.role === role ? 'selected' : ''}>${role}</option>`).join('')}</select></label><label class="account-field"><span>เมือง</span><input name="city" value="${swEscape(profile.city)}" maxlength="40" required /></label></div><label class="account-field"><span>แนะนำตัว</span><textarea name="bio" maxlength="160" rows="3" placeholder="บอกสั้น ๆ ว่าคุณกำลังทำอะไร หรืออยากเจอใคร">${swEscape(profile.bio)}</textarea><small class="field-counter">ไม่เกิน 160 ตัวอักษร</small></label><p class="editor-save-note"><span>ⓘ</span> โปรไฟล์ของคุณบันทึกไว้ใน Supabase</p><div class="editor-actions"><button type="button" class="editor-cancel" data-account-action="profile">ยกเลิก</button><button type="submit" class="auth-submit">บันทึกโปรไฟล์ <span aria-hidden="true">↗</span></button></div></form></section>`);
+    const sessionActive = Boolean(window.SourcewavAuthUser);
+    swShow(`<section class="profile-editor"><div class="editor-heading"><span class="account-status"><i></i> PROFILE SETTINGS</span><h2 id="modalTitle">ทำโปรไฟล์ให้เป็นคุณ</h2><p>บอกคนในวงการว่าคุณเป็นใคร และอยากทำอะไรต่อไป</p></div><form id="profileForm"><div class="editor-avatar-row"><div class="editor-avatar ${profile.avatarUrl ? 'has-avatar-image' : ''}" id="profileAvatarPreview" aria-hidden="true">${profile.avatarUrl ? '<img src="' + swEscape(profile.avatarUrl) + '" alt="" />' : swEscape([...profile.name][0] || 'S')}</div><div class="editor-avatar-field"><div class="editor-avatar-field-title">รูปโปรไฟล์</div><label class="avatar-camera-pick" for="profileAvatarFile" aria-label="เลือกหรือเปลี่ยนรูปโปรไฟล์"><svg viewBox="0 0 48 48" aria-hidden="true"><path class="camera-body" d="M8 16h7l3-5h12l3 5h7a3 3 0 0 1 3 3v17a3 3 0 0 1-3 3H8a3 3 0 0 1-3-3V19a3 3 0 0 1 3-3Z"/><circle class="camera-lens" cx="24" cy="27" r="8"/><circle class="camera-glint" cx="27" cy="24" r="2"/></svg><span>เปลี่ยนรูป</span></label><input class="avatar-file-input" id="profileAvatarFile" name="avatar" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="profileAvatarHelp"  /><small id="profileAvatarHelp">เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB · บัญชีตัวอย่างจะบันทึกไว้ในเบราว์เซอร์นี้</small></div></div><label class="account-field"><span>ชื่อที่แสดง</span><input name="displayName" value="${swEscape(profile.name)}" minlength="2" maxlength="32" required /></label><label class="account-field"><span>ชื่อผู้ใช้</span><div class="handle-control"><span>@</span><input name="handle" value="${swEscape(profile.handle)}" pattern="[A-Za-z0-9_]{3,30}" minlength="3" maxlength="30" required /></div><small>ใช้ตัวอักษรอังกฤษ ตัวเลข หรือขีดล่าง 3–30 ตัว</small></label><div class="account-field-row"><label class="account-field"><span>บทบาทในวงการ</span><select name="role">${['Rapper / MC','Producer / Beatmaker','DJ','ศิลปิน / นักวาด','คนทำงานเบื้องหลัง','นักฟังเพลง'].map(role => `<option ${profile.role === role ? 'selected' : ''}>${role}</option>`).join('')}</select></label><label class="account-field"><span>เมือง</span><input name="city" value="${swEscape(profile.city)}" maxlength="40" required /></label></div><label class="account-field"><span>แนะนำตัว</span><textarea name="bio" maxlength="160" rows="3" placeholder="บอกสั้น ๆ ว่าคุณกำลังทำอะไร หรืออยากเจอใคร">${swEscape(profile.bio)}</textarea><small class="field-counter">ไม่เกิน 160 ตัวอักษร</small></label><p class="editor-save-note"><span>ⓘ</span> ${sessionActive ? 'โปรไฟล์ของคุณบันทึกไว้ใน Supabase' : 'โปรไฟล์ตัวอย่างบันทึกไว้ในเบราว์เซอร์นี้'}</p><div class="editor-actions"><button type="button" class="editor-cancel" data-account-action="profile">ยกเลิก</button><button type="submit" class="auth-submit">บันทึกโปรไฟล์ <span aria-hidden="true">↗</span></button></div></form></section>`);
   }
 
   function swHandleAction(action, event) {
@@ -301,26 +347,64 @@
         handle: String(data.get('handle') || '').trim(),
         role: data.get('role'),
         city: String(data.get('city') || '').trim(),
-        bio: String(data.get('bio') || '').trim() || 'อยู่ตรงนี้เพื่อฟังเพลงใหม่ ๆ และเจอคนทำของน่าสนใจ'
+        bio: String(data.get('bio') || '').trim() || 'อยู่ตรงนี้เพื่อฟังเพลงใหม่ ๆ และเจอคนทำของน่าสนใจ',
+        avatarUrl: swGetProfile().avatarUrl
       };
+      const avatarFile = data.get('avatar');
+      let uploadedAvatarKey = '';
+      if (avatarFile instanceof File && avatarFile.size) {
+        if (!window.SourcewavAuthUser || !window.SourcewavSupabase) return toast('เข้าสู่ระบบก่อนเพื่ออัปโหลดรูปโปรไฟล์');
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(avatarFile.type) || avatarFile.size > 5 * 1024 * 1024) return toast('เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
+        const extension = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' })[avatarFile.type];
+        uploadedAvatarKey = `${window.SourcewavAuthUser.id}/${crypto.randomUUID()}.${extension}`;
+        const { error: uploadError } = await window.SourcewavSupabase.storage.from('sourcewav-avatars').upload(uploadedAvatarKey, avatarFile, {
+          contentType: avatarFile.type, cacheControl: '3600', upsert: false
+        });
+        if (uploadError) return toast('อัปโหลดรูปไม่สำเร็จ: ' + uploadError.message);
+        profile.avatarUrl = window.SourcewavSupabase.storage.from('sourcewav-avatars').getPublicUrl(uploadedAvatarKey).data.publicUrl;
+      }
+      if (avatarFile instanceof File && avatarFile.size && !(window.SourcewavAuthUser && window.SourcewavSupabase)) {
+        profile.avatarUrl = await swCompressAvatar(avatarFile);
+      }
       if (window.SourcewavAuthUser && window.SourcewavSupabase) {
         const { error } = await window.SourcewavSupabase.from('profiles').update({
           username: profile.handle,
           display_name: profile.name,
           roles: [profile.role],
           province: profile.city,
-          bio: profile.bio
+          bio: profile.bio,
+          avatar_url: profile.avatarUrl || null
         }).eq('user_id', window.SourcewavAuthUser.id);
         if (error) {
+          if (uploadedAvatarKey) await window.SourcewavSupabase.storage.from('sourcewav-avatars').remove([uploadedAvatarKey]);
           toast(error.code === '23505' ? 'ชื่อผู้ใช้นี้ถูกใช้แล้ว' : 'บันทึกโปรไฟล์ไม่สำเร็จ');
           return;
         }
-        swCacheRemoteProfile({ username: profile.handle, display_name: profile.name, roles: [profile.role], province: profile.city, bio: profile.bio });
+        swCacheRemoteProfile({ username: profile.handle, display_name: profile.name, roles: [profile.role], province: profile.city, bio: profile.bio, avatar_url: profile.avatarUrl });
       } else swSaveProfile(profile);
       swUpdateProfileChrome(profile);
       swProfileView();
       toast(window.SourcewavAuthUser ? 'บันทึกโปรไฟล์ใน Supabase แล้ว' : 'บันทึกโปรไฟล์ไว้ในเบราว์เซอร์แล้ว');
     }
+  }, true);
+
+  document.addEventListener('change', event => {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement) || input.id !== 'profileAvatarFile') return;
+    const file = input.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      input.value = '';
+      toast('เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
+      return;
+    }
+    const preview = document.querySelector('#profileAvatarPreview');
+    if (!preview) return;
+    if (preview.dataset.previewUrl) URL.revokeObjectURL(preview.dataset.previewUrl);
+    const url = URL.createObjectURL(file);
+    preview.dataset.previewUrl = url;
+    preview.classList.add('has-avatar-image');
+    preview.replaceChildren(Object.assign(document.createElement('img'), { src: url, alt: 'ตัวอย่างรูปโปรไฟล์ที่เลือก' }));
   }, true);
 
   window.addEventListener('sourcewav:auth', event => {

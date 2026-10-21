@@ -7,10 +7,19 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.my-tickets]
-verify_jwt = true
+verify_jwt = false
 
 [functions.validate-ticket]
-verify_jwt = true
+verify_jwt = false
 
 [functions.create-event]
-verify_jwt = true
+verify_jwt = false
+
+[functions.create-manual-ticket-order]
+verify_jwt = false
+
+[functions.submit-ticket-payment]
+verify_jwt = false
+
+[functions.finalize-ticket-payment]
+verify_jwt = false

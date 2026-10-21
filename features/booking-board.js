@@ -2,7 +2,7 @@
 (function (global) {
   'use strict';
   const Core = global.SourcewavFeaturesCore;
-  const { $, $$, esc, money, toast, showModal, closeModal, state, saveFeaturesState } = Core;
+  const { $, $$, esc, money, toast, showModal, closeModal, state } = Core;
   const F = global.SourcewavFeatures || (global.SourcewavFeatures = {});
 
   /* --------------------------------------------------------------------------
@@ -38,8 +38,8 @@
                 <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
                   <strong>${esc(card.artistName)}</strong>
                   ${card.isPro ? '<span class="badge-pro"><span>⚡</span> PRO</span>' : ''}
-                  <button class="booking-follow-btn ${(F.isFollowingArtist?.(card.artistName)) ? 'following' : ''}" data-follow-artist="${esc(card.artistName)}" type="button">
-                    ${(F.isFollowingArtist?.(card.artistName)) ? '✓ ติดตามแล้ว' : '＋ ติดตาม'}
+                  <button class="booking-follow-btn ${(F.isFollowingArtist?.(card.artistId)) ? 'following' : ''}" data-follow-artist="${esc(card.artistId)}" data-artist-name="${esc(card.artistName)}" type="button">
+                    ${(F.isFollowingArtist?.(card.artistId)) ? '✓ ติดตามแล้ว' : '＋ ติดตาม'}
                   </button>
                 </div>
                 <small>@${esc(card.handle)} · ${esc(card.city)}</small>
@@ -90,24 +90,18 @@
 
   function openJoinBookingModal() {
     const profile = window.SourcewavStore?.getState().profile || {};
-    const defaultName = profile.displayName || profile.name || 'มินตรา';
-    const defaultHandle = profile.handle || 'min.wav';
+    const defaultName = profile.displayName || profile.name || '';
 
     showModal(`
       <h2 id="modalTitle">ลงทะเบียนรับงาน / สร้างการ์ด Booking</h2>
       <p>เพิ่มโปรไฟล์ของคุณบน Booking Board เพื่อรับงานแสดง DJ, แรป, ทำบีท หรืองานโปรดักชัน</p>
 
       <form id="joinBookingForm">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <label class="modal-field">
-            ชื่อที่ใช้รับงาน
-            <input id="newArtistName" required value="${esc(defaultName)}" />
-          </label>
-          <label class="modal-field">
-            Username / Handle
-            <input id="newArtistHandle" required value="${esc(defaultHandle)}" />
-          </label>
-        </div>
+        <label class="modal-field">
+          ชื่อที่ใช้รับงาน
+          <input id="newArtistName" required value="${esc(defaultName)}" />
+          <small>ใช้ชื่อและ Username จากโปรไฟล์ที่เข้าสู่ระบบ</small>
+        </label>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <label class="modal-field">
@@ -140,7 +134,7 @@
 
         <label class="modal-field">
           สถานะวันว่าง & คิวงาน
-          <input id="newArtistAvailability" value="ว่างรับงานสุดสัปดาห์นี้" placeholder="เช่น ว่างทุกศุกร์-เสาร์, คิวว่างเดือน พ.ย." required />
+          <input id="newArtistAvailability" placeholder="เช่น ว่างทุกศุกร์-เสาร์, คิวว่างเดือน พ.ย." required />
         </label>
 
         <label class="modal-field">
@@ -150,18 +144,8 @@
 
         <label class="modal-field">
           ตัวอย่างผลงาน / ลิงก์เดโม
-          <input id="newArtistPortfolio" placeholder="เช่น ลิงก์ SoundCloud, YouTube, หรือชื่อมิกซ์เทป" value="DEMO REEL 2026" required />
+          <input id="newArtistPortfolio" placeholder="เช่น ลิงก์ SoundCloud, YouTube, หรือชื่อมิกซ์เทป" />
         </label>
-
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px; margin: 14px 0;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
-              <strong style="font-size: 13px; color: #172a40;">สถานะสมาชิกแบบ Pro (0% ค่าคอมมิชชัน)</strong>
-              <small style="display: block; color: #64748b; font-size: 11px;">สมาชิก Pro รับรายได้เต็ม 100% และได้รับการปักหมุดบนหน้า Booking</small>
-            </div>
-            <input type="checkbox" id="newArtistProToggle" checked style="width: 18px; height: 18px; accent-color: #2858ef;" />
-          </div>
-        </div>
 
         <button type="submit" class="modal-primary" id="saveBookingCardBtn">บันทึกและขึ้นแสดงบน Booking Board</button>
       </form>
@@ -179,12 +163,8 @@
       };
 
       const role = $('#newArtistRole').value;
-      const isPro = $('#newArtistProToggle').checked;
-
       const newCard = {
-        id: `bk-${Date.now().toString(36)}`,
         artistName: $('#newArtistName').value.trim(),
-        handle: $('#newArtistHandle').value.trim().replace(/^@/, ''),
         role: role,
         roleLabel: roleMap[role] || 'ศิลปิน',
         rate: Number($('#newArtistRate').value || 4000),
@@ -194,16 +174,14 @@
         city: $('#newArtistCity').value.trim(),
         bio: $('#newArtistBio').value.trim(),
         portfolioTitle: $('#newArtistPortfolio').value.trim(),
-        isPro: isPro,
-        gigsCompleted: 0,
         avatarChar: $('#newArtistName').value.trim().charAt(0).toUpperCase()
       };
 
-      state.bookingCards.unshift(newCard);
-      saveFeaturesState();
-      renderBookingBoard();
-      closeModal();
-      toast('เพิ่มการ์ดของคุณบน Booking Board เรียบร้อยแล้ว!');
+      global.SourcewavFeatureData.createBookingCard(newCard).then(() => {
+        renderBookingBoard();
+        closeModal();
+        toast('บันทึกการ์ดลงฐานข้อมูลและแสดงบน Booking Board แล้ว');
+      }).catch(error => toast(`บันทึกไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
     });
   }
 
@@ -218,7 +196,7 @@
 
     showModal(`
       <h2 id="modalTitle">ส่งข้อเสนอจ้างงาน · ${esc(card.artistName)}</h2>
-      <p style="margin-bottom: 14px;">สร้างข้อเสนอจ้างงานอย่างเป็นทางการ พร้อมระบบสัญญาและแจกแจงค่าคอมมิชชันโปร่งใส</p>
+      <p style="margin-bottom: 14px;">ส่งรายละเอียดและงบประมาณให้ศิลปินตอบรับ ข้อเสนอนี้ยังไม่ใช่การชำระเงินหรือสัญญาออนไลน์</p>
 
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -236,28 +214,28 @@
       <form id="hireOfferForm">
         <label class="modal-field">
           ชื่องาน / กิจกรรม
-          <input id="offerEventTitle" required placeholder="เช่น Friday Night Live at AVVE" value="โชว์คืนวันเสาร์ที่ร้าน" />
+            <input id="offerEventTitle" required placeholder="เช่น Friday Night Live at AVVE" />
         </label>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <label class="modal-field">
             วันและเวลาของงาน
-            <input id="offerEventDate" required placeholder="เช่น 24 ต.ค. 2026 · 21:00-23:00" value="25 ต.ค. 2026 · 20:30-22:30" />
+            <input id="offerEventDate" required placeholder="เช่น 24 ต.ค. 2026 · 21:00-23:00" />
           </label>
           <label class="modal-field">
             สถานที่จัดงาน
-            <input id="offerVenueLocation" required placeholder="เช่น AVVE ซอยปรีดี 1 กรุงเทพฯ" value="AVVE · วัฒนา กรุงเทพฯ" />
+            <input id="offerVenueLocation" required placeholder="เช่น AVVE ซอยปรีดี 1 กรุงเทพฯ" />
           </label>
         </div>
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <label class="modal-field">
             ผู้ติดต่อ / ชื่อร้าน
-            <input id="offerClientName" required placeholder="ชื่อคุณ หรือชื่อสถานที่" value="AVVE Event Space" />
+            <input id="offerClientName" required placeholder="ชื่อคุณ หรือชื่อสถานที่" />
           </label>
           <label class="modal-field">
             เบอร์ติดต่อ / อีเมล
-            <input id="offerClientContact" required placeholder="08x-xxx-xxxx" value="contact@avve.bkk" />
+            <input id="offerClientContact" required placeholder="เบอร์โทรศัพท์หรืออีเมล" />
           </label>
         </div>
 
@@ -267,23 +245,23 @@
         </label>
 
         <!-- Real-time Commission Breakdown -->
-        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px; margin: 12px 0;">
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 14px; margin: 12px 0;">
           <div style="font-size: 11px; font-weight: 700; color: #166534; text-transform: uppercase; margin-bottom: 6px;">
-            การแจกแจงค่าธรรมเนียมและคอมมิชชัน
+            ประมาณการงบประมาณ
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px;">
             <span>งบประมาณจ้างงาน:</span>
             <b id="calcBudget">${money(baseBudget)}</b>
           </div>
           <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: ${card.isPro ? '#059669' : '#b45309'};">
-            <span>ค่าคอมมิชชัน Sourcewav (${card.isPro ? 'Pro 0%' : '10%'}):</span>
+            <span>ค่าธรรมเนียมโดยประมาณ (${card.isPro ? 'Pro 0%' : '10%'}):</span>
             <b id="calcCommission">${money(initialCommission)}</b>
           </div>
           <div style="border-top: 1px solid #bbf7d0; padding-top: 6px; display: flex; justify-content: space-between; font-size: 13px; color: #166534; font-weight: 700;">
-            <span>ศิลปินได้รับสุทธิ:</span>
+            <span>ยอดหลังหักโดยประมาณ:</span>
             <b id="calcPayout">${money(initialPayout)}</b>
           </div>
-          ${card.isPro ? '<small style="display: block; color: #047857; margin-top: 4px; font-size: 10px;">⚡ ศิลปินเป็นสมาชิก Pro ได้รับเงินเต็ม 100% ไม่ถูกหักคอมมิชชัน</small>' : '<small style="display: block; color: #78716c; margin-top: 4px; font-size: 10px;">หักค่าคอมมิชชัน 10% จากงานที่ปิดได้สำเร็จ</small>'}
+          <small style="display: block; color: #78716c; margin-top: 4px; font-size: 10px;">ระบบยังไม่รับชำระเงินและยังไม่หักค่าธรรมเนียมจริง</small>
         </div>
 
         <label class="modal-field">
@@ -319,43 +297,35 @@
       const payout = budget - comm;
 
       const newOffer = {
-        id: `off-${Date.now().toString(36)}`,
-        cardId: card.id,
-        artistName: card.artistName,
         clientName: $('#offerClientName').value.trim(),
         clientContact: $('#offerClientContact').value.trim(),
         eventTitle: $('#offerEventTitle').value.trim(),
         eventDate: $('#offerEventDate').value.trim(),
         venueLocation: $('#offerVenueLocation').value.trim(),
         roleNeeded: card.roleLabel,
-        offeredBudget: budget,
-        commissionRate: commissionRate,
-        commissionAmount: comm,
-        artistPayout: payout,
+        budget,
         details: $('#offerDetails').value.trim(),
-        status: 'pending',
-        createdAt: new Date().toISOString()
       };
 
-      state.bookingOffers.unshift(newOffer);
-      saveFeaturesState();
-      renderBookingBoard();
-      closeModal();
-      toast(`ส่งข้อเสนอจ้างงานให้ ${card.artistName} เรียบร้อยแล้ว!`);
+      global.SourcewavFeatureData.createBookingOffer(card, newOffer).then(() => {
+        renderBookingBoard();
+        closeModal();
+        toast(`บันทึกข้อเสนอในฐานข้อมูลแล้ว ส่งให้ ${card.artistName} เรียบร้อย`);
+      }).catch(error => toast(`ส่งข้อเสนอไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
     });
   }
 
   function openBookingInboxModal() {
     showModal(`
       <h2 id="modalTitle">ข้อเสนอจ้างงานและสัญญา (Booking Inbox)</h2>
-      <p style="margin-bottom: 16px;">จัดการข้อเสนอที่ได้รับและปิดงานเพื่อรับเงินพร้อมใบเสร็จคอมมิชชัน</p>
+      <p style="margin-bottom: 16px;">ดูข้อเสนอที่ส่งและได้รับ การยอมรับยังไม่ใช่การชำระเงินหรือการออกใบเสร็จ</p>
 
       <div style="display: flex; flex-direction: column; gap: 12px; max-height: 480px; overflow-y: auto;">
         ${state.bookingOffers.length ? state.bookingOffers.map(offer => {
           const statusBadges = {
             pending: '<span style="background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700;">รอตอบรับ</span>',
             accepted: '<span style="background: #dcfce7; color: #166534; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700;">รับงานแล้ว</span>',
-            closed: '<span style="background: #e0f2fe; color: #075985; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700;">✓ ปิดงานสำเร็จ</span>',
+            closed: '<span style="background: #e0f2fe; color: #075985; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700;">งานเสร็จแล้ว</span>',
             declined: '<span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700;">ปฏิเสธ</span>'
           };
 
@@ -382,11 +352,13 @@
               </div>
 
               <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                ${offer.status === 'pending' ? `
+                ${offer.status === 'pending' && offer.artistId === global.SourcewavAuthUser?.id ? `
                   <button class="outline-btn" data-decline-offer="${esc(offer.id)}" style="font-size: 11px; padding: 5px 10px; color: #b91c1c;">ปฏิเสธ</button>
                   <button class="modal-primary" data-accept-offer="${esc(offer.id)}" style="font-size: 11px; padding: 5px 12px;">ยอมรับข้อเสนอ</button>
+                ` : offer.status === 'pending' ? `
+                  <span style="font-size: 11px; color: #64748b;">รอศิลปินตอบรับ</span>
                 ` : offer.status === 'accepted' ? `
-                  <button class="modal-primary" data-close-deal="${esc(offer.id)}" style="font-size: 11px; padding: 5px 12px; background: #059669;">ปิดงานสำเร็จ & ออกใบเสร็จ</button>
+                  <span style="font-size: 11px; color: #64748b;">ยอมรับแล้ว · จัดการชำระเงินกันนอกระบบ</span>
                 ` : `
                   <span style="font-size: 11px; color: #64748b;">ธุรกรรมปิดสมบูรณ์แล้ว</span>
                 `}

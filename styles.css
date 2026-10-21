@@ -766,7 +766,7 @@ body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
 .brand:hover .brand-logo{transform:none;filter:drop-shadow(0 0 14px #eb35d688)}
 @media(max-width:1150px){.brand{height:62px}.brand .brand-logo{width:200px;max-height:58px}}
 @media(max-width:680px){.brand{flex:0 0 auto;width:auto;height:54px}.brand .brand-logo{width:165px;max-height:50px;transform:none}}
-@media(max-width:450px){.brand{height:44px}.brand .brand-logo{width:135px;max-height:40px}}
+@media(max-width:450px){.brand{height:40px}.brand .brand-logo{width:150px;max-height:38px}}
 
 /* ── Feature 6/7 right-column previews ──────────────────────────── */
 .drop-preview-list{display:grid;gap:0}
@@ -938,7 +938,7 @@ body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
   font-style:normal;
   font-weight:400;
   font-display:swap;
-  size-adjust:160%;
+  size-adjust:100%;
 }
 @font-face{
   font-family:"TH Sarabun New";
@@ -946,7 +946,7 @@ body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
   font-style:normal;
   font-weight:700;
   font-display:swap;
-  size-adjust:160%;
+  size-adjust:100%;
 }
 @font-face{
   font-family:"TH Sarabun New";
@@ -954,7 +954,7 @@ body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
   font-style:italic;
   font-weight:400;
   font-display:swap;
-  size-adjust:160%;
+  size-adjust:100%;
 }
 @font-face{
   font-family:"TH Sarabun New";
@@ -962,7 +962,7 @@ body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
   font-style:italic;
   font-weight:700;
   font-display:swap;
-  size-adjust:160%;
+  size-adjust:100%;
 }
 :root{--font:"TH Sarabun New",sans-serif;--display:"TH Sarabun New",sans-serif}
 body{font-family:var(--font);font-size:16px;text-shadow:0 0 .02em currentColor}
@@ -1074,3 +1074,132 @@ h1,h2,h3,h4{
   .ticket-sell-grid{grid-template-columns:minmax(0,1fr)}
 }
 @media(prefers-reduced-motion:reduce){#events .ticket-hub{transition:none}}
+
+/* Keep the source mark, typography and primary ticket panel aligned across the site. */
+.auth-brand-logo{display:block;width:min(100%,360px);height:46px;padding:0;overflow:visible}
+.auth-brand-logo .brand-logo{display:block;width:100%;height:100%;transform:none;filter:drop-shadow(0 2px 10px #0008)}
+.auth-brand-logo:hover .brand-logo{transform:none;filter:drop-shadow(0 2px 12px #5cd6c655)}
+.auth-art-center{margin-top:30px;margin-bottom:48px}
+.auth-art-center h2{font-size:clamp(29px,3vw,34px);line-height:1.12;letter-spacing:-.3px}
+.avatar.has-avatar-image,.profile-avatar:has(img),.editor-avatar:has(img){overflow:hidden;padding:0}
+.avatar.has-avatar-image img,.profile-avatar img,.editor-avatar img{display:block;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.editor-avatar-field{min-width:0}
+.editor-avatar-field label{display:block;margin-bottom:4px;color:#344c63;font-size:12px;font-weight:700}
+.editor-avatar-field input{display:block;width:100%;max-width:100%;font:inherit;font-size:12px}
+.editor-avatar-field small{display:block;margin-top:4px;color:#718497;font-size:11px;line-height:1.4}
+.left-rail>.rail-item[href="#feed"],
+.left-rail>.rail-item[href="#booking"],
+.left-rail>.rail-item[href="#events"],
+.left-rail>.rail-item[href="#market"],
+.left-rail>.rail-item[href="#artist-store"]{display:none!important}
+.left-rail>.rail-label:first-of-type{margin-top:3px}
+.left-rail .rail-item[href="#booking"]{white-space:nowrap;flex-wrap:nowrap}
+.booking-header{flex-wrap:nowrap;align-items:center;gap:10px}
+.booking-header>div:first-child{min-width:0}
+.booking-header h2{white-space:nowrap;font-size:clamp(18px,2.5vw,23px);letter-spacing:0}
+#events .right-heading h2{font-size:clamp(20px,1.7vw,22px);line-height:1.2;letter-spacing:0}
+#events .right-heading #createEventBtn{min-height:36px;padding-inline:11px;font-size:12px}
+#events .ticket-hub h3{font-size:19px}
+#events .ticket-hub p{font-size:12px;line-height:1.4}
+#events .live-event-card .buy-btn{min-height:36px;padding-inline:11px;font-size:12px}
+.ticket-sell-heading h2{font-size:22px;line-height:1.18}
+.ticket-sell-heading p{font-size:13px}
+.ticket-sell-section>strong{font-size:15px}
+@media(max-width:700px){.booking-header{flex-wrap:wrap;align-items:flex-start}.booking-header h2{font-size:19px}.auth-brand-logo{width:220px;height:36px}.editor-avatar-row{align-items:flex-start}.editor-avatar-field input{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.profile-work,.profile-first-work,.auth-brand-logo .brand-logo{transition:none}}
+
+.payment-credential-note{display:block;margin-top:8px;color:#6d8294;font-size:12px;line-height:1.55}
+.manual-payment>h2{margin-top:0;color:#162c43;font-size:23px;line-height:1.2}
+.manual-payment>p{color:#6a7c8d;line-height:1.55}
+.manual-payment .real-payment-qr{display:flex;justify-content:center;padding:10px}
+.manual-payment .real-payment-qr img{width:min(240px,70vw);height:auto;max-height:240px;object-fit:contain;border:1px solid #dbe5ec;border-radius:12px;background:#fff}
+.manual-payment .checkout-event{margin:8px 0 13px}
+.manual-payment #ticketSlipForm{padding:12px;border:1px solid #dfe8ee;border-radius:12px;background:#fff}
+.manual-payment #ticketSlipForm .modal-field{margin:0 0 10px}
+.manual-payment #ticketSlipForm small{display:block;margin-top:4px;color:#73869a;font-size:11px}
+.manual-payment #submitTicketSlip{margin:0}
+.slip-check-result{display:grid;gap:5px;margin-top:12px;padding:12px;border:1px solid #d8e5eb;border-radius:11px;background:#fff;font-size:13px;line-height:1.5}
+.slip-check-result.is-verified{border-color:#a8ddcc;background:#effaf6;color:#1b6956}
+.slip-check-result.is-rejected{border-color:#f0cbc1;background:#fff6f3;color:#9b4b39}
+.slip-check-result small{opacity:.8}
+@media(max-width:500px){.manual-payment>h2{font-size:20px}.manual-payment .checkout-row{gap:8px}.manual-payment .checkout-row b{max-width:62%;text-align:right}}
+
+/* Keep the map useful when its remote street tiles are unavailable, and make its labels readable on mobile. */
+.map-preview .map-head h3,.map-modal-heading h2{font-size:clamp(22px,2.5vw,26px);line-height:1.25}
+.map-preview .map-scope,.map-modal .map-scope{font-size:13px}
+.map-preview .map-filter,.map-modal .map-filter{min-height:42px;padding:7px 15px;font-size:14px;line-height:1.2}
+.map-preview .map-legend,.map-modal .map-legend{font-size:13px;line-height:1.4}
+.map-preview .venue-row,.map-modal .venue-row{min-height:54px;gap:10px}
+.map-preview .venue-copy strong,.map-modal .venue-copy strong{font-size:15px;line-height:1.35;text-wrap:pretty}
+.map-preview .venue-copy small,.map-modal .venue-copy small{font-size:12px;line-height:1.45}
+.map-preview .map-credit,.map-preview .map-source,.map-preview .map-bottom,.map-modal .map-credit,.map-modal .map-source,.map-modal-footer{font-size:12px;line-height:1.5}
+.map-preview .map-bottom button,.map-modal .map-bottom button{min-height:42px;padding-inline:14px;font-size:13px}
+.map-error-text{font-size:14px;line-height:1.5}
+.map-retry{min-height:42px;padding:8px 16px;font-size:14px}
+.map-canvas .map-error{z-index:1000;border:1px solid #ecc9c6;border-radius:14px;background:rgba(255,250,249,.97);font-size:14px}
+.bangkok-map.map-tiles-unavailable{background:radial-gradient(ellipse at center,#eef4f3 0,#e7eeed 74%)}
+@media(max-width:600px){
+  .map-preview .map-source,.map-modal .map-source{font-size:12px}
+  .map-canvas .map-error{align-items:center;justify-content:center;gap:12px;padding:18px;text-align:center}
+  .map-retry{width:min(100%,220px)}
+}
+
+/* Larger, easier-to-scan map controls and venue actions. */
+.map-preview .bangkok-map{height:clamp(280px,36vh,360px);min-height:280px}
+.map-modal .map-large{height:clamp(380px,58vh,600px);min-height:380px}
+.map-preview .map-controls,.map-modal .map-controls{gap:9px;margin:14px 0 12px}
+.map-preview .map-filter,.map-modal .map-filter{min-height:46px;padding:9px 18px;font-size:16px}
+.map-preview .map-legend,.map-modal .map-legend{gap:16px;font-size:15px}
+.map-preview .sourcewav-marker,.map-modal .sourcewav-marker{width:42px;height:42px;font-size:21px}
+.map-preview .map-bottom,.map-modal .map-bottom{font-size:14px}
+.map-preview .map-bottom button,.map-modal .map-bottom button{min-height:46px;font-size:15px}
+.map-preview .venue-list,.map-modal .venue-list-wide{gap:8px}
+.map-preview .venue-row,.map-modal .venue-row{display:flex;min-height:64px;gap:7px;padding:6px;border-radius:13px}
+.map-preview .venue-select,.map-modal .venue-select{display:flex;min-width:0;flex:1;align-items:center;gap:12px;padding:7px;border:0;border-radius:9px;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.map-preview .venue-select:focus-visible,.map-modal .venue-select:focus-visible{outline:3px solid #426fae;outline-offset:1px}
+.map-preview .venue-type,.map-modal .venue-type{width:38px;height:38px;border-radius:11px;font-size:19px}
+.map-preview .venue-copy strong,.map-modal .venue-copy strong{font-size:18px;line-height:1.25}
+.map-preview .venue-copy small,.map-modal .venue-copy small{font-size:14px;line-height:1.3}
+.map-preview .venue-arrow,.map-modal .venue-arrow{font-size:22px}
+.map-preview .venue-directions,.map-modal .venue-directions{display:grid;width:44px;min-width:44px;min-height:44px;place-items:center;align-self:center;border:1px solid #cbd8e6;border-radius:11px;background:#fff;color:#315d8a;font-size:23px;line-height:1;text-decoration:none}
+.map-preview .venue-directions:hover,.map-modal .venue-directions:hover{border-color:#7fa0c2;background:#edf4f8}
+.map-preview .venue-directions:focus-visible,.map-modal .venue-directions:focus-visible{outline:3px solid #426fae;outline-offset:2px}
+.map-preview .venue-row.is-active,.map-modal .venue-row.is-active{background:#eaf2f8;border-color:#426fae;box-shadow:inset 3px 0 0 #426fae}
+.leaflet-control-zoom a{width:38px!important;height:38px!important;line-height:38px!important;font-size:24px!important}
+.leaflet-control-attribution{font-size:12px!important}
+@media(max-width:600px){
+  .map-preview .bangkok-map{height:300px;min-height:280px}
+  .map-modal .map-large{height:48vh;min-height:300px}
+  .map-preview .venue-copy strong,.map-modal .venue-copy strong{font-size:17px}
+  .map-preview .venue-copy small,.map-modal .venue-copy small{font-size:13px}
+}
+
+/* Site-wide readability and language control. */
+html{font-size:112.5%}
+body{zoom:1.08}
+.language-toggle{flex:none;min-width:46px;min-height:38px;padding:0 10px;border:1px solid #8ea7be;border-radius:999px;background:#f4f8fb;color:#183b5a;font:700 14px/1 var(--font);letter-spacing:.02em;cursor:pointer;box-shadow:0 2px 8px #0a20321c}
+.language-toggle:hover{background:#dcedf3;border-color:#63adb4}
+.language-toggle:focus-visible{outline:3px solid #83d9d0;outline-offset:2px}
+@media(max-width:680px){body{zoom:1.04}.top-actions{gap:4px}.language-toggle{min-width:40px;min-height:36px;padding-inline:7px;font-size:13px}}
+
+/* Larger site scale and language-safe heading rhythm. */
+html{font-size:120%}
+body{zoom:1.18}
+.hero-band{height:auto;min-height:390px}
+.hero-copy{min-width:0}
+.hero-copy h1{font-size:clamp(38px,3.5vw,52px);line-height:1.42;letter-spacing:0;text-wrap:pretty}
+.hero-copy p{font-size:15px;line-height:1.9}
+.live-label{font-size:13px;line-height:1.6}
+html[lang="th"] body{line-height:1.65}
+html[lang="th"] :is(p, h1, h2, h3, h4, label, .nav-link, .rail-item, .room-item, .event-info, .post-copy, .section-kicker){line-height:1.65}
+@media(max-width:1050px){.hero-band{min-height:390px}.hero-copy h1{font-size:clamp(34px,4vw,46px);line-height:1.4}}
+@media(max-width:680px){body{zoom:1.06}.hero-band{min-height:350px;height:auto}.hero-copy h1{font-size:clamp(29px,7vw,38px);line-height:1.4}.hero-copy p{font-size:13px;line-height:1.8}}
+
+/* Keep venue names and addresses inside their map result cards. */
+.map-preview .venue-row,.map-modal .venue-row{min-height:88px;align-items:stretch}
+.map-preview .venue-select,.map-modal .venue-select{min-height:74px;align-items:center}
+.map-preview .venue-copy,.map-modal .venue-copy{min-width:0;overflow:hidden;gap:4px}
+.map-preview .venue-copy strong,.map-modal .venue-copy strong{display:-webkit-box;overflow:hidden;white-space:normal;overflow-wrap:anywhere;line-height:1.3;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.map-preview .venue-copy small,.map-modal .venue-copy small{display:-webkit-box;overflow:hidden;overflow-wrap:anywhere;line-height:1.4;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.main-nav .nav-link{font-size:16px;font-weight:700}
+@media(max-width:680px){.main-nav .nav-link{font-size:13px;font-weight:700}}

@@ -2,7 +2,7 @@
 (function (global) {
   'use strict';
   const Core = global.SourcewavFeaturesCore;
-  const { $, $$, esc, money, toast, showModal, closeModal, state, saveFeaturesState } = Core;
+  const { $, $$, esc, toast, showModal, closeModal, state } = Core;
   const F = global.SourcewavFeatures || (global.SourcewavFeatures = {});
 
   /* --------------------------------------------------------------------------
@@ -18,7 +18,7 @@
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
           <div>
             <h2 id="modalTitle" style="margin: 0 0 4px;">Follow & Drop Alert</h2>
-            <p style="margin: 0; color: #64748b; font-size: 12px;">แจ้งเตือนเมื่อศิลปินหรือสถานที่ที่คุณติดตามมีเพลงใหม่ งานใหม่ หรือบัตรรอบใหม่</p>
+            <p style="margin: 0; color: #64748b; font-size: 12px;">ประกาศและรายการอัปเดตจากฐานข้อมูล Sourcewav</p>
           </div>
           <button id="markAllDropsReadBtn" style="background: none; border: 0; color: #2858ef; font: 600 11px var(--font); cursor: pointer; padding: 4px;">
             อ่านทั้งหมดแล้ว
@@ -38,14 +38,14 @@
           ${renderDropItemsHTML()}
         </div>
 
-        <!-- Sponsor / Boost CTA for Organizers & Artists -->
+        <!-- Drop creation; paid sponsorship is unavailable until payment is configured. -->
         <div class="boost-cta-box">
           <div>
-            <strong>ผู้จัดหรือศิลปินอยากให้คนเห็นงานใหม่?</strong>
-            <p>โปรโมต Drop งานของคุณ ส่งตรงถึงแฟนเพลงในพื้นที่ ไม่ต้องเริ่มหาคนดูจากศูนย์</p>
+            <strong>แชร์ข่าวงานหรือเพลงใหม่</strong>
+            <p>บันทึกประกาศลงฐานข้อมูลและแสดงใน Drop Alerts โดยไม่ติดป้ายโฆษณา</p>
           </div>
           <button class="boost-launch-btn" id="openBoostDropModalBtn">
-            🚀 โปรโมตงานของคุณ
+            ＋ สร้าง Drop
           </button>
         </div>
       </div>
@@ -116,12 +116,14 @@
     });
 
     $('#markAllDropsReadBtn')?.addEventListener('click', () => {
-      state.dropAlerts.forEach(a => { a.read = true; });
-      saveFeaturesState();
-      const list = $('#dropFeedList');
-      if (list) list.innerHTML = renderDropItemsHTML();
-      bindDropActionClicks();
-      toast('ทำเครื่องหมายว่าอ่านทั้งหมดแล้ว');
+      global.SourcewavFeatureData.markAllDropsRead().then(ok => {
+        if (!ok) return;
+        const list = $('#dropFeedList');
+        if (list) list.innerHTML = renderDropItemsHTML();
+        bindDropActionClicks();
+        Core.updateNotificationBadge();
+        toast('บันทึกสถานะอ่านทั้งหมดลงฐานข้อมูลแล้ว');
+      }).catch(error => toast(`บันทึกไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
     });
 
     $('#openBoostDropModalBtn')?.addEventListener('click', openBoostDropModal);
@@ -137,6 +139,11 @@
         const target = btn.dataset.dropTarget;
 
         closeModal();
+
+        if (/^https:\/\//i.test(target)) {
+          window.open(target, '_blank', 'noopener,noreferrer');
+          return;
+        }
 
         if (actionType === 'music') {
           const trackRowPlay = document.querySelector('.track-row-play');
@@ -163,120 +170,51 @@
 
   function openBoostDropModal() {
     showModal(`
-      <h2 id="modalTitle">โปรโมตงานใหม่ (Sponsored Drop)</h2>
-      <p style="margin-bottom: 16px;">กระจายข่าวเพลงใหม่ อีเวนต์ หรือบัตรรอบใหม่ สู่ผู้ใช้ Sourcewav ทั่วประเทศ</p>
-
-      <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 12px; margin-bottom: 14px; font-size: 11px; color: #92400e;">
-        ⚠️ <b>ข้อกำหนดความโปร่งใส:</b> งานที่ได้รับการโปรโมตจะแสดงป้ายกำกับ <b>[⚡ ได้รับการโปรโมต / SPONSORED]</b> อย่างชัดเจนเสมอ
-      </div>
+      <h2 id="modalTitle">สร้าง Drop Alert</h2>
+      <p style="margin-bottom: 16px;">ประกาศนี้จะบันทึกลงฐานข้อมูลและแสดงเป็นโพสต์ทั่วไป การโปรโมตแบบชำระเงินยังไม่เปิดใช้</p>
 
       <form id="boostDropForm">
         <label class="modal-field">
-          ชื่องานหรือเพลงที่ต้องการโปรโมต
-          <input id="boostTitle" required placeholder="เช่น HIPHOP NATION BKK FEST 2026" />
+          หัวข้อประกาศ
+          <input id="boostTitle" required maxlength="200" placeholder="ชื่องาน เพลงใหม่ หรือข่าวจากคุณ" />
+        </label>
+
+        <label class="modal-field">ประเภทประกาศ
+          <select id="boostType"><option value="event">อีเวนต์</option><option value="music">เพลงใหม่</option><option value="ticket">บัตร</option><option value="announcement">ประกาศทั่วไป</option></select>
         </label>
 
         <label class="modal-field">
-          ชื่อผู้จัด / ศิลปิน
-          <input id="boostCreator" required placeholder="เช่น Hiphop Nation Thailand" />
+          รายละเอียด
+          <textarea id="boostDetails" rows="3" maxlength="3000" required placeholder="บอกวันเวลา สถานที่ หรือรายละเอียดที่ต้องการแชร์"></textarea>
         </label>
 
-        <label class="modal-field">
-          ข้อความสั้นดึงดูดแฟนเพลง (150 ตัวอักษร)
-          <textarea id="boostDetails" rows="3" required placeholder="บอกจุดเด่น วันเวลา สถานที่ หรือโปรโมชันบัตร..."></textarea>
+        <label class="modal-field">ลิงก์รายละเอียด (ไม่บังคับ)
+          <input id="boostActionUrl" type="url" placeholder="https://…" />
         </label>
-
-        <label class="modal-field">
-          เลือกระดับการโปรโมต (Monetization Packages)
-          <select id="boostPackage">
-            <option value="500">🚀 Starter Boost (฿500) — ส่งแจ้งเตือนแฟนเพลงในพื้นที่ ~500 คน</option>
-            <option value="1500" selected>🔥 High Rotation Boost (฿1,500) — แจ้งเตือน ~2,500 คน + ปักหมุดหน้าฟีด</option>
-            <option value="3500">⚡ Headline Spotlight (฿3,500) — เข้าถึงสมาชิกทุกคน + แบนเนอร์พิเศษ</option>
-          </select>
-        </label>
-
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin: 14px 0;">
-          <div style="display: flex; justify-content: space-between; font-size: 13px;">
-            <span>ยอดชำระ:</span>
-            <b id="boostPriceTotal">฿1,500</b>
-          </div>
-          <small style="color: #64748b; font-size: 10px;">ชำระผ่าน PromptPay · เริ่มกระจาย Drop ทันที</small>
-        </div>
-
-        <button type="submit" class="modal-primary" id="submitBoostBtn">ยืนยันโปรโมต Drop (ชำระ ฿1,500)</button>
+        <button type="submit" class="modal-primary" id="submitBoostBtn">บันทึก Drop ลงฐานข้อมูล</button>
       </form>
     `);
 
-    const pkgSelect = $('#boostPackage');
-    const totalEl = $('#boostPriceTotal');
-    const submitBtn = $('#submitBoostBtn');
-
-    if (pkgSelect) {
-      pkgSelect.addEventListener('change', () => {
-        const val = Number(pkgSelect.value);
-        if (totalEl) totalEl.textContent = money(val);
-        if (submitBtn) submitBtn.textContent = `ยืนยันโปรโมต Drop (ชำระ ${money(val)})`;
-      });
-    }
-
     $('#boostDropForm')?.addEventListener('submit', e => {
       e.preventDefault();
-      const title = $('#boostTitle').value.trim();
-      const creator = $('#boostCreator').value.trim();
-      const details = $('#boostDetails').value.trim();
-
-      const newDrop = {
-        id: `drop-${Date.now().toString(36)}`,
-        type: 'event',
-        title: title,
-        creatorName: creator,
-        creatorHandle: creator.toLowerCase().replace(/[^a-z0-9]/g, ''),
-        timestamp: 'เมื่อสักครู่',
-        badgeLabel: 'สปอนเซอร์',
-        isPromoted: true,
-        promoTag: 'SPONSORED',
-        detailText: details,
-        actionLabel: 'ดูรายละเอียดบัตร ↗',
-        actionType: 'event',
-        actionTarget: 'local-matter',
-        read: false
-      };
-
-      state.dropAlerts.unshift(newDrop);
-      saveFeaturesState();
-      closeModal();
-      toast('โปรโมต Drop เรียบร้อยแล้ว! งานจะแสดงป้าย [⚡ SPONSORED] บนหน้าฟีดทันที');
+      global.SourcewavFeatureData.createDrop({
+        type: $('#boostType').value, title: $('#boostTitle').value.trim(),
+        details: $('#boostDetails').value.trim(), actionLabel: 'ดูรายละเอียด',
+        actionUrl: $('#boostActionUrl').value.trim()
+      }).then(drop => {
+        if (!drop) return;
+        closeModal();
+        renderDropPreview();
+        toast('บันทึก Drop ลงฐานข้อมูลแล้ว');
+      }).catch(error => toast(`บันทึกไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
     });
   }
 
   function toggleFollowVenue(venueId, venueName) {
-    const list = state.followedVenues || [];
-    const index = list.indexOf(venueId);
-    if (index > -1) {
-      list.splice(index, 1);
-      toast(`เลิกติดตามสถานที่ ${venueName} แล้ว`);
-    } else {
-      list.push(venueId);
-      // Generate instant drop alert for following
-      state.dropAlerts.unshift({
-        id: `drop-${Date.now().toString(36)}`,
-        type: 'venue',
-        title: `${venueName} เพิ่มในสถานที่โปรดของคุณแล้ว`,
-        creatorName: venueName,
-        creatorHandle: venueId,
-        timestamp: 'เมื่อสักครู่',
-        badgeLabel: 'สถานที่โปรด',
-        isPromoted: false,
-        detailText: `คุณเริ่มติดตาม ${venueName} เมื่อมีงานใหม่หรืออีเวนต์จะได้รับการแจ้งเตือนทันที`,
-        actionLabel: 'ดูสถานที่บนแผนที่ ⌁',
-        actionType: 'venue',
-        actionTarget: venueId,
-        read: false
-      });
-      toast(`เริ่มติดตามสถานที่ ${venueName} แล้ว! จะได้รับ Drop Alert เมื่อมีงานใหม่`);
-    }
-    state.followedVenues = list;
-    saveFeaturesState();
+    return global.SourcewavFeatureData.toggleFollowVenue(venueId).then(following => {
+      if (following !== null) toast(following ? `เริ่มติดตาม ${venueName} แล้ว` : `เลิกติดตาม ${venueName} แล้ว`);
+      return following;
+    });
   }
 
   /* --- Right column preview (rendered from state) --- */
@@ -305,33 +243,16 @@
   }
 
   /* --- Follow artist (booking card button) --- */
-  function toggleFollowArtist(artistName) {
-    const list = Array.isArray(state.followedArtists) ? state.followedArtists : [];
-    const index = list.indexOf(artistName);
-    if (index >= 0) {
-      list.splice(index, 1);
-      toast(`เลิกติดตาม ${artistName} แล้ว`);
-    } else {
-      list.push(artistName);
-      state.dropAlerts.unshift({
-        id: `drop-${Date.now().toString(36)}`,
-        type: 'followed',
-        title: `กำลังติดตาม ${artistName}`,
-        details: 'คุณจะได้รับแจ้งเมื่อมีเพลงใหม่ งาน หรือบัตรรอบใหม่',
-        creator: artistName,
-        isPromoted: false,
-        read: false,
-        createdAt: new Date().toISOString()
-      });
-      toast(`เริ่มติดตาม ${artistName} — จะแจ้งเตือนเมื่อมีอะไรใหม่`);
-    }
-    state.followedArtists = list;
-    saveFeaturesState();
-    renderDropPreview();
-    F.renderBookingBoard?.();
+  function toggleFollowArtist(artistId, artistName) {
+    return global.SourcewavFeatureData.toggleFollowArtist(artistId).then(following => {
+      if (following === null) return null;
+      toast(following ? `เริ่มติดตาม ${artistName} แล้ว` : `เลิกติดตาม ${artistName} แล้ว`);
+      F.renderBookingBoard?.();
+      return following;
+    });
   }
 
-  const isFollowingArtist = name => (Array.isArray(state.followedArtists) ? state.followedArtists : []).includes(name);
+  const isFollowingArtist = id => (Array.isArray(state.followedArtists) ? state.followedArtists : []).includes(id);
 
   function bindStatic() {
     $('#notificationBtn')?.addEventListener('click', e => {
