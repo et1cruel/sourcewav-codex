@@ -1,0 +1,13 @@
+# Local app data and uploaded audio should stay on the developer machine.
+database/*.sqlite
+database/*.sqlite-*
+database/uploads/
+
+# Local design iterations and generated workspace artifacts.
+.superpowers/
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+.next/
