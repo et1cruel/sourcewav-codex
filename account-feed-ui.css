@@ -18,3 +18,40 @@
 @media(max-width:700px){.modal.account-modal:has(.auth-shell){width:min(510px,100%);max-height:94vh;border-radius:18px}.auth-shell{display:block;min-height:0}.auth-art{min-height:155px;height:155px;padding:17px 20px}.auth-brand>span{width:28px;height:28px}.auth-art-center{display:none}.auth-wave{right:0;bottom:20px;left:35%;height:42px}.auth-wave i{width:2px}.auth-art-foot{font-size:8px}.auth-panel{padding:22px 22px 24px}.auth-panel-head{margin-bottom:13px}.auth-tabs{margin-bottom:17px}.auth-panel h1{font-size:24px}.auth-intro{margin-bottom:17px}.account-field-row{gap:9px}.modal.account-modal:has(.profile-page),.modal.account-modal:has(.profile-editor){width:min(610px,100%);max-height:94vh}.profile-page{padding:0 20px 19px}.profile-cover{margin-inline:-20px;height:116px}.profile-cover-tag{left:20px}.profile-identity-copy h2{font-size:19px}.feed-filters{overflow-x:auto;white-space:nowrap}.post-card:hover{transform:none}}
 @media(max-width:390px){.auth-panel{padding-inline:17px}.auth-art{height:135px;min-height:135px}.auth-panel h1{font-size:22px}.account-field-row{grid-template-columns:1fr;gap:0}.account-field-row .account-field{margin-bottom:12px}.profile-page{padding-inline:15px}.profile-cover{margin-inline:-15px}.profile-cover-tag{left:15px}.profile-identity{gap:10px}.profile-avatar{width:66px;height:66px;border-radius:19px}.editor-actions{grid-template-columns:1fr 2fr}}
 @media(prefers-reduced-motion:reduce){.post-artwork img,.post-card,.composer,.auth-submit{transition:none!important}}
+
+/* Left rail: an editorial navigation panel with a small studio glow. */
+.left-rail{position:sticky;isolation:isolate;overflow:hidden;padding:19px 13px 16px;background:linear-gradient(158deg,rgba(255,252,255,.96),rgba(249,246,252,.93) 56%,rgba(242,249,250,.94));border:1px solid #ffffffd9;box-shadow:0 18px 48px #22102b14,0 3px 10px #25132c09,inset 0 1px 0 #fff;backdrop-filter:blur(22px)}
+.left-rail:before{position:absolute;z-index:-1;top:-54px;right:-82px;width:190px;height:170px;border-radius:50%;background:radial-gradient(circle,#ec61df21,transparent 70%);content:"";pointer-events:none}
+.left-rail:after{position:absolute;z-index:-1;bottom:60px;left:-100px;width:180px;height:150px;border-radius:50%;background:radial-gradient(circle,#59c9cf14,transparent 72%);content:"";pointer-events:none}
+.rail-profile{gap:11px;margin:1px 0 17px;padding:5px 5px 16px;border-bottom:1px solid #dfe2e9}
+.profile-big{width:45px;height:45px;border:2px solid #fff;background:linear-gradient(145deg,#d8e8ff,#d7f4f0);color:#214a79;box-shadow:0 0 0 3px #bd36ad18,0 5px 13px #24395717}
+.rail-profile strong{color:#202940;font-size:12px;font-weight:700;letter-spacing:-.1px}.rail-profile small{margin-top:3px;color:#758197;font-size:9px}
+.rail-label{display:flex;align-items:center;gap:8px;margin:1px 0 10px 5px;color:#758098;font-size:10px;font-weight:700;letter-spacing:0}
+.rail-label:before{width:3px;height:13px;border-radius:3px;background:linear-gradient(#d73cc5,#7351bf);content:""}
+.rail-item{position:relative;height:43px;gap:10px;margin:2px 0;padding:0 9px;border:1px solid transparent;border-radius:12px;color:#48536d;font-size:11px;font-weight:600;transition:transform .18s,border-color .18s,background .18s,box-shadow .18s}
+.rail-item:hover{transform:translateX(2px);border-color:#e3d8ec;background:rgba(255,255,255,.82);color:#312b48;box-shadow:0 4px 12px #33204a0c}
+.rail-item span{display:grid;width:25px;height:25px;place-items:center;border-radius:8px;background:#eef0f7;color:#637391;font-size:14px;transition:transform .18s,background .18s,color .18s}
+.rail-item:hover span{transform:scale(1.06);background:#e9e5f5;color:#7250a8}
+.rail-item b{display:grid;min-width:23px;height:21px;place-items:center;padding:0 6px;border-radius:7px;background:#f0eaf4;color:#795983;font-size:9px;font-weight:700}
+.rail-item.active{transform:none;border-color:#e64dd732;background:linear-gradient(112deg,#b822aa 0%,#d52bbd 53%,#e642ce 100%);color:#fff;box-shadow:0 8px 20px #b91eaa40,inset 0 1px 0 #ffffff4d}
+.rail-item.active:before{position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:#83f1dc;box-shadow:0 0 11px #83f1dcb0;content:""}
+.rail-item.active span{background:#ffffff25;color:#b8fff2}.rail-item.active b{background:#ffffff25;color:#fff}
+.rail-gap{height:1px;margin:15px 2px 16px;background:linear-gradient(90deg,transparent,#d8dce6 13%,#d8dce6 87%,transparent)}
+.room-item{height:37px;gap:9px;margin:1px 0;padding:0 7px;border-radius:9px;color:#4d5870;font-size:10px;font-weight:500;transition:transform .16s,background .16s,color .16s}
+.room-item:hover{transform:translateX(2px);background:#fff9;color:#302c49}
+.room-dot{width:8px;height:8px;flex:none;box-shadow:0 0 0 3px #ffffffa6,0 1px 5px #17233820}
+.room-dot.lime{background:#179b88}.room-dot.blue{background:#426ce0}.room-dot.orange{background:#8a5ac2}
+.room-item small{display:grid;min-width:22px;height:19px;place-items:center;margin-left:auto;padding:0 5px;border-radius:6px;background:#ffffffb8;color:#728099;font-size:9px}
+.add-room{display:flex;min-height:35px;align-items:center;gap:7px;margin:8px 0 0;padding:0 9px;border:1px dashed #d9cce3;border-radius:9px;background:#fff7;color:#76518e;font-size:10px;font-weight:600;transition:border-color .16s,background .16s,transform .16s,box-shadow .16s}
+.add-room:hover{transform:translateY(-1px);border-color:#cf82c4;background:#fff;box-shadow:0 5px 12px #a62a9915;color:#8b3280}
+.rail-footer{gap:8px 13px;padding:19px 4px 0;color:#69758a;font-size:9px}.rail-footer span{transition:color .15s;cursor:pointer}.rail-footer span:hover{color:#a32f98}.rail-footer small{color:#8b95a5;font-size:8px}
+@media(max-width:1150px){.left-rail{padding-inline:11px}.rail-item{gap:8px;padding-inline:7px}.room-item{gap:7px;padding-inline:5px}}
+
+/* Sidebar type scale: improve legibility at the narrow rail width. */
+.rail-profile strong{font-size:14px}.rail-profile small{font-size:12px}
+.rail-label{font-size:13px}
+.rail-item{font-size:14px;gap:10px}.rail-item span{font-size:17px}.rail-item b{font-size:11px;min-width:25px;height:22px}
+.room-item{font-size:13px;gap:9px}.room-item small{font-size:10px;min-width:24px;height:20px}
+.add-room{font-size:13px;min-height:38px}
+.rail-footer{font-size:10px;gap:9px 13px}.rail-footer small{font-size:9px}
+@media(max-width:1150px){.rail-label{font-size:12px}.rail-item{font-size:13px}.room-item{font-size:12px}}
