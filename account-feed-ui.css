@@ -55,3 +55,13 @@
 .add-room{font-size:13px;min-height:38px}
 .rail-footer{font-size:10px;gap:9px 13px}.rail-footer small{font-size:9px}
 @media(max-width:1150px){.rail-label{font-size:12px}.rail-item{font-size:13px}.room-item{font-size:12px}}
+
+/* The selected item gets one smoothly traveling pink surface. */
+.left-rail{position:sticky}
+.left-rail .rail-item{position:relative;z-index:1;background:transparent;box-shadow:none}
+.left-rail .rail-item.active{background:transparent;color:#fff;box-shadow:none}
+.left-rail .rail-item.active span,.left-rail .rail-item.active b{background:#ffffff25;color:#b8fff2}
+.rail-active-indicator{position:absolute;z-index:0;top:0;right:13px;left:13px;pointer-events:none;border:1px solid #e64dd732;border-radius:12px;background:linear-gradient(112deg,#b822aa 0%,#d52bbd 53%,#e642ce 100%);box-shadow:0 8px 20px #b91eaa40,inset 0 1px 0 #ffffff4d;transition:transform .38s cubic-bezier(.22,.8,.24,1),height .25s ease}
+.rail-active-indicator:before{position:absolute;top:8px;bottom:8px;left:0;width:3px;border-radius:0 4px 4px 0;background:#83f1dc;box-shadow:0 0 11px #83f1dcb0;content:""}
+@media(max-width:1150px){.rail-active-indicator{right:11px;left:11px}}
+@media(prefers-reduced-motion:reduce){.rail-active-indicator{transition:none}}
