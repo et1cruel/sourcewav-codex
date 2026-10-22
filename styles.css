@@ -2212,8 +2212,9 @@ body.event-purchase-page-active .chat-fab{display:none!important}
 .event-purchase-loading,.event-purchase-error{width:min(100%,840px);margin:34px auto;color:#f1eaff;}
 .event-purchase-error h1{margin:0 0 8px;color:#fff;font-size:24px;}
 .event-purchase-error p{margin:0;color:#d2c9df;line-height:1.7;}
+.mobile-ticket-cta{display:none;}
 @media(max-width:800px){.event-purchase-layout{grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:16px}.event-purchase-poster{min-height:350px;padding:12px;border-radius:22px}.event-purchase-poster-empty{min-height:350px}}
-@media(max-width:680px){.event-purchase-page{min-height:calc(100dvh - 58px);padding:12px 12px 36px}.event-purchase-toolbar{margin-bottom:12px}.event-purchase-toolbar>span{font-size:9px}.event-purchase-layout{grid-template-columns:minmax(0,1fr);gap:13px}.event-purchase-art{position:relative;top:auto}.event-purchase-poster{min-height:0;max-height:none;padding:10px;border-radius:19px}.event-purchase-poster img{width:auto;max-width:100%;max-height:min(68dvh,680px);}.event-purchase-poster-empty{min-height:240px}.event-purchase-content{gap:13px}.event-purchase-info,.event-purchase-checkout,.event-purchase-error{padding:17px;border-radius:19px}.event-purchase-info h1{margin:10px 0 15px;font-size:27px}.event-purchase-facts>div{padding:11px;border-radius:15px}.event-purchase-description{margin-top:16px;padding-top:15px}.event-purchase-checkout>header h2{font-size:20px}.event-purchase-checkout .modal-field input{max-width:none}.event-purchase-page #startManualCheckout{min-height:56px;font-size:16px}}
+@media(max-width:680px){body.event-purchase-page-active .topbar{display:none}.event-purchase-page{min-height:100dvh;padding:12px 12px 112px}.event-purchase-toolbar{margin-bottom:12px}.event-purchase-toolbar>span{font-size:9px}.event-purchase-layout{grid-template-columns:minmax(0,1fr);gap:13px}.event-purchase-art{position:relative;top:auto}.event-purchase-poster{min-height:0;max-height:none;padding:10px;border-radius:19px}.event-purchase-poster img{width:auto;max-width:100%;max-height:min(42dvh,360px);}.event-purchase-poster-empty{min-height:240px}.event-purchase-content{gap:13px}.event-purchase-info,.event-purchase-checkout,.event-purchase-error{padding:17px;border-radius:19px}.event-purchase-info h1{margin:10px 0 15px;font-size:27px}.event-purchase-facts>div{padding:11px;border-radius:15px}.event-purchase-description{margin-top:16px;padding-top:15px}.event-purchase-checkout>header h2{font-size:20px}.event-purchase-checkout .modal-field input{max-width:none}.event-purchase-page #startManualCheckout{min-height:56px;font-size:16px}.mobile-ticket-cta{position:fixed;right:max(14px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));left:max(14px,env(safe-area-inset-left));z-index:20;display:flex;align-items:center;justify-content:center;min-height:54px;padding:12px 18px;border:1px solid #e2d0ff;border-radius:17px;color:#291c3d;background:linear-gradient(145deg,#e5d3ff,#b695ea 65%,#9a80d0);box-shadow:0 8px 24px #08071175,inset 0 2px #ffffffb8;font:800 16px var(--font);cursor:pointer;touch-action:manipulation}.mobile-ticket-cta:focus-visible{outline:3px solid #fff;outline-offset:3px}}
 @media(prefers-reduced-motion:reduce){.event-purchase-toolbar a,.event-purchase-page #startManualCheckout{transition:none}.event-purchase-toolbar a:hover,.event-purchase-page #startManualCheckout:hover,.event-purchase-page #startManualCheckout:active{transform:none}}
 .map-preview .venue-type,.map-modal .venue-type{border:1px solid #ffffff85;background:#101116db;color:#fff;box-shadow:0 2px 8px #0008}
 .map-preview .venue-type.art,.map-modal .venue-type.art{background:#291a1be8;color:#fff}
@@ -2241,3 +2242,64 @@ body.event-purchase-page-active .chat-fab{display:none!important}
 .rail-profile-avatar-link[href]:hover{filter:brightness(1.06);transform:scale(1.06)}
 .rail-profile-avatar-link:focus-visible{outline:3px solid #7859a0;outline-offset:3px}
 @media(prefers-reduced-motion:reduce){.rail-profile-avatar-link[href]{transition:none}.rail-profile-avatar-link[href]:hover{transform:none}}
+
+/* Keep ticket payment copy readable and make slip selection feel like a clear action. */
+.modal.is-ticket-payment .payment-heading h2,
+.modal.is-ticket-payment .payment-details h3,
+.modal.is-ticket-payment .payment-total strong{color:#fff}
+.modal.is-ticket-payment .payment-heading p,
+.modal.is-ticket-payment .payment-steps li,
+.modal.is-ticket-payment .payment-total,
+.modal.is-ticket-payment .payment-details .checkout-row span,
+.modal.is-ticket-payment .payment-order-ref,
+.modal.is-ticket-payment .qr-hint,
+.modal.is-ticket-payment .manual-payment #ticketSlipForm .modal-field,
+.modal.is-ticket-payment .manual-payment #ticketSlipForm .modal-field small{color:#e2ddec!important}
+.modal.is-ticket-payment .manual-payment #ticketSlipForm{border-color:#ffffff26;border-radius:22px;background:linear-gradient(145deg,#ffffff12,#ffffff06);box-shadow:0 12px 26px #08071130,inset 0 1px #ffffff18}
+.modal.is-ticket-payment .manual-payment #ticketSlipForm .modal-field{font-weight:700}
+.modal.is-ticket-payment .manual-payment #ticketSlipFile{display:block;width:100%;min-height:58px;margin:9px 0;padding:7px;border:1px dashed #65547a;border-radius:17px;color:#f0eafa;background:#171521;font:600 13px var(--font);cursor:pointer;transition:border-color .18s,background-color .18s,box-shadow .18s}
+.modal.is-ticket-payment .manual-payment #ticketSlipFile:hover{border-color:#9a83b7;background:#1c1928;box-shadow:0 5px 18px #9b7ad51c}
+.modal.is-ticket-payment .manual-payment #ticketSlipFile::file-selector-button{min-height:42px;margin-right:12px;padding:0 17px;border:1px solid #f7f7f7;border-radius:9px;color:#242329;background:linear-gradient(180deg,#fff 0%,#f4f4f4 10%,#b9b9b9 19%,#fafafa 31%,#d5d5d5 46%,#858585 57%,#c9c9c9 67%,#f9f9f9 80%,#fff 91%,#a8a8a8 100%);box-shadow:inset 0 2px 2px #fff, inset 0 -2px 3px #5559,0 3px 7px #0008;font:800 13px var(--font);text-shadow:0 1px #fff9;cursor:pointer;transition:transform .15s,filter .15s,box-shadow .15s}
+.modal.is-ticket-payment .manual-payment #ticketSlipFile::file-selector-button:hover{filter:brightness(1.08);transform:translateY(-1px);box-shadow:inset 0 2px 2px #fff, inset 0 -2px 3px #5559,0 5px 10px #0009}
+.modal.is-ticket-payment .manual-payment #ticketSlipFile::file-selector-button:active{filter:brightness(.94);transform:translateY(1px);box-shadow:inset 0 2px 5px #4448,0 1px 3px #0008}
+.modal.is-ticket-payment .manual-payment #ticketSlipFile:focus-visible{outline:3px solid #b5fff0;outline-offset:3px}
+.modal.is-ticket-payment .qr-mobile-hint{display:none}
+@media(max-width:620px){
+  .modal.is-ticket-payment .qr-mobile-hint{display:block;max-width:34ch;margin:10px auto 0;color:#e2ddec;font-size:13px;line-height:1.55;text-align:center}
+  .modal.is-ticket-payment .manual-payment #ticketSlipForm{padding:12px}
+  .modal.is-ticket-payment .manual-payment #ticketSlipFile{box-sizing:border-box;max-width:100%;min-height:60px;padding:7px;font-size:12px}
+  .modal.is-ticket-payment .manual-payment #ticketSlipFile::file-selector-button{min-height:44px;margin-right:7px;padding:0 10px;font-size:12px}
+  .modal.is-ticket-payment .manual-payment #submitTicketSlip{min-height:54px;padding:12px;font-size:16px;touch-action:manipulation}
+}
+@media(prefers-reduced-motion:reduce){.modal.is-ticket-payment .manual-payment #ticketSlipFile,.modal.is-ticket-payment .manual-payment #ticketSlipFile::file-selector-button{transition:none}.modal.is-ticket-payment .manual-payment #ticketSlipFile::file-selector-button:hover,.modal.is-ticket-payment .manual-payment #ticketSlipFile::file-selector-button:active{transform:none}}
+
+/* Liquid chrome surfaces for the listening room, with dark ink for readable copy. */
+.stream-section{
+  border:1px solid #777b80;
+  background:
+    radial-gradient(ellipse at 14% 8%,#fff 0 3%,#ffffffa8 8%,transparent 27%),
+    radial-gradient(ellipse at 94% 29%,#26292d 0 1%,#ffffffd9 6%,transparent 19%),
+    radial-gradient(ellipse at 3% 76%,#34383c 0 1%,#f8f8f8 5%,transparent 17%),
+    radial-gradient(ellipse at 84% 99%,#fff 0 5%,#85898d 11%,transparent 22%),
+    linear-gradient(122deg,#8e9296 0%,#fdfdfd 8%,#a9adb1 17%,#f5f6f6 29%,#bfc2c5 46%,#fff 61%,#85898d 74%,#f8f8f8 88%,#777b80 100%);
+  box-shadow:0 16px 34px #10131825,inset 0 2px 3px #fff,inset 0 -3px 7px #282b303f;
+}
+.stream-heading h2{color:#17191c}
+.stream-heading p{color:#35383c}
+.stream-upload{border-color:#777b80;color:#17191c;background:linear-gradient(160deg,#fff 0%,#d7d9db 24%,#fdfdfd 44%,#a9adb1 57%,#f8f8f8 74%,#c4c7ca 100%);box-shadow:inset 0 1px 2px #fff,0 4px 10px #10131825}
+.stream-upload:hover{border-color:#3e4247;background:linear-gradient(160deg,#fff,#c4c7ca 28%,#fff 48%,#93979b 65%,#fff);color:#090a0c}
+.stream-player{border-color:#d9dcdf;background:linear-gradient(145deg,#15191e 0%,#30363c 18%,#101317 36%,#3d444a 49%,#111418 65%,#272d33 82%,#080a0d 100%);box-shadow:0 15px 30px #080a0c4d,inset 0 1px 2px #fff,inset 0 -2px 5px #000}
+.stream-cover{border-color:#fff;background:radial-gradient(ellipse at 30% 14%,#fff 0 2%,#c6c9cc 10%,transparent 35%),radial-gradient(circle at 45% 42%,#9da2a6 0 8%,#3a3e42 9% 11%,transparent 12%),repeating-radial-gradient(circle at 45% 42%,#24292e 0 2px,#70767b 3px 5px,#30363b 6px 7px);box-shadow:inset 0 0 40px #080a0cbd,0 0 0 3px #ffffff59,0 5px 12px #0006}
+.stream-cover span{border-color:#d9dcdf;background:linear-gradient(145deg,#fff,#aeb2b6 45%,#f8f8f8 60%,#71767b);color:#101216;box-shadow:inset 0 1px 2px #fff,0 3px 9px #0008}
+.stream-release-card{border-color:#85898d;background:linear-gradient(145deg,#fff 0%,#d7d9db 20%,#fbfbfb 36%,#aeb2b6 54%,#f8f8f8 73%,#c4c7ca 100%);box-shadow:0 8px 18px #10131820,inset 0 1px 2px #fff,inset 0 -2px 4px #55585b38}
+.stream-section>.track-list .track-row{border-color:#ffffffb5;background:linear-gradient(112deg,#ffffffd9,#d4d6d8a8 35%,#fff 58%,#9b9fa399 100%);box-shadow:inset 0 1px #fff,0 4px 10px #10131817}
+.stream-section>.track-list .track-row:hover,.stream-section>.track-list .track-row.is-playing{border-color:#55595d;background:linear-gradient(112deg,#fff,#c7c9cb 34%,#fff 58%,#9b9fa3)}
+.stream-section>.track-list .track-row-copy strong{color:#17191c}
+.stream-section>.track-list .track-row-copy small{color:#34373a}
+.stream-release-copy>small{color:#393c40}
+.stream-release-copy h4{color:#17191c}
+.stream-release-artist-avatar{border-color:#71767b;background:linear-gradient(145deg,#fff,#b6b9bc 45%,#f8f8f8 65%,#777c81);color:#17191c;box-shadow:inset 0 1px 2px #fff,0 3px 8px #12151935}
+@media(max-width:680px){.stream-section{background:radial-gradient(ellipse at 12% 3%,#fff 0 4%,transparent 25%),radial-gradient(ellipse at 100% 83%,#fff 0 4%,transparent 27%),linear-gradient(132deg,#8e9296,#fdfdfd 13%,#bfc2c5 39%,#fff 60%,#8a8e92 77%,#f8f8f8 91%,#777b80)}}
+
+/* Keep the current track name legible against the dark chrome player. */
+.stream-player .stream-main h3{color:#f0f0ed}

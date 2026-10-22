@@ -1261,3 +1261,94 @@
   background:#2a2a2e;
   box-shadow:0 7px 17px #0005,inset 0 1px #ffffff12;
 }
+
+/* Liquid chrome finish for the Sourcewav profile dashboard. */
+.modal.account-modal:has(.profile-page){
+  border:1px solid transparent;
+  border-top:1px solid transparent;
+  background:
+    linear-gradient(150deg,#17181a 0%,#0d0e10 48%,#191a1c 100%) padding-box,
+    linear-gradient(138deg,#fff 0%,#666a6e 8%,#202225 17%,#f4f5f5 29%,#777b7f 43%,#fdfdfd 58%,#4e5256 71%,#e4e5e6 86%,#565a5e 100%) border-box;
+  box-shadow:0 30px 100px #000c,inset 0 1px 2px #fff,inset 0 -3px 9px #000;
+}
+.modal.account-modal:has(.profile-page)>.modal-close{
+  border-color:#e3e4e5;
+  background:linear-gradient(145deg,#fff 0%,#c2c5c8 24%,#f7f7f7 42%,#777b7f 60%,#ececed 79%,#a1a4a7 100%);
+  color:#141517;
+  box-shadow:inset 0 1px 2px #fff,0 5px 13px #0008;
+}
+.modal.account-modal:has(.profile-page) .profile-page{
+  background:radial-gradient(ellipse at 50% 0%,#ffffff09,transparent 44%),linear-gradient(145deg,#101113,#151618 52%,#0d0e10);
+}
+.modal.account-modal:has(.profile-page) .profile-cover{
+  border-bottom:1px solid #d4d6d7;
+  background:
+    radial-gradient(ellipse at 7% 4%,#fff 0 1%,#c6c9cb 4%,transparent 24%),
+    radial-gradient(ellipse at 96% 84%,#fff 0 1%,#777c81 6%,transparent 22%),
+    radial-gradient(ellipse at 80% 4%,#ffffff22,transparent 35%),
+    linear-gradient(133deg,#111315 0%,#24282c 25%,#131518 48%,#303438 69%,#101214 100%);
+}
+.modal.account-modal:has(.profile-page) .profile-cover:before{
+  background:linear-gradient(112deg,transparent 12%,#ffffff0a 28%,#ffffff27 38%,#10121430 44%,#ffffff13 57%,transparent 74%);
+}
+.modal.account-modal:has(.profile-page) .profile-cover:after{
+  background:radial-gradient(ellipse at 64% 48%,transparent 0 25%,#ffffff08 51%,transparent 72%),linear-gradient(180deg,#0003,transparent 28%,transparent 76%,#0008);
+}
+.modal.account-modal:has(.profile-page) .profile-soundwave{opacity:.48}
+.modal.account-modal:has(.profile-page) .profile-soundwave i{
+  background:linear-gradient(180deg,#fff,#b8bdc1 38%,#555a5e 68%,#eff0f0);
+  box-shadow:0 1px 3px #0009;
+}
+.modal.account-modal:has(.profile-page) .profile-identity-card,
+.modal.account-modal:has(.profile-page) .profile-work{
+  border:1px solid transparent;
+  border-radius:16px;
+  background:
+    radial-gradient(ellipse at 8% 0%,#ffffff09,transparent 37%),
+    linear-gradient(145deg,#202124 0%,#141517 34%,#1b1c1f 66%,#101113 100%) padding-box,
+    linear-gradient(138deg,#f4f4f4,#676c70 12%,#25282a 27%,#e5e6e7 43%,#72767a 61%,#f8f8f9 81%,#3c4044) border-box;
+  box-shadow:inset 0 1px 2px #fff,inset 0 -2px 5px #0008,0 12px 26px #0004;
+}
+.modal.account-modal:has(.profile-page) .profile-avatar{
+  border:2px solid transparent;
+  background:linear-gradient(145deg,#26282b,#111214) padding-box,linear-gradient(145deg,#fff,#71767a 35%,#f3f3f4 58%,#55595d) border-box;
+  box-shadow:0 5px 15px #0009,inset 0 1px 2px #fff5;
+}
+.modal.account-modal:has(.profile-page) .profile-edit-icon,
+.modal.account-modal:has(.profile-page) .profile-work-mark,
+.modal.account-modal:has(.profile-page) .profile-location,
+.modal.account-modal:has(.profile-page) .profile-action-icon{
+  border:1px solid transparent;
+  background:linear-gradient(145deg,#303236,#17181a 52%,#292b2e) padding-box,linear-gradient(145deg,#f7f7f7,#666a6e 45%,#e1e2e3) border-box;
+  box-shadow:inset 0 1px 1px #fff5,0 4px 9px #0006;
+}
+.modal.account-modal:has(.profile-page) .profile-stats div{
+  border:1px solid transparent;
+  border-radius:13px;
+  background:linear-gradient(145deg,#292a2d,#17181a 50%,#252629) padding-box,linear-gradient(145deg,#e8e9e9,#55595d 45%,#c5c7c9) border-box;
+  box-shadow:inset 0 1px 1px #fff4,0 5px 12px #0005;
+}
+.modal.account-modal:has(.profile-page) .profile-first-work,
+.modal.account-modal:has(.profile-page) .profile-work-actions .profile-first-work:first-child,
+.modal.account-modal:has(.profile-page) .profile-actions .profile-edit-button{
+  border:1px solid transparent;
+  background:linear-gradient(145deg,#303236 0%,#1a1b1d 46%,#292b2e 100%) padding-box,linear-gradient(138deg,#f3f3f4,#676b70 36%,#dedfe0 68%,#585c60) border-box;
+  box-shadow:inset 0 1px 1px #fff6,0 5px 13px #0006;
+}
+.modal.account-modal:has(.profile-page) .profile-first-work.profile-music-action{
+  background:radial-gradient(ellipse at 0 50%,#ffffff16,transparent 48%),linear-gradient(145deg,#36393d,#191a1c 51%,#303236) padding-box,linear-gradient(138deg,#fff,#777b7f 35%,#e4e5e6 68%,#4c5054) border-box;
+}
+.modal.account-modal:has(.profile-page) .profile-first-work:before{display:none}
+.modal.account-modal:has(.profile-page) .profile-first-work:hover,
+.modal.account-modal:has(.profile-page) .profile-actions .profile-edit-button:hover{
+  border-color:transparent;
+  background:linear-gradient(145deg,#414448,#202225 48%,#35383c) padding-box,linear-gradient(138deg,#fff,#85898d 36%,#fff 68%,#595d61) border-box;
+  box-shadow:inset 0 1px 1px #fff8,0 8px 19px #0008;
+}
+.modal.account-modal:has(.profile-page) .profile-logout{color:#ddd7d8}
+@media(max-width:680px){
+  .modal.account-modal:has(.profile-page){border-radius:17px}
+  .modal.account-modal:has(.profile-page) .profile-identity-card,
+  .modal.account-modal:has(.profile-page) .profile-work{border-radius:15px}
+}
+@media(prefers-reduced-motion:reduce){.modal.account-modal:has(.profile-page) .profile-first-work{transition:none}}
