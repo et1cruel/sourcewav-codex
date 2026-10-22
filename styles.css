@@ -641,7 +641,7 @@ body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
 /* Live platform surfaces */
 #feed .post-card:not(.live-post-card),#feed .user-post { display: none; }
 .platform-loading,.platform-empty { margin: 16px 0; padding: 22px; border: 1px dashed rgba(201,218,207,.22); border-radius: 16px; color: #aebbb4; background: rgba(255,255,255,.025); font-size: .92rem; }
-.live-post-title { margin: 8px 0 0; color: #edf6ef; font-size: 1.05rem; }
+.live-post-title { margin: 8px 0 0; color: #172b45; font-size: 1.05rem; font-weight: 700; line-height: 1.6; }
 .live-post-card { animation: live-card-in .28s ease both; }
 .live-like-btn.liked { color: #b5e95f; }
 .live-listing { display: grid; grid-template-columns: 54px minmax(0,1fr) auto; gap: 12px; align-items: center; width: 100%; padding: 13px; margin: 9px 0; border: 1px solid rgba(192,218,195,.14); border-radius: 14px; background: rgba(255,255,255,.035); }.listing-art-image { width:54px;height:62px;border-radius:11px;object-fit:cover; }
