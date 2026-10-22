@@ -6,6 +6,7 @@
   const list = $('#trackList');
   if (!audio || !list) return;
   let tracks = [];
+  let currentUserId = null;
   let artistRouteRequest = 0;
   let currentTrack = null;
   let likedTrackIds = new Set();
@@ -164,8 +165,76 @@
       <button type="button" class="track-row-play" data-track-play="${escapeHTML(track.id)}" aria-label="${currentTrack?.id === track.id && !audio.paused ? 'หยุด' : 'เล่น'} ${escapeHTML(track.title)}">${currentTrack?.id === track.id && !audio.paused ? 'Ⅱ' : '▶'}</button>
       <span class="track-row-cover" aria-hidden="true">${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="" loading="lazy" />` : '♫'}</span>
       <div class="track-row-copy"><strong>${escapeHTML(track.title)}</strong><small>${track.artist_profile?.username ? `<a class="track-artist-link" href="#artist/${encodeURIComponent(track.artist_profile.username)}" data-artist-profile="${escapeHTML(track.artist_profile.username)}">${escapeHTML(track.artist_profile.display_name || track.artist)}</a>` : escapeHTML(track.artist)}</small></div>
-      <div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span><span class="track-size">${formatSize(track.size_bytes)}</span><button type="button" class="stream-like-button${likedTrackIds.has(track.id) ? ' is-liked' : ''}" data-track-like="${escapeHTML(track.id)}" aria-label="${likedTrackIds.has(track.id) ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} ${escapeHTML(track.title)}">${likedTrackIds.has(track.id) ? '♥' : '♡'}</button></div>
+      <div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span><span class="track-size">${formatSize(track.size_bytes)}</span>${track.owner_id === currentUserId ? `<button type="button" class="track-edit-button" data-track-edit="${escapeHTML(track.id)}" aria-label="แก้ไขชื่อเพลงและรูปปก ${escapeHTML(track.title)}">แก้ไข</button>` : ''}<button type="button" class="stream-like-button${likedTrackIds.has(track.id) ? ' is-liked' : ''}" data-track-like="${escapeHTML(track.id)}" aria-label="${likedTrackIds.has(track.id) ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} ${escapeHTML(track.title)}">${likedTrackIds.has(track.id) ? '♥' : '♡'}</button></div>
     </article>`).join('');
+  }
+
+  function showTrackEditForm(track) {
+    if (!track || track.owner_id !== currentUserId) return;
+    openModal(`<form class="track-edit-modal" id="trackEditForm" data-track-id="${escapeHTML(track.id)}">
+      <span class="track-edit-kicker">จัดการเพลงของคุณ</span><h2 id="modalTitle">แก้ไขเพลง</h2>
+      <label class="modal-field">ชื่อเพลง<input name="title" required maxlength="100" autocomplete="off" value="${escapeHTML(track.title)}" /></label>
+      <label class="modal-field">รูปปกเพลง<input name="cover" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /><small>เลือกรูปใหม่เพื่อเปลี่ยนปก · JPG, PNG หรือ WebP · สูงสุด 5 MB</small></label>
+      ${track.cover_url ? `<div class="track-edit-cover-preview"><img src="${escapeHTML(track.cover_url)}" alt="รูปปกปัจจุบัน" /><span>รูปปกปัจจุบัน</span></div>` : ''}
+      <p class="stream-error" id="trackEditError" role="alert" hidden></p>
+      <button class="modal-primary track-edit-submit" id="trackEditSubmit" type="submit">บันทึกการเปลี่ยนแปลง</button>
+    </form>`);
+  }
+
+  async function saveTrackEdit(form) {
+    const error = $('#trackEditError');
+    const submit = $('#trackEditSubmit');
+    const track = tracks.find(item => item.id === form.dataset.trackId);
+    const title = form.elements.title.value.trim();
+    const coverFile = form.elements.cover.files?.[0] || null;
+    error.hidden = true;
+    if (!track || track.owner_id !== currentUserId) { error.textContent = 'แก้ไขได้เฉพาะเพลงที่คุณเป็นเจ้าของ'; error.hidden = false; return; }
+    if (!title) { error.textContent = 'กรอกชื่อเพลงก่อนบันทึก'; error.hidden = false; return; }
+    if (coverFile && !coverMimeByType[coverFile.type]) { error.textContent = 'รูปปกต้องเป็น JPG, PNG หรือ WebP'; error.hidden = false; return; }
+    if (coverFile && coverFile.size > maxCoverSize) { error.textContent = 'รูปปกมีขนาดใหญ่เกิน 5 MB'; error.hidden = false; return; }
+    const db = window.SourcewavSupabase;
+    if (!db) { error.textContent = 'เชื่อมต่อฐานข้อมูลไม่ได้ ลองอีกครั้ง'; error.hidden = false; return; }
+    submit.disabled = true;
+    submit.textContent = 'กำลังบันทึก…';
+    let newCoverKey = '';
+    try {
+      const update = { title };
+      if (coverFile) {
+        const ext = coverMimeByType[coverFile.type];
+        newCoverKey = `${currentUserId}/${track.id}-${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await db.storage.from('sourcewav-track-covers').upload(newCoverKey, coverFile, { contentType: coverFile.type, cacheControl: '3600', upsert: false });
+        if (uploadError?.statusCode === '404' || uploadError?.message?.toLowerCase().includes('bucket not found')) {
+          throw new Error('ระบบยังไม่พร้อมสำหรับรูปปก โปรดใช้ migration 20261022000100_audio_track_cover_art.sql ก่อน');
+        }
+        if (uploadError) throw new Error('อัปโหลดรูปปกไม่ได้: ' + uploadError.message);
+        update.cover_storage_key = newCoverKey;
+      }
+      const { error: updateError } = await db.from('audio_tracks').update(update).eq('id', track.id).eq('owner_id', currentUserId);
+      if (updateError?.code === '42703' && updateError.message?.includes('cover_storage_key')) {
+        throw new Error('ฐานข้อมูลยังไม่พร้อมสำหรับรูปปก โปรดใช้ migration 20261022000100_audio_track_cover_art.sql ก่อน');
+      }
+      if (updateError) throw new Error('บันทึกการแก้ไขไม่ได้: ' + updateError.message);
+      if (newCoverKey && track.cover_storage_key) await db.storage.from('sourcewav-track-covers').remove([track.cover_storage_key]);
+      await loadTracks();
+      const updated = tracks.find(item => item.id === track.id);
+      if (updated && currentTrack?.id === track.id) {
+        currentTrack = updated;
+        $('#streamTitle').textContent = updated.title;
+        const playerCover = $('#streamCover');
+        $('.stream-cover-image', playerCover)?.remove();
+        playerCover.classList.toggle('has-artwork', Boolean(updated.cover_url));
+        if (updated.cover_url) playerCover.insertAdjacentHTML('afterbegin', `<img class="stream-cover-image" src="${escapeHTML(updated.cover_url)}" alt="" />`);
+        updateArtistMini();
+      }
+      $('#modalClose').click();
+      toast('บันทึกการแก้ไขเพลงแล้ว');
+    } catch (failure) {
+      if (newCoverKey) await db.storage.from('sourcewav-track-covers').remove([newCoverKey]).catch(() => {});
+      error.textContent = failure.message || 'บันทึกไม่สำเร็จ ลองอีกครั้ง';
+      error.hidden = false;
+      submit.disabled = false;
+      submit.textContent = 'ลองบันทึกอีกครั้ง';
+    }
   }
 
   function updateArtistMini() {
@@ -366,6 +435,7 @@
     tracks = normalizeTracks(data);
     likedTrackIds = new Set();
     const { data: authData } = await db.auth.getUser();
+    currentUserId = authData?.user?.id || null;
     if (authData?.user && tracks.length) {
       const { data: likes } = await db.from('audio_track_likes').select('track_id').eq('user_id', authData.user.id).in('track_id', tracks.map(track => track.id));
       likedTrackIds = new Set((likes || []).map(like => like.track_id));
@@ -415,6 +485,7 @@
     ]);
     if (requestId !== artistRouteRequest) return;
     const currentUser = authData?.user || null;
+    currentUserId = currentUser?.id || null;
     let isFollowing = false;
     if (currentUser && currentUser.id !== profile.user_id) {
       const { data: followRecord } = await db.from('follows').select('follower_id').eq('follower_id', currentUser.id).eq('followed_id', profile.user_id).maybeSingle();
@@ -447,7 +518,7 @@
     const tracksMarkup = profileTracks.map(track => `<article class="track-row${currentTrack?.id === track.id && !audio.paused ? ' is-playing' : ''}" data-track-row="${escapeHTML(track.id)}">
         <button type="button" class="track-row-play" data-track-play="${escapeHTML(track.id)}" aria-label="เล่น ${escapeHTML(track.title)}">${currentTrack?.id === track.id && !audio.paused ? 'Ⅱ' : '▶'}</button>
         <span class="track-row-cover" aria-hidden="true">${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="" loading="lazy" />` : '♫'}</span>
-        <div class="track-row-copy"><strong>${escapeHTML(track.title)}</strong><small>${escapeHTML(track.genre)} · ${new Date(track.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</small></div><div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span></div>
+        <div class="track-row-copy"><strong>${escapeHTML(track.title)}</strong><small>${escapeHTML(track.genre)} · ${new Date(track.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</small></div><div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span>${track.owner_id === currentUserId ? `<button type="button" class="track-edit-button" data-track-edit="${escapeHTML(track.id)}" aria-label="แก้ไขชื่อเพลงและรูปปก ${escapeHTML(track.title)}">แก้ไข</button>` : ''}</div>
       </article>`).join('');
     const genres = [...new Set(profileTracks.map(track => track.genre).filter(Boolean))].slice(0, 6);
     view.innerHTML = `<header class="artist-profile-hero"><div class="artist-profile-cover-art" aria-hidden="true"></div><div class="artist-profile-hero-shade"></div><div class="artist-profile-identity">
@@ -528,6 +599,8 @@
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
     if (target.closest('#navReleaseBtn, #addTrackBtn, #emptyUploadBtn')) { event.preventDefault(); event.stopImmediatePropagation(); showUploadForm(); return; }
+    const edit = target.closest('[data-track-edit]');
+    if (edit) { event.preventDefault(); event.stopImmediatePropagation(); showTrackEditForm(tracks.find(track => track.id === edit.dataset.trackEdit)); return; }
     const tab = target.closest('[data-music-tab]');
     if (tab) {
       event.preventDefault(); event.stopImmediatePropagation();
@@ -563,6 +636,9 @@
   }, true);
 
   document.addEventListener('submit', async event => {
+    if (event.target instanceof HTMLFormElement && event.target.id === 'trackEditForm') {
+      event.preventDefault(); event.stopImmediatePropagation(); await saveTrackEdit(event.target); return;
+    }
     if (!(event.target instanceof HTMLFormElement) || event.target.id !== 'trackUploadForm') return;
     event.preventDefault(); event.stopImmediatePropagation();
     const form = event.target;
