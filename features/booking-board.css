@@ -320,7 +320,7 @@
 .booking-meta strong{color:#f1faff;font-size:16px}
 .booking-meta small{color:#a5bfce;font-size:11px}
 .booking-role-tag{border:1px solid #70c9da55;border-radius:999px;background:#17364a;color:#aeeaf1;font-size:10px;padding:3px 9px}
-.booking-role-tag.dj,.booking-role-tag.rapper,.booking-role-tag.producer,.booking-role-tag.photographer,.booking-role-tag.vj,.booking-role-tag.crew{border-color:#76ccdd55;background:#183449;color:#aeeaf1}
+.booking-role-tag.dj,.booking-role-tag.rapper,.booking-role-tag.producer,.booking-role-tag.photographer,.booking-role-tag.vj,.booking-role-tag.crew,.booking-role-tag.organizer{border-color:#76ccdd55;background:#183449;color:#aeeaf1}
 .booking-avail-pill{border-radius:999px;font-size:11px}
 .booking-avail-pill.ready{border-color:#74dfb155;background:#0e382f;color:#8af0bb}
 .booking-avail-pill.busy{border-color:#e1c56b60;background:#3b3020;color:#f2d47c}

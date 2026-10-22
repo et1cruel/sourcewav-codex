@@ -10,7 +10,7 @@
   const ROLE_LABELS = {
     dj: 'DJ / เปิดเพลง', rapper: 'Rapper / MC', producer: 'Producer / Beatmaker',
     photographer: 'Photographer / Video', editor: 'Editor / ตัดต่อวิดีโอ', tattooist: 'Tattooist / ช่างสัก',
-    vj: 'VJ / Visual Artist', crew: 'Sound Engineer / ทีมจัดงาน', other: 'ศิลปิน'
+    vj: 'VJ / Visual Artist', crew: 'Sound Engineer / ทีมจัดงาน', organizer: 'Organizer / ผู้จัดงาน', other: 'ศิลปิน'
   };
   let db = null;
   let user = null;

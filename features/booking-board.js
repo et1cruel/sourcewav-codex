@@ -136,6 +136,7 @@
               <option value="tattooist">Tattooist / ช่างสัก</option>
               <option value="vj">VJ / Visual Artist</option>
               <option value="crew">Sound Engineer / ทีมจัดงาน</option>
+              <option value="organizer">Organizer / ผู้จัดงาน</option>
             </select>
           </label>
           <label class="modal-field">
@@ -223,7 +224,8 @@
         editor: 'Editor / ตัดต่อวิดีโอ',
         tattooist: 'Tattooist / ช่างสัก',
         vj: 'VJ / Visual Artist',
-        crew: 'Sound Engineer / ทีมจัดงาน'
+        crew: 'Sound Engineer / ทีมจัดงาน',
+        organizer: 'Organizer / ผู้จัดงาน'
       };
 
       const role = $('#newArtistRole').value;
