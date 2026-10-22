@@ -2,11 +2,11 @@
   const swProfileKey = 'sourcewav.profile.v1';
   let swProfileCache = null;
   const swDefaultProfile = {
-    name: 'มินตรา',
-    handle: 'min.wav',
-    role: 'นักฟังเพลง',
-    city: 'กรุงเทพฯ',
-    bio: 'อยู่ตรงนี้เพื่อฟังเพลงใหม่ ๆ และเจอคนทำของน่าสนใจ',
+    name: 'Guest',
+    handle: 'guest',
+    role: 'ผู้เยี่ยมชมเว็บไซต์',
+    city: 'Guest',
+    bio: 'กำลังสำรวจเพลง อีเวนต์ และชุมชนบน Sourcewav',
     avatarUrl: ''
   };
 
@@ -34,6 +34,7 @@
   }
   function swGetProfile() {
     try {
+      if (!window.SourcewavAuthUser) return { ...swDefaultProfile };
       const stored = swProfileCache || window.SourcewavStore?.getState?.().profile || JSON.parse(localStorage.getItem(swProfileKey) || '{}');
       return {
         ...swDefaultProfile,
@@ -117,7 +118,9 @@
     const railAvatar = document.querySelector('.rail-profile .avatar');
     const railName = document.querySelector('.rail-profile strong');
     const railMeta = document.querySelector('.rail-profile small');
+    const composerAvatar = document.querySelector('.composer .avatar');
     renderAvatar(railAvatar, [...profile.name][0] || 'S');
+    renderAvatar(composerAvatar, [...profile.name][0] || 'S');
     if (railName) railName.textContent = profile.name;
     if (railMeta) railMeta.textContent = `@${profile.handle} · ${profile.city}`;
   }
@@ -130,6 +133,18 @@
     const profile = swGetProfile();
     const sessionActive = Boolean(window.SourcewavAuthUser);
     swUpdateProfileChrome(profile);
+    if (!sessionActive) {
+      swShow(`<section class="profile-page guest-profile-page">
+        <div class="profile-cover"><div class="profile-soundwave" aria-hidden="true">${Array.from({ length: 34 }, (_, i) => `<i style="--wave:${10 + ((i * 17 + 9) % 29)}px"></i>`).join('')}</div><span class="profile-cover-tag">SOURCEWAV / GUEST</span></div>
+        <div class="profile-grid"><section class="profile-identity-card" aria-label="สถานะผู้เยี่ยมชม">
+          <div class="profile-identity"><div class="profile-avatar">G</div><div class="profile-identity-copy"><span class="account-status"><i></i>ผู้เยี่ยมชมเว็บไซต์</span><h2 id="modalTitle">Guest</h2><p>เข้าชมแบบไม่ต้องสมัครสมาชิก</p></div></div>
+          <p class="profile-bio">ฟังเพลง ดูโพสต์ ค้นหาศิลปินและดูอีเวนต์สาธารณะได้เลย</p>
+          <div class="profile-guest-links"><a href="#music" data-account-action="close">♫ ไปหน้าฟังเพลง</a><a href="#events" data-account-action="close">ตั๋ว · ดูอีเวนต์</a></div>
+          <div class="profile-auth-links"><span>อยากโพสต์ กดถูกใจ หรือเก็บรายการไว้?</span><button type="button" data-account-action="register">สร้างบัญชี</button><button type="button" data-account-action="login">เข้าสู่ระบบ</button></div>
+        </section></div>
+      </section>`);
+      return;
+    }
     swShow(`<section class="profile-page">
       <div class="profile-cover"><div class="profile-soundwave" aria-hidden="true">${Array.from({ length: 34 }, (_, i) => `<i style="--wave:${10 + ((i * 17 + 9) % 29)}px"></i>`).join('')}</div><span class="profile-cover-tag">SOURCEWAV / PROFILE</span></div>
       <div class="profile-grid"><section class="profile-identity-card" aria-label="ข้อมูลโปรไฟล์">
@@ -167,7 +182,7 @@
   function swAuthView(mode = 'register') {
     const isRegister = mode === 'register';
     const isRecovery = mode === 'recovery';
-    const fields = isRegister ? `<label class="account-field"><span>ชื่อที่ใช้ในคอมมูนิตี้</span><input name="displayName" type="text" autocomplete="name" placeholder="เช่น มินตรา" minlength="2" maxlength="32" required /></label>
+    const fields = isRegister ? `<label class="account-field"><span>ชื่อที่ใช้ในคอมมูนิตี้</span><input name="displayName" type="text" autocomplete="name" placeholder="เช่น ชื่อที่ใช้ในวงการ" minlength="2" maxlength="32" required /></label>
       <label class="account-field"><span>ชื่อผู้ใช้</span><input name="username" type="text" autocomplete="username" placeholder="เช่น min_wav" pattern="[A-Za-z0-9_]{3,30}" minlength="3" maxlength="30" required /><small>ใช้ภาษาอังกฤษ ตัวเลข หรือขีดล่าง 3–30 ตัว</small></label>
       <div class="account-field-row"><label class="account-field"><span>คุณทำอะไร</span><select name="role"><option>Rapper / MC</option><option>Producer / Beatmaker</option><option>DJ</option><option>ศิลปิน / นักวาด</option><option>คนทำงานเบื้องหลัง</option><option>นักฟังเพลง</option></select></label><label class="account-field"><span>เมืองของคุณ</span><input name="city" type="text" autocomplete="address-level2" value="กรุงเทพฯ" maxlength="40" required /></label></div>` : '';
     const credentialFields = isRecovery
@@ -451,7 +466,7 @@
   window.addEventListener('sourcewav:auth', event => {
     if (event.detail.authEvent === 'PASSWORD_RECOVERY') swAuthView('recovery');
     if (event.detail.user) swLoadRemoteProfile().catch(() => {});
-    else swProfileCache = null;
+    else { swProfileCache = null; swUpdateProfileChrome(swGetProfile()); }
   });
   swUpdateProfileChrome(swGetProfile());
 })();

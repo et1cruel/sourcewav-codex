@@ -371,6 +371,7 @@
       artist_id: owner.id, title: input.title, category: input.category,
       product_type: input.type, price_minor: Math.round(Number(input.price) * 100),
       stock: input.stock, image_url: input.imageUrl, description: input.description,
+      preview_audio_url: input.previewAudioUrl || null,
       is_active: true
     }).select('*').single(), 'create artist product');
     const profile = await db.from('profiles').select('user_id,username,display_name').eq('user_id', owner.id).maybeSingle();

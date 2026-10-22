@@ -9,6 +9,10 @@
      FEATURE 8: ARTIST STORE
   --------------------------------------------------------------------------- */
   let activeStoreCategory = 'all';
+  const beatPreviewTypes = {
+    mp3: 'audio/mpeg', wav: 'audio/wav', flac: 'audio/flac', ogg: 'audio/ogg',
+    m4a: 'audio/mp4', aac: 'audio/aac', webm: 'audio/webm'
+  };
 
   function renderArtistStore() {
     const host = $('#artistStoreGrid');
@@ -38,21 +42,18 @@
       return `
         <article class="store-product-card" data-product-id="${esc(prod.id)}">
           <div class="product-image-wrap">
-            <img src="${esc(prod.imageUrl)}" alt="${esc(prod.title)}" loading="lazy" />
+            ${prod.imageUrl ? `<img src="${esc(prod.imageUrl)}" alt="${esc(prod.title)}" loading="lazy" />` : `<div class="product-art-placeholder" aria-label="ไม่มีภาพปกสินค้า"><span>♫</span><b>${esc(prod.title)}</b></div>`}
             <div class="product-tag-floating">
               ${typeBadge}
             </div>
-            ${prod.category === 'beats' ? `
-              <button class="product-demo-btn" data-play-beat-demo="${esc(prod.id)}">
-                ▶ ตัวอย่างบีท
-              </button>
-            ` : ''}
+            ${prod.category === 'beats' && prod.previewAudioUrl ? `<div class="product-beat-player"><audio controls preload="none" src="${esc(prod.previewAudioUrl)}" aria-label="ฟังตัวอย่าง ${esc(prod.title)}"></audio></div>` : ''}
           </div>
 
           <div class="product-info">
             <div>
               <span class="product-category-sub">${esc(prod.categoryLabel)}</span>
               <h4>${esc(prod.title)}</h4>
+              <small class="product-creator">โดย ${esc(prod.artistName || 'โปรดิวเซอร์')}</small>
               <p>${esc(prod.description)}</p>
             </div>
 
@@ -65,7 +66,7 @@
                 ? '<span class="platform-empty">สินค้าของคุณ</span>'
                 : prod.stock === 0
                   ? '<button class="buy-product-btn" type="button" disabled>สินค้าหมด</button>'
-                  : `<button class="buy-product-btn" data-buy-product="${esc(prod.id)}">ส่งคำขอสั่งซื้อ</button>`}
+                  : `<div class="product-card-actions"><button class="buy-product-btn" data-buy-product="${esc(prod.id)}">ส่งคำขอสั่งซื้อ</button>${prod.category === 'beats' ? `<button class="product-chat-btn" data-chat-artist="${esc(prod.artistId)}" data-artist-name="${esc(prod.artistName || 'โปรดิวเซอร์')}" type="button">✉ ทักโปรดิวเซอร์</button>` : ''}</div>`}
             </div>
           </div>
         </article>
@@ -75,70 +76,65 @@
 
   function openAddProductModal() {
     showModal(`
-      <h2 id="modalTitle">ลงขายสินค้าใน Artist Store</h2>
-      <p>บันทึกสินค้าไว้ในฐานข้อมูลและเปิดให้ผู้ใช้ส่งคำขอสั่งซื้อ</p>
-
-      <form id="addProductForm">
-        <label class="modal-field">
-          ชื่อสินค้า / ชิ้นงาน
-          <input id="prodTitle" required placeholder="เช่น OVERSIZE TEE 'NIGHT RIDE' หรือ BOOM BAP BEAT PACK" />
-        </label>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <label class="modal-field">
-            หมวดหมู่สินค้า
-            <select id="prodCategory">
-              <option value="merch">เสื้อผ้า & Merch</option>
-              <option value="tape_cd">เทปคาสเซ็ท / ซีดี</option>
-              <option value="beats" selected>Beat & Sample Pack (ดิจิทัล)</option>
-              <option value="art">Artwork & สิ่งพิมพ์</option>
-            </select>
-          </label>
-
-          <label class="modal-field">
-            ประเภทสินค้า
-            <select id="prodType">
-              <option value="digital" selected>ดิจิทัลดาวน์โหลด (Instant Download)</option>
-              <option value="physical">สินค้าจริง (ต้องจัดส่งทางพัสดุ)</option>
-            </select>
-          </label>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-          <label class="modal-field">
-            ราคาขาย (บาท)
-            <input id="prodPrice" type="number" min="50" step="10" value="650" required />
-          </label>
-
-          <label class="modal-field">
-            จำนวนสต็อก (สินค้าจริง)
-            <input id="prodStock" type="number" min="0" step="1" placeholder="ระบุจำนวนสินค้าจริง" />
-          </label>
-        </div>
-
-        <label class="modal-field">
-          ลิงก์รูปภาพสินค้า
-          <input id="prodImage" value="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=600&q=80" required />
-        </label>
-
-        <label class="modal-field">
-          คำอธิบายสินค้า & สิทธิ์การใช้งาน
-          <textarea id="prodDesc" rows="3" required placeholder="ระบุขนาด สไตล์ รายละเอียดไฟล์ หรือลิขสิทธิ์เชิงพาณิชย์..."></textarea>
-        </label>
-
-        <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; margin: 14px 0;">
-          <div style="font-size: 11px; font-weight: 700; color: #1e293b; text-transform: uppercase; margin-bottom: 4px;">
-            สถานะการขาย
+      <section class="store-create-view">
+        <header class="store-create-heading"><span class="store-create-mark" aria-hidden="true">✳</span><div><span class="store-form-eyebrow">SOURCEWAV · CREATOR MARKET</span><h2 id="modalTitle">ลงผลงานใน Artist Store</h2><p>เปิดพื้นที่ให้คนในชุมชนค้นพบและสนับสนุนงานของคุณ</p></div></header>
+        <form id="addProductForm" class="store-product-form">
+          <div class="store-product-fields">
+            <label class="modal-field store-field-wide">ชื่อสินค้า / ชิ้นงาน<input id="prodTitle" required maxlength="180" placeholder="เช่น BOOM BAP BEAT PACK VOL. 01" /></label>
+            <label class="modal-field">หมวดหมู่<select id="prodCategory"><option value="beats" selected>Beat & Sample Pack</option><option value="merch">เสื้อผ้า & Merch</option><option value="tape_cd">เทปคาสเซ็ท / ซีดี</option><option value="art">Artwork & สิ่งพิมพ์</option></select></label>
+            <label class="modal-field">ประเภทสินค้า<select id="prodType"><option value="digital" selected>ดิจิทัล</option><option value="physical">สินค้าจริง · จัดส่ง</option></select></label>
+            <label class="modal-field">ราคาขาย (บาท)<input id="prodPrice" type="number" min="50" step="10" value="650" required /></label>
+            <label class="modal-field store-stock-field" id="prodStockField" hidden>จำนวนสต็อก<input id="prodStock" type="number" min="0" step="1" placeholder="ระบุจำนวนชิ้น" /></label>
+            <label class="modal-field store-field-wide">ลิงก์ภาพปกสินค้า <input id="prodImage" type="url" placeholder="https://..." /><small>ใส่ URL รูปปกของผลงานเพื่อให้แสดงบนการ์ดสินค้า</small></label>
+            <label class="modal-field store-field-wide">คำอธิบายและสิทธิ์การใช้งาน<textarea id="prodDesc" rows="3" required maxlength="2000" placeholder="แนวเพลง รายละเอียดไฟล์ วิธีใช้งาน หรือสิทธิ์การนำไปใช้..."></textarea></label>
+            <section class="store-beat-upload store-field-wide" id="beatPreviewField" aria-labelledby="beatPreviewTitle">
+              <div class="store-beat-upload-copy"><span class="store-beat-icon" aria-hidden="true">♫</span><div><strong id="beatPreviewTitle">เพิ่มเสียงพรีวิวบีท</strong><small>ให้ผู้ฟังกดลองฟังก่อนตัดสินใจ · ไม่บังคับ</small></div></div>
+              <label class="store-audio-pick" for="prodBeatPreview"><span aria-hidden="true">＋</span> เลือกไฟล์เสียงพรีวิว<input id="prodBeatPreview" type="file" accept=".mp3,.wav,.flac,.ogg,.m4a,.aac,.webm,audio/mpeg,audio/wav,audio/flac,audio/ogg,audio/mp4,audio/aac,audio/webm" /><small>MP3, WAV, FLAC, OGG, M4A, AAC หรือ WebM · ไม่เกิน 20 MB · แนะนำ 30–60 วินาที</small></label>
+              <audio id="prodBeatPreviewPlayer" controls preload="metadata" hidden aria-label="ตัวอย่างเสียงพรีวิวบีท"></audio>
+              <p>อัปโหลดเฉพาะคลิปพรีวิวสั้น ๆ ไฟล์นี้จะเปิดฟังได้สาธารณะ อย่าใช้ไฟล์ master เต็มที่ต้องการเก็บไว้ขาย</p>
+            </section>
           </div>
-          <p style="font-size:12px;margin:0;color:#475569;">คำสั่งซื้อจะอยู่สถานะรอดำเนินการ ระบบยังไม่รับเงินและยังไม่ส่งไฟล์ดิจิทัลอัตโนมัติ</p>
-        </div>
+          <div class="store-create-note"><span aria-hidden="true">ⓘ</span><p>คำสั่งซื้อจะถูกบันทึกเป็นคำขอ ระบบยังไม่รับชำระเงินและไม่ส่งไฟล์ขายอัตโนมัติ</p></div>
+          <button type="submit" class="store-publish-btn"><span>เปิดขายผลงาน</span><b aria-hidden="true">↗</b></button>
+        </form>
+      </section>
+    `, 'artist-store-modal');
 
-        <button type="submit" class="modal-primary">เปิดขายสินค้าใน Artist Store</button>
-      </form>
-    `);
+    const categorySelect = $('#prodCategory');
+    const typeSelect = $('#prodType');
+    const stockField = $('#prodStockField');
+    const stockInput = $('#prodStock');
+    const beatFileInput = $('#prodBeatPreview');
+    const beatPlayer = $('#prodBeatPreviewPlayer');
+    const syncConditionalFields = () => {
+      const isPhysical = typeSelect.value === 'physical';
+      stockField.hidden = !isPhysical;
+      stockInput.required = isPhysical;
+      $('#beatPreviewField').hidden = categorySelect.value !== 'beats';
+    };
+    categorySelect.addEventListener('change', () => {
+      if (categorySelect.value === 'beats') typeSelect.value = 'digital';
+      syncConditionalFields();
+    });
+    typeSelect.addEventListener('change', syncConditionalFields);
+    syncConditionalFields();
+    beatFileInput.addEventListener('change', () => {
+      const file = beatFileInput.files?.[0];
+      if (!file) { beatPlayer.pause(); beatPlayer.removeAttribute('src'); beatPlayer.hidden = true; return; }
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      if (!beatPreviewTypes[extension] || file.size > 20 * 1024 * 1024) {
+        beatFileInput.value = '';
+        toast('เลือกไฟล์เสียงพรีวิวที่รองรับและมีขนาดไม่เกิน 20 MB');
+        return;
+      }
+      beatPlayer.src = URL.createObjectURL(file);
+      beatPlayer.hidden = false;
+      beatPlayer.load();
+    });
 
     $('#addProductForm')?.addEventListener('submit', e => {
       e.preventDefault();
+      if (!global.SourcewavAuthUser) { toast('เข้าสู่ระบบก่อนลงขายสินค้า'); document.querySelector('#profileBtn')?.click(); return; }
       const category = $('#prodCategory').value;
       const type = $('#prodType').value;
       const price = Number($('#prodPrice').value) || 0;
@@ -148,6 +144,7 @@
         return;
       }
 
+      const previewFile = category === 'beats' ? beatFileInput.files?.[0] : null;
       const newProduct = {
         title: $('#prodTitle').value.trim(),
         category: category,
@@ -155,15 +152,36 @@
         price: price,
         stock: type === 'digital' ? null : Number(stockInput),
         imageUrl: $('#prodImage').value.trim(),
-        description: $('#prodDesc').value.trim()
+        description: $('#prodDesc').value.trim(),
+        previewFile
       };
-
-      global.SourcewavFeatureData.createProduct(newProduct).then(product => {
-        if (!product) return;
-        renderArtistStore();
-        closeModal();
-        toast('บันทึกสินค้าในฐานข้อมูลและเปิดขายแล้ว');
-      }).catch(error => toast(`บันทึกสินค้าไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
+      const submitButton = $('#addProductForm button[type="submit"]');
+      submitButton.disabled = true;
+      submitButton.setAttribute('aria-busy', 'true');
+      const persistProduct = async () => {
+        let previewKey = '';
+        try {
+          if (previewFile) {
+            const extension = previewFile.name.split('.').pop().toLowerCase();
+            const bucket = global.SourcewavSupabase.storage.from('sourcewav-audio');
+            previewKey = `${global.SourcewavAuthUser.id}/store-previews/${crypto.randomUUID()}.${extension}`;
+            const { error } = await bucket.upload(previewKey, previewFile, { contentType: beatPreviewTypes[extension], cacheControl: '3600', upsert: false });
+            if (error) throw error;
+            newProduct.previewAudioUrl = bucket.getPublicUrl(previewKey).data.publicUrl;
+          }
+          const product = await global.SourcewavFeatureData.createProduct(newProduct);
+          if (!product) { if (previewKey) await global.SourcewavSupabase.storage.from('sourcewav-audio').remove([previewKey]); return; }
+          renderArtistStore();
+          closeModal();
+          toast(previewFile ? 'เปิดขายสินค้าและเผยแพร่เสียงพรีวิวแล้ว' : 'บันทึกสินค้าในฐานข้อมูลและเปิดขายแล้ว');
+        } catch (error) {
+          if (previewKey) await global.SourcewavSupabase.storage.from('sourcewav-audio').remove([previewKey]).catch(() => {});
+          toast(`บันทึกสินค้าไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`);
+        } finally {
+          if (submitButton.isConnected) { submitButton.disabled = false; submitButton.removeAttribute('aria-busy'); }
+        }
+      };
+      persistProduct();
     });
   }
 
