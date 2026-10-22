@@ -97,7 +97,7 @@
 
     showModal(`
       <h2 id="modalTitle">ลงทะเบียนรับงาน / สร้างการ์ด Booking</h2>
-      <p>เพิ่มโปรไฟล์ของคุณบน Booking Board เพื่อรับงานแสดง DJ, แรป, ทำบีท หรืองานโปรดักชัน</p>
+      <p>เพิ่มโปรไฟล์ของคุณบน Booking Board เพื่อรับงาน DJ, แรป, ทำบีท ถ่ายและตัดต่อวิดีโอ สักลาย หรืองานโปรดักชัน</p>
 
       <form id="joinBookingForm">
         <label class="modal-field">
@@ -114,6 +114,8 @@
               <option value="rapper">Rapper / MC</option>
               <option value="producer">Producer / Beatmaker</option>
               <option value="photographer">Photographer / Video</option>
+              <option value="editor">Editor / ตัดต่อวิดีโอ</option>
+              <option value="tattooist">Tattooist / ช่างสัก</option>
               <option value="vj">VJ / Visual Artist</option>
               <option value="crew">Sound Engineer / ทีมจัดงาน</option>
             </select>
@@ -161,6 +163,8 @@
         rapper: 'Rapper / MC',
         producer: 'Producer / Beatmaker',
         photographer: 'Photographer / Video',
+        editor: 'Editor / ตัดต่อวิดีโอ',
+        tattooist: 'Tattooist / ช่างสัก',
         vj: 'VJ / Visual Artist',
         crew: 'Sound Engineer / ทีมจัดงาน'
       };

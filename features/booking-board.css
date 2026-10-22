@@ -356,4 +356,5 @@
 .booking-chip:hover{transform:none;border-color:#76d7e8;background:#1a3549;color:#f2fbff;box-shadow:0 3px 10px #03101b45}
 .booking-chip.selected{border-color:#c9f477;background:#263b3b;color:#efffc4;box-shadow:inset 0 0 0 1px #c9f47736,0 0 12px #baf06b1d}
 .booking-filter-icon{display:block;width:27px;height:27px;flex:none;object-fit:contain}
+.booking-filter-icon[src*="editor"],.booking-filter-icon[src*="tattooist"]{filter:drop-shadow(0 2px 5px #c8e9ff35)}
 @media(max-width:680px){.booking-filters{flex-wrap:nowrap;overflow-x:auto;overscroll-behavior-inline:contain;gap:7px;padding:2px 0 9px;margin-bottom:12px;scrollbar-width:thin}.booking-chip{min-height:40px;padding:4px 9px;font-size:11px}.booking-filter-icon{width:25px;height:25px}}
