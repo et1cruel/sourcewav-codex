@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "build:pages": "node scripts/build-pages.mjs",
+    "deploy:pages": "npm run build:pages && npx wrangler pages deploy dist --project-name sourcewav-community --branch main"
+  },
   "devDependencies": {
     "supabase": "^2.121.0"
   }

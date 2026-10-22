@@ -297,14 +297,15 @@
 
   async function openMyTickets() {
     const previewMode = location.hostname === 'localhost' && new URLSearchParams(location.search).get('preview') === 'tickets';
-    const user = previewMode ? { id: 'local-ticket-preview' } : await needUser(); if (!user) return;
+    const { data: auth } = previewMode ? { data: { user: { id: 'local-ticket-preview' } } } : await db.auth.getUser();
+    const user = auth.user;
     try {
       const previewTickets = [{
         id: 'local-preview-ticket', status: 'valid', issued_at: '2026-08-18T12:00:00+07:00', qr_payload: 'SOURCEWAV-LOCAL-PREVIEW',
         events: { title: 'SUMMER ECHO FESTIVAL', category: 'music', starts_at: '2026-11-14T18:00:00+07:00', venue_name: 'IMPACT ARENA', venue_address: 'อิมแพ็ค เมืองทองธานี', status: 'published' },
         order_items: { unit_price_minor: 250000, ticket_types: { name: 'Zone A · Row 12 · Seat 34' }, orders: { id: 'SW-92481', created_at: '2026-08-18T12:00:00+07:00' } }
       }];
-      const { tickets = previewTickets } = previewMode ? {} : await call('my-tickets', {});
+      const { tickets = previewTickets } = previewMode ? {} : user ? await call('my-tickets', {}) : { tickets: [] };
       const classify = ticket => {
         if (ticket.status === 'checked_in') return 'used';
         if (['cancelled', 'refunded'].includes(ticket.status) || ticket.events?.status === 'cancelled') return 'cancelled';
@@ -341,7 +342,7 @@
       const statusFilters = [['all','All','▱'],['valid','Upcoming','▦'],['used','Used','✓'],['cancelled','Cancelled','×']];
       const counts = Object.fromEntries(statusFilters.map(([key]) => [key, key === 'all' ? tickets.length : tickets.filter(ticket => classify(ticket) === key).length]));
       modal(`<div class="my-tickets-page"><nav class="tickets-page-nav" aria-label="Ticket navigation"><a class="tickets-page-brand" href="#home" data-ticket-nav="home" aria-label="Sourcewav dashboard">SOURCEWAV</a><div class="tickets-page-links"><a href="#home" data-ticket-nav="home">Dashboard</a><a href="#my-tickets" class="is-current" aria-current="page">My Tickets</a><a href="#events" data-ticket-nav="events">Events</a></div><button type="button" class="tickets-search" data-ticket-nav="events" aria-label="Search events"></button><button type="button" class="tickets-user-icon" data-ticket-profile aria-label="Account"><span aria-hidden="true"></span></button></nav><div class="tickets-page-content"><header class="my-tickets-heading"><h2 id="modalTitle">My Tickets</h2><div class="ticket-filters" role="group" aria-label="Filter tickets by status">${statusFilters.map(([key,label,icon]) => `<button type="button" class="ticket-filter${key === 'all' ? ' is-active' : ''}" data-ticket-filter="${key}" aria-pressed="${key === 'all'}"><span class="ticket-filter-icon" aria-hidden="true">${icon}</span><span>${label}</span><b>${counts[key]}</b></button>`).join('')}</div></header>
-        <div class="my-ticket-list">${ticketCards || '<div class="tickets-empty"><h3>ยังไม่มีบัตรในกระเป๋า</h3><p>บัตรที่ซื้อสำเร็จจะแสดงอยู่ที่นี่</p></div>'}</div><div class="tickets-filter-empty" hidden>ไม่มีบัตรในหมวดนี้</div></div></div>`);
+        <div class="my-ticket-list">${ticketCards || `<div class="tickets-empty"><h3>${user ? 'ยังไม่มีบัตรในกระเป๋า' : 'เข้าสู่ระบบเพื่อดูบัตรของคุณ'}</h3><p>${user ? 'บัตรที่ซื้อสำเร็จจะแสดงอยู่ที่นี่' : 'บัตรที่ซื้อสำเร็จจะแสดงอยู่ที่นี่ เมื่อเข้าสู่ระบบด้วยบัญชีที่ใช้ซื้อบัตร'}</p>${user ? '' : '<button type="button" class="ticket-login-action" data-ticket-login>เข้าสู่ระบบ</button>'}</div>`}</div><div class="tickets-filter-empty" hidden>ไม่มีบัตรในหมวดนี้</div></div></div>`);
       const host = $('#modalContent');
       host.querySelectorAll('.ticket-qr').forEach(node => { if (window.QRCode && node.dataset.qr) new QRCode(node, { text: node.dataset.qr, width: 148, height: 148, correctLevel: QRCode.CorrectLevel.M }); });
       host.querySelectorAll('[data-ticket-filter]').forEach(button => button.addEventListener('click', () => {
@@ -365,6 +366,7 @@
         if (destination === 'events') document.querySelector('#events')?.scrollIntoView({ behavior: 'smooth' });
         else window.scrollTo({ top: 0, behavior: 'smooth' });
       }));
+      host.querySelector('[data-ticket-login]')?.addEventListener('click', () => { closeModal(); $('#profileBtn')?.click(); });
       host.querySelector('[data-ticket-profile]')?.addEventListener('click', () => { closeModal(); $('#profileBtn')?.click(); });
     } catch (error) { toast(error.message); }
   }

@@ -1,12 +1,6 @@
 {
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "sourcewav-community",
   "compatibility_date": "2026-10-21",
-  "main": "worker.js",
-  "workers_dev": true,
-  "preview_urls": false,
-  "assets": {
-    "directory": ".",
-    "binding": "ASSETS",
-    "not_found_handling": "single-page-application"
-  }
+  "pages_build_output_dir": "./dist"
 }

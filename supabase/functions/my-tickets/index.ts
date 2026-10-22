@@ -7,7 +7,12 @@ Deno.serve(async (request) => {
     const secret = Deno.env.get('TICKET_QR_SECRET');
     if (!secret) return json({ error: 'Ticket QR is not configured' }, 503);
     const db = serviceClient();
-    const { data, error } = await db.from('tickets').select('id,event_id,status,issued_at,checked_in_at,qr_code_hash,events(title,starts_at,venue_id,venues(name,address)),order_items(ticket_types(name))').eq('owner_id', user.id).order('issued_at', { ascending: false });
+    const { data, error } = await db.from('tickets')
+      .select('id,event_id,status,issued_at,checked_in_at,qr_code_hash,events(title,category,status,starts_at,cover_url,venue_id,venues(name,address)),order_items!inner(unit_price_minor,ticket_types(name),orders!inner(id,created_at,status))')
+      .eq('owner_id', user.id)
+      .in('order_items.orders.status', ['paid', 'refunded'])
+      .in('status', ['valid', 'checked_in', 'cancelled', 'refunded'])
+      .order('issued_at', { ascending: false });
     if (error) throw error;
     const tickets = (data || []).map(ticket => ({ ...ticket, qr_payload: '' }));
     // Sign tokens with the same deterministic HMAC used when the payment webhook created the ticket hash.

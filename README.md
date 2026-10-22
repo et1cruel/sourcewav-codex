@@ -18,12 +18,18 @@ The server listens on `http://localhost:4173` and binds to loopback only. If ano
 - The local Node server's older SQLite `/api/state` and `/api/tracks` endpoints are retained for local compatibility only; the current web UI does not use them.
 - The Bangkok venue map is interactive and uses Leaflet with OpenStreetMap tiles.
 
-## Cloudflare preview deployment
+## Cloudflare Pages deployment
 
-The repository is configured for Cloudflare Workers Static Assets. Install Wrangler or run it through `npx`, then deploy from the project root with `npx wrangler deploy`. `.assetsignore` excludes source, local database, and project metadata from public assets. The app continues to use the configured Supabase project for auth and data.
+The project deploys static files to Cloudflare Pages. Build and deploy the site from the project root with:
 
-After deployment, add the resulting `https://<worker-name>.<workers-subdomain>.workers.dev` URL to Supabase Auth's Site URL and Redirect URLs before testing registration or login. Apply and review pending SQL migrations first. Production registration also depends on Supabase Auth email confirmation and SMTP settings.
+```powershell
+npm run deploy:pages
+```
+
+The build copies only the files the web app needs into `dist/`, so workspace files and local data stay out of the public deployment. The deployed site uses the configured Supabase project for auth and data.
+
+The production site is `https://sourcewav-community.pages.dev`. Supabase Auth's Site URL and Redirect URLs are configured for that Pages domain. Email signup requires email confirmation; production email delivery depends on Supabase SMTP settings.
 
 ## Remaining launch work
 
-Apply migration `20261022000000_community_room_images.sql` to the configured Supabase project before using room image messages. Email sign-up is enabled and requires users to confirm their email before logging in. Set the deployed site's URL in Supabase Auth's Site URL and Redirect URLs, then test registration, email confirmation, login, room creation, text and image messages, and password recovery with two accounts. Test SlipOK, order reconciliation, and ticket QR scan in a controlled environment before taking real payments. Keep the local Node/SQLite endpoints off the public deployment.
+Test registration, email confirmation, login, room creation, text and image messages, and password recovery with two accounts. Test SlipOK, order reconciliation, and ticket QR scan in a controlled environment before taking real payments. Keep the local Node/SQLite endpoints off the public deployment.
