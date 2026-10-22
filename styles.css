@@ -2071,3 +2071,19 @@ body :where(button,a,.ticket-filter,.nav-link,.rail-item){-webkit-text-stroke:.1
 .ticket-sell-modal .modal-field small{color:#b7b3c3}
 .event-poster-upload{border-color:#b99af245;background:linear-gradient(145deg,#191b26,#151720);box-shadow:inset 0 1px #ffffff08,0 8px 22px #0002}
 @media(prefers-reduced-motion:reduce){.ticket-sell-modal .modal-field input[type=file],.ticket-sell-modal .modal-field input[type=file]::file-selector-button{transition:none}}
+.map-preview .venue-row,.map-modal .venue-row{position:relative;min-height:92px;padding:5px 6px 21px;border:1px solid #ffffff62;border-radius:13px;background-color:#151319;background-image:linear-gradient(90deg,#05070cdb 0%,#08090a8c 62%,#08090a38 100%),var(--venue-image);background-position:center;background-size:cover;box-shadow:0 5px 13px #0005;overflow:hidden}
+.map-preview .venue-row:hover,.map-modal .venue-row:hover{transform:translateY(-1px);border-color:#fff;background-color:#151319;background-image:linear-gradient(90deg,#05070cdb 0%,#08090a8c 62%,#08090a38 100%),var(--venue-image)}
+.map-preview .venue-row.is-active,.map-modal .venue-row.is-active{border-color:#bde3ec;box-shadow:inset 0 0 0 2px #bde3ec,0 6px 16px #0007;background-color:#151319;background-image:linear-gradient(90deg,#05070cdb 0%,#08090a8c 62%,#08090a38 100%),var(--venue-image)}
+.map-preview .venue-select,.map-modal .venue-select{min-height:68px;padding:4px 3px 15px;background:transparent}
+.venue-copy strong,.venue-copy small,.venue-arrow,.venue-photo-credit{-webkit-text-stroke:.55px #050505;paint-order:stroke fill;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 2px 5px #000;color:#fff}
+.map-preview .venue-copy strong,.map-modal .venue-copy strong{font-size:15px!important;font-weight:800}
+.map-preview .venue-copy small,.map-modal .venue-copy small{font-size:11px!important;color:#fff!important;line-height:1.4}
+.map-preview .venue-type,.map-modal .venue-type{border:1px solid #ffffff85;background:#101116db;color:#fff;box-shadow:0 2px 8px #0008}
+.map-preview .venue-type.art,.map-modal .venue-type.art{background:#291a1be8;color:#fff}
+.map-preview .venue-arrow,.map-modal .venue-arrow{color:#fff}
+.map-preview .venue-directions,.map-modal .venue-directions{width:38px;min-width:38px;min-height:38px;border-color:#ffffffa8;border-radius:10px;background:#090a0dcc;color:#fff;font-weight:800;box-shadow:0 3px 9px #0008}
+.map-preview .venue-directions:hover,.map-modal .venue-directions:hover{border-color:#fff;background:#000;color:#fff}
+.venue-photo-credit{position:absolute;left:56px;bottom:4px;z-index:2;font-size:8px;font-weight:650;line-height:1;text-decoration:none;opacity:.9}
+.venue-photo-credit:hover{text-decoration:underline;opacity:1}
+.venue-photo-credit:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:2px}
+@media(max-width:600px){.map-preview .venue-row{min-height:88px}.map-preview .venue-select{min-height:64px}.venue-photo-credit{font-size:7px}}

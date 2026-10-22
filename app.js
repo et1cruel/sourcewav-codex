@@ -36,7 +36,10 @@ const bangkokVenues = [
     lat: 13.7144532,
     lng: 100.5940104,
     url: 'https://www.instagram.com/avvebaravve/',
-    linkLabel: 'Instagram'
+    linkLabel: 'Instagram',
+    photoUrl: 'https://bangkok-nights.s3.amazonaws.com/venues/avve/gallery/1772960798706-1.jpg',
+    photoSource: 'Bangkok Nights',
+    photoPage: 'https://bangkok-nights.com/venue/avve'
   },
   {
     id: 'poison-door',
@@ -49,7 +52,10 @@ const bangkokVenues = [
     lng: 100.692403,
     url: 'https://www.instagram.com/poison.door/',
     linkLabel: 'Instagram',
-    status: 'closed'
+    status: 'closed',
+    photoUrl: 'https://p16-lemon8-cross-sign.tiktokcdn.com/tos-alisg-v-a3e477-sg/ok5QOKgafEE2DhD3AB20AJC28iBUieAwoHAIYx~tplv-tej9nj120t-wap-logo:QHBpcGVyX3BpcGU=:1080:0.webp?lk3s=66c60501&source=wap_large_logo_image&x-expires=1793296800&x-signature=qJoMLf4Imt678MwkpVfgXgzT86s%3D',
+    photoSource: 'Piper BLack · Lemon8',
+    photoPage: 'https://www.lemon8-app.com/@piper_pipe/7552800730696925712?region=th'
   },
   {
     id: 'attitude-fusion',
@@ -61,7 +67,10 @@ const bangkokVenues = [
     lat: 13.7258039,
     lng: 100.5161133,
     url: 'https://fusionattitude.wixsite.com/attitude-fusion-roof',
-    linkLabel: 'เว็บไซต์สถานที่'
+    linkLabel: 'เว็บไซต์สถานที่',
+    photoUrl: 'https://dynamic-media-cdn.tripadvisor.com/media/photo-o/29/49/8c/9c/attitude-fusion-3-n-1.jpg?h=500&s=1&w=900',
+    photoSource: 'Tripadvisor',
+    photoPage: 'https://www.tripadvisor.com/Restaurant_Review-g293916-d25077558-Reviews-Attitude_Fusion_Tapas_Rooftop_Bar-Bangkok.html'
   },
   {
     id: 'redhotmoon',
@@ -75,19 +84,25 @@ const bangkokVenues = [
     lat: 13.9589053,
     lng: 100.5677547,
     url: 'https://www.instagram.com/redhotmoonlivehouse/',
-    linkLabel: 'Instagram'
+    linkLabel: 'Instagram',
+    photoUrl: 'https://media.timeout.com/images/106388635/750/422/image.jpg',
+    photoSource: 'Time Out',
+    photoPage: 'https://www.timeout.com/bangkok/music/redhotmoon-livehouse'
   },
   {
     id: 'gearbox-red-drum',
-    name: 'GEARBOX BKK · RED DRUM',
+    name: 'GEAR BOX · THE WAREHOUSE',
     category: 'music',
     categoryLabel: 'คลับ / ดนตรีอิเล็กทรอนิกส์',
-    district: 'วัฒนา',
-    address: 'RED DRUM (ชั้นใต้ดิน), BLOQ Bangkok / Seenspace, 251/1 Thong Lo 13, Khlong Tan Nuea 10110',
-    lat: 13.7334223,
-    lng: 100.5813826,
-    url: 'https://www.instagram.com/gearboxbkk/',
-    linkLabel: 'Instagram'
+    district: 'ตลาดน้อย',
+    address: 'ชั้น 3 The Warehouse Bangkok, 867 ถนนเจริญกรุง, ตลาดน้อย 10100',
+    lat: 13.7338215,
+    lng: 100.5144907,
+    url: 'https://www.thewarehousebkk.com/spaces/gear-box',
+    linkLabel: 'เว็บไซต์สถานที่',
+    photoUrl: 'https://image.nightify.co/raWezVjKFZslSlI8rihl2gRlzNYJnxCtpYMr0g4aL64/rs%3Afill%3A1080%3A1080%3A0/czM6Ly9uaWdodGlmeS1hc3NldHMtcHJvZC9pbWFnZXMvZ2VhcmJveC1zVEtuQnQud2VicA.webp',
+    photoSource: 'Nightify',
+    photoPage: 'https://nightify.co/venues/gearbox'
   }
 ];
 
@@ -192,7 +207,7 @@ function renderVenueList(containerId = 'venueList') {
       const area = venue.areaLabel || `เขต${venue.district} · ${venue.province || 'กรุงเทพมหานคร'}`;
       const closed = venue.status === 'closed' ? ' · ปิดถาวร' : '';
       const directions = `https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}`;
-      return `<article class="venue-row ${active ? 'is-active' : ''}" data-venue-id="${escapeMapHtml(venue.id)}"><button class="venue-select" type="button" aria-pressed="${active}" aria-label="ดู ${escapeMapHtml(venue.name)} บนแผนที่"><span class="venue-type ${venue.category}" aria-hidden="true">${venueCategoryMark(venue.category)}</span><span class="venue-copy"><strong>${escapeMapHtml(venue.name)}</strong><small>${escapeMapHtml(venue.categoryLabel)} · ${escapeMapHtml(area)}${closed}</small></span><span class="venue-arrow" aria-hidden="true">⌖</span></button><a class="venue-directions" href="${directions}" target="_blank" rel="noopener noreferrer" aria-label="เปิดเส้นทางไป ${escapeMapHtml(venue.name)} ใน Google Maps" title="เปิดเส้นทาง">↗</a></article>`;
+      return `<article class="venue-row ${active ? 'is-active' : ''}" data-venue-id="${escapeMapHtml(venue.id)}" style="--venue-image:url(&quot;${escapeMapHtml(venue.photoUrl)}&quot;)"><button class="venue-select" type="button" aria-pressed="${active}" aria-label="ดู ${escapeMapHtml(venue.name)} บนแผนที่"><span class="venue-type ${venue.category}" aria-hidden="true">${venueCategoryMark(venue.category)}</span><span class="venue-copy"><strong>${escapeMapHtml(venue.name)}</strong><small>${escapeMapHtml(venue.categoryLabel)} · ${escapeMapHtml(area)}${closed}</small></span><span class="venue-arrow" aria-hidden="true">⌖</span></button><a class="venue-directions" href="${directions}" target="_blank" rel="noopener noreferrer" aria-label="เปิดเส้นทางไป ${escapeMapHtml(venue.name)} ใน Google Maps" title="เปิดเส้นทาง">↗</a><a class="venue-photo-credit" href="${escapeMapHtml(venue.photoPage)}" target="_blank" rel="noopener noreferrer" aria-label="ที่มาภาพ: ${escapeMapHtml(venue.photoSource)}">ภาพ: ${escapeMapHtml(venue.photoSource)}</a></article>`;
     }).join('')
     : '<p class="venue-empty">ไม่พบสถานที่ในหมวดนี้</p>';
   updateMapCounts(matches.length);
