@@ -13,6 +13,7 @@
   let musicTab = 'library';
   let shuffleMode = false;
   let coverPreviewUrl = '';
+  let bannerPreviewUrl = '';
   const coverMimeByType = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
   const maxCoverSize = 5 * 1024 * 1024;
 
@@ -189,8 +190,10 @@
     openModal(`<form class="track-edit-modal" id="trackEditForm" data-track-id="${escapeHTML(track.id)}">
       <span class="track-edit-kicker">จัดการเพลงของคุณ</span><h2 id="modalTitle">แก้ไขเพลง</h2>
       <label class="modal-field">ชื่อเพลง<input name="title" required maxlength="100" autocomplete="off" value="${escapeHTML(track.title)}" /></label>
-      <label class="modal-field">รูปปกเพลง<input name="cover" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /><small>เลือกรูปใหม่เพื่อเปลี่ยนปก · JPG, PNG หรือ WebP · สูงสุด 5 MB</small></label>
+      <label class="modal-field">รูปปกเพลง<input name="cover" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /><small>รูปสี่เหลี่ยมที่แสดงในรายการเพลง · JPG, PNG หรือ WebP · สูงสุด 5 MB</small></label>
       ${track.cover_url ? `<div class="track-edit-cover-preview"><img src="${escapeHTML(track.cover_url)}" alt="รูปปกปัจจุบัน" /><span>รูปปกปัจจุบัน</span></div>` : ''}
+      <label class="modal-field">แบนเนอร์เพลง<input name="banner" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /><small>ภาพแนวกว้างแสดงด้านหลังเครื่องเล่น · แนะนำ 1500 × 500 px · สูงสุด 5 MB</small></label>
+      ${track.banner_url ? `<div class="track-edit-banner-preview"><img src="${escapeHTML(track.banner_url)}" alt="แบนเนอร์เพลงปัจจุบัน" /><span>แบนเนอร์ปัจจุบัน</span></div>` : ''}
       <p class="stream-error" id="trackEditError" role="alert" hidden></p>
       <button class="modal-primary track-edit-submit" id="trackEditSubmit" type="submit">บันทึกการเปลี่ยนแปลง</button>
     </form>`);
@@ -202,16 +205,20 @@
     const track = tracks.find(item => item.id === form.dataset.trackId);
     const title = form.elements.title.value.trim();
     const coverFile = form.elements.cover.files?.[0] || null;
+    const bannerFile = form.elements.banner.files?.[0] || null;
     error.hidden = true;
     if (!track || track.owner_id !== currentUserId) { error.textContent = 'แก้ไขได้เฉพาะเพลงที่คุณเป็นเจ้าของ'; error.hidden = false; return; }
     if (!title) { error.textContent = 'กรอกชื่อเพลงก่อนบันทึก'; error.hidden = false; return; }
     if (coverFile && !coverMimeByType[coverFile.type]) { error.textContent = 'รูปปกต้องเป็น JPG, PNG หรือ WebP'; error.hidden = false; return; }
     if (coverFile && coverFile.size > maxCoverSize) { error.textContent = 'รูปปกมีขนาดใหญ่เกิน 5 MB'; error.hidden = false; return; }
+    if (bannerFile && !coverMimeByType[bannerFile.type]) { error.textContent = 'แบนเนอร์ต้องเป็น JPG, PNG หรือ WebP'; error.hidden = false; return; }
+    if (bannerFile && bannerFile.size > maxCoverSize) { error.textContent = 'แบนเนอร์มีขนาดใหญ่เกิน 5 MB'; error.hidden = false; return; }
     const db = window.SourcewavSupabase;
     if (!db) { error.textContent = 'เชื่อมต่อฐานข้อมูลไม่ได้ ลองอีกครั้ง'; error.hidden = false; return; }
     submit.disabled = true;
     submit.textContent = 'กำลังบันทึก…';
     let newCoverKey = '';
+    let newBannerKey = '';
     try {
       const update = { title };
       if (coverFile) {
@@ -224,12 +231,23 @@
         if (uploadError) throw new Error('อัปโหลดรูปปกไม่ได้: ' + uploadError.message);
         update.cover_storage_key = newCoverKey;
       }
+      if (bannerFile) {
+        const ext = coverMimeByType[bannerFile.type];
+        newBannerKey = `${currentUserId}/${track.id}-banner-${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await db.storage.from('sourcewav-track-covers').upload(newBannerKey, bannerFile, { contentType: bannerFile.type, cacheControl: '3600', upsert: false });
+        if (uploadError) throw new Error('อัปโหลดแบนเนอร์ไม่ได้: ' + uploadError.message);
+        update.banner_storage_key = newBannerKey;
+      }
       const { error: updateError } = await db.from('audio_tracks').update(update).eq('id', track.id).eq('owner_id', currentUserId);
+      if (updateError?.code === '42703' && updateError.message?.includes('banner_storage_key')) {
+        throw new Error('ฐานข้อมูลยังไม่พร้อมสำหรับแบนเนอร์เพลง โปรดใช้ migration 20261022000200_audio_track_banner_art.sql ก่อน');
+      }
       if (updateError?.code === '42703' && updateError.message?.includes('cover_storage_key')) {
         throw new Error('ฐานข้อมูลยังไม่พร้อมสำหรับรูปปก โปรดใช้ migration 20261022000100_audio_track_cover_art.sql ก่อน');
       }
       if (updateError) throw new Error('บันทึกการแก้ไขไม่ได้: ' + updateError.message);
       if (newCoverKey && track.cover_storage_key) await db.storage.from('sourcewav-track-covers').remove([track.cover_storage_key]);
+      if (newBannerKey && track.banner_storage_key) await db.storage.from('sourcewav-track-covers').remove([track.banner_storage_key]);
       await loadTracks();
       const updated = tracks.find(item => item.id === track.id);
       if (updated && currentTrack?.id === track.id) {
@@ -239,12 +257,14 @@
         $('.stream-cover-image', playerCover)?.remove();
         playerCover.classList.toggle('has-artwork', Boolean(updated.cover_url));
         if (updated.cover_url) playerCover.insertAdjacentHTML('afterbegin', `<img class="stream-cover-image" src="${escapeHTML(updated.cover_url)}" alt="" />`);
+        setPlayerBanner(updated);
         updateArtistMini();
       }
       $('#modalClose').click();
       toast('บันทึกการแก้ไขเพลงแล้ว');
     } catch (failure) {
       if (newCoverKey) await db.storage.from('sourcewav-track-covers').remove([newCoverKey]).catch(() => {});
+      if (newBannerKey) await db.storage.from('sourcewav-track-covers').remove([newBannerKey]).catch(() => {});
       error.textContent = failure.message || 'บันทึกไม่สำเร็จ ลองอีกครั้ง';
       error.hidden = false;
       submit.disabled = false;
@@ -269,6 +289,14 @@
     const playButton = $('[data-artist-mini-play]', mini);
     playButton.textContent = !audio.paused ? 'Ⅱ' : '▶';
     playButton.setAttribute('aria-label', !audio.paused ? 'หยุดเพลง' : 'เล่นเพลง');
+  }
+
+  function setPlayerBanner(track) {
+    const player = $('.stream-player');
+    if (!player) return;
+    $('.stream-player-banner', player)?.remove();
+    player.classList.toggle('has-banner', Boolean(track?.banner_url));
+    if (track?.banner_url) player.insertAdjacentHTML('afterbegin', `<img class="stream-player-banner" src="${escapeHTML(track.banner_url)}" alt="" aria-hidden="true" />`);
   }
 
   function updatePlayer() {
@@ -303,6 +331,7 @@
     $('.stream-cover-image', cover)?.remove();
     cover.classList.toggle('has-artwork', Boolean(track.cover_url));
     if (track.cover_url) cover.insertAdjacentHTML('afterbegin', `<img class="stream-cover-image" src="${escapeHTML(track.cover_url)}" alt="" />`);
+    setPlayerBanner(track);
     $('#streamTitle').textContent = track.title;
     const artistLine = $('#streamArtist');
     artistLine.textContent = track.artist_profile?.display_name || track.artist;
@@ -353,6 +382,16 @@
               </label>
               <button class="track-cover-clear" id="clearTrackCover" type="button" hidden>เอารูปออก</button>
             </div>
+          </div>
+          <div class="track-banner-field">
+            <label class="track-cover-label" for="trackBanner">แบนเนอร์เพลง <span>ไม่บังคับ</span></label>
+            <label class="track-banner-picker" for="trackBanner">
+              <input id="trackBanner" name="banner" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" aria-label="เลือกแบนเนอร์เพลง" />
+              <span class="track-banner-preview" id="trackBannerPreview" aria-hidden="true">♫</span>
+              <span class="track-cover-copy"><strong id="trackBannerName">เพิ่มภาพแบนเนอร์แนวกว้าง</strong><small id="trackBannerMeta">แนะนำ 1500 × 500 px · JPG, PNG หรือ WebP · สูงสุด 5 MB</small></span>
+              <span class="track-cover-browse">เลือกรูป</span>
+            </label>
+            <button class="track-cover-clear" id="clearTrackBanner" type="button" hidden>เอารูปออก</button>
           </div>
           <label class="track-dropzone" id="trackDropzone"><input id="trackFile" class="track-file-input" name="audio" type="file" required accept=".mp3,.wav,.flac,.ogg,.m4a,.aac,.webm,audio/mpeg,audio/wav,audio/flac,audio/ogg,audio/mp4,audio/aac,audio/webm" aria-label="เลือกไฟล์เสียง" /><span class="drop-orbit" aria-hidden="true"><b>↑</b></span><span class="drop-copy"><strong id="uploadFileName">วางไฟล์เพลงตรงนี้</strong><small id="uploadFileMeta">หรือคลิกเพื่อเลือกจากเครื่อง</small></span><span class="drop-browse">เลือกไฟล์</span></label>
           <p class="upload-file-note" id="uploadFileNote">รองรับ MP3, WAV, FLAC, OGG, M4A, AAC, WEBM · สูงสุด 50 MB</p>
@@ -406,6 +445,29 @@
       coverInput.value = '';
       coverInput.dispatchEvent(new Event('change', { bubbles: true }));
     });
+    const bannerInput = $('#trackBanner');
+    bannerInput?.addEventListener('change', () => {
+      const file = bannerInput.files?.[0];
+      if (bannerPreviewUrl) URL.revokeObjectURL(bannerPreviewUrl);
+      bannerPreviewUrl = '';
+      const preview = $('#trackBannerPreview');
+      preview.innerHTML = '♫';
+      $('#trackBannerName').textContent = file?.name || 'เพิ่มภาพแบนเนอร์แนวกว้าง';
+      $('#trackBannerMeta').textContent = !file ? 'แนะนำ 1500 × 500 px · JPG, PNG หรือ WebP · สูงสุด 5 MB'
+        : !coverMimeByType[file.type] ? 'ไฟล์นี้ไม่รองรับ เลือก JPG, PNG หรือ WebP'
+          : file.size > maxCoverSize ? 'ไฟล์ใหญ่เกิน 5 MB เลือกรูปที่เล็กกว่านี้'
+            : `${formatSize(file.size)} · ภาพพร้อมอัปโหลด`;
+      if (file && coverMimeByType[file.type] && file.size <= maxCoverSize) {
+        bannerPreviewUrl = URL.createObjectURL(file);
+        preview.innerHTML = `<img src="${escapeHTML(bannerPreviewUrl)}" alt="" />`;
+      }
+      $('#clearTrackBanner').hidden = !file;
+    });
+    $('#clearTrackBanner')?.addEventListener('click', event => {
+      event.preventDefault(); event.stopPropagation();
+      bannerInput.value = '';
+      bannerInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
     ['dragenter', 'dragover'].forEach(name => dropzone?.addEventListener(name, event => { event.preventDefault(); dropzone.classList.add('is-dragging'); }));
     ['dragleave', 'drop'].forEach(name => dropzone?.addEventListener(name, event => { event.preventDefault(); dropzone.classList.remove('is-dragging'); }));
     dropzone?.addEventListener('drop', event => {
@@ -427,7 +489,10 @@
     const fetchTracks = columns => db.from('audio_tracks')
       .select(columns).eq('status', 'published').eq('visibility', 'public').is('deleted_at', null)
       .order('created_at', { ascending: false }).limit(100);
-    let { data, error } = await fetchTracks('id,owner_id,title,artist_name,genre,storage_key,cover_storage_key,mime_type,byte_size,created_at');
+    let { data, error } = await fetchTracks('id,owner_id,title,artist_name,genre,storage_key,cover_storage_key,banner_storage_key,mime_type,byte_size,created_at');
+    if (error?.code === '42703' && (error.message?.includes('banner_storage_key') || error.message?.includes('cover_storage_key'))) {
+      ({ data, error } = await fetchTracks('id,owner_id,title,artist_name,genre,storage_key,cover_storage_key,mime_type,byte_size,created_at'));
+    }
     if (error?.code === '42703' && error.message?.includes('cover_storage_key')) {
       ({ data, error } = await fetchTracks('id,owner_id,title,artist_name,genre,storage_key,mime_type,byte_size,created_at'));
     }
@@ -445,7 +510,8 @@
       artist: track.artist_name, size_bytes: Number(track.byte_size),
       artist_profile: profileById[track.owner_id] || null,
       audio_url: db.storage.from('sourcewav-audio').getPublicUrl(track.storage_key).data.publicUrl,
-      cover_url: track.cover_storage_key ? db.storage.from('sourcewav-track-covers').getPublicUrl(track.cover_storage_key).data.publicUrl : ''
+      cover_url: track.cover_storage_key ? db.storage.from('sourcewav-track-covers').getPublicUrl(track.cover_storage_key).data.publicUrl : '',
+      banner_url: track.banner_storage_key ? db.storage.from('sourcewav-track-covers').getPublicUrl(track.banner_storage_key).data.publicUrl : ''
     }));
     tracks = normalizeTracks(data);
     likedTrackIds = new Set();
@@ -485,7 +551,10 @@
     const fetchArtistTracks = columns => db.from('audio_tracks').select(columns)
       .eq('owner_id', profile.user_id).eq('status', 'published').eq('visibility', 'public')
       .is('deleted_at', null).order('created_at', { ascending: false }).limit(200);
-    let { data: artistTracks, error: tracksError } = await fetchArtistTracks('id,owner_id,title,artist_name,genre,storage_key,cover_storage_key,mime_type,byte_size,created_at');
+    let { data: artistTracks, error: tracksError } = await fetchArtistTracks('id,owner_id,title,artist_name,genre,storage_key,cover_storage_key,banner_storage_key,mime_type,byte_size,created_at');
+    if (tracksError?.code === '42703' && (tracksError.message?.includes('banner_storage_key') || tracksError.message?.includes('cover_storage_key'))) {
+      ({ data: artistTracks, error: tracksError } = await fetchArtistTracks('id,owner_id,title,artist_name,genre,storage_key,cover_storage_key,mime_type,byte_size,created_at'));
+    }
     if (tracksError?.code === '42703' && tracksError.message?.includes('cover_storage_key')) {
       ({ data: artistTracks, error: tracksError } = await fetchArtistTracks('id,owner_id,title,artist_name,genre,storage_key,mime_type,byte_size,created_at'));
     }
@@ -514,12 +583,13 @@
     const profileTracks = (artistTracks || []).map(track => ({ ...track, artist: track.artist_name, artist_profile: artist,
       size_bytes: Number(track.byte_size),
       audio_url: db.storage.from('sourcewav-audio').getPublicUrl(track.storage_key).data.publicUrl,
-      cover_url: track.cover_storage_key ? db.storage.from('sourcewav-track-covers').getPublicUrl(track.cover_storage_key).data.publicUrl : ''
+      cover_url: track.cover_storage_key ? db.storage.from('sourcewav-track-covers').getPublicUrl(track.cover_storage_key).data.publicUrl : '',
+      banner_url: track.banner_storage_key ? db.storage.from('sourcewav-track-covers').getPublicUrl(track.banner_storage_key).data.publicUrl : ''
     }));
     const location = [profile.city, profile.province].filter(Boolean).join(' · ');
     const roles = Array.isArray(profile.roles) ? profile.roles : [];
     const latest = profileTracks[0];
-    const bannerUrl = (() => { try { const url = new URL(latest?.cover_url || ''); return ['http:', 'https:'].includes(url.protocol) ? `url("${url.href.replace(/["\\]/g, '')}")` : 'none'; } catch { return 'none'; } })();
+    const bannerUrl = (() => { try { const url = new URL(latest?.banner_url || latest?.cover_url || ''); return ['http:', 'https:'].includes(url.protocol) ? `url("${url.href.replace(/["\\]/g, '')}")` : 'none'; } catch { return 'none'; } })();
     view.style.setProperty('--artist-banner-image', bannerUrl);
     const totalTracks = profileTracks.length;
     const playlist = profileTracks.slice(0, 4);
@@ -659,6 +729,7 @@
     const form = event.target;
     const file = form.elements.audio.files?.[0];
     const coverFile = form.elements.cover.files?.[0] || null;
+    const bannerFile = form.elements.banner.files?.[0] || null;
     const error = $('#uploadError');
     const submit = $('#trackSubmit');
     error.hidden = true;
@@ -666,6 +737,8 @@
     if (file.size > 50 * 1024 * 1024) { error.textContent = 'ไฟล์มีขนาดใหญ่เกิน 50 MB'; error.hidden = false; return; }
     if (coverFile && !coverMimeByType[coverFile.type]) { error.textContent = 'รูปปกต้องเป็น JPG, PNG หรือ WebP'; error.hidden = false; return; }
     if (coverFile && coverFile.size > maxCoverSize) { error.textContent = 'รูปปกมีขนาดใหญ่เกิน 5 MB'; error.hidden = false; return; }
+    if (bannerFile && !coverMimeByType[bannerFile.type]) { error.textContent = 'แบนเนอร์ต้องเป็น JPG, PNG หรือ WebP'; error.hidden = false; return; }
+    if (bannerFile && bannerFile.size > maxCoverSize) { error.textContent = 'แบนเนอร์มีขนาดใหญ่เกิน 5 MB'; error.hidden = false; return; }
     const db = window.SourcewavSupabase;
     const auth = await db?.auth.getUser();
     if (!db || auth?.error || !auth?.data?.user) { error.textContent = 'เข้าสู่ระบบก่อนอัปโหลดเพลง'; error.hidden = false; submit.disabled = false; submit.textContent = 'ปล่อยเพลงเข้าสู่วง'; return; }
@@ -676,13 +749,16 @@
     submit.disabled = true; submit.textContent = 'กำลังอัปโหลด…';
     let storageKey = '';
     let coverStorageKey = null;
+    let bannerStorageKey = null;
     let audioUploaded = false;
     let coverUploaded = false;
+    let bannerUploaded = false;
     try {
       const user = auth.data.user;
       const trackId = crypto.randomUUID();
       storageKey = `${user.id}/${trackId}.${extension}`;
       coverStorageKey = coverFile ? `${user.id}/${trackId}.${coverMimeByType[coverFile.type]}` : null;
+      bannerStorageKey = bannerFile ? `${user.id}/${trackId}-banner.${coverMimeByType[bannerFile.type]}` : null;
       const { error: uploadError } = await db.storage.from('sourcewav-audio').upload(storageKey, file, { contentType: mime, cacheControl: '3600', upsert: false });
       if (uploadError) throw new Error('อัปโหลดไฟล์เพลงไม่ได้: ' + uploadError.message);
       audioUploaded = true;
@@ -694,6 +770,11 @@
         if (coverUploadError) throw new Error('อัปโหลดรูปปกไม่ได้: ' + coverUploadError.message);
         coverUploaded = true;
       }
+      if (bannerFile && bannerStorageKey) {
+        const { error: bannerUploadError } = await db.storage.from('sourcewav-track-covers').upload(bannerStorageKey, bannerFile, { contentType: bannerFile.type, cacheControl: '3600', upsert: false });
+        if (bannerUploadError) throw new Error('อัปโหลดแบนเนอร์ไม่ได้: ' + bannerUploadError.message);
+        bannerUploaded = true;
+      }
       const trackRecord = {
         id: trackId, owner_id: user.id, title: form.elements.title.value.trim(),
         artist_name: form.elements.artist.value.trim(), genre: form.elements.genre.value,
@@ -701,13 +782,18 @@
         visibility: 'public', status: 'published'
       };
       if (coverStorageKey) trackRecord.cover_storage_key = coverStorageKey;
+      if (bannerStorageKey) trackRecord.banner_storage_key = bannerStorageKey;
       const { error: insertError } = await db.from('audio_tracks').insert(trackRecord);
+      if (insertError?.code === '42703' && insertError.message?.includes('banner_storage_key')) {
+        throw new Error('ฐานข้อมูลยังไม่พร้อมสำหรับแบนเนอร์เพลง โปรดใช้ migration 20261022000200_audio_track_banner_art.sql ก่อน แล้วลองอีกครั้ง');
+      }
       if (insertError?.code === '42703' && insertError.message?.includes('cover_storage_key')) {
         throw new Error('ฐานข้อมูลยังไม่พร้อมสำหรับรูปปกเพลง โปรดใช้ migration 20261022000100_audio_track_cover_art.sql ก่อน แล้วลองอีกครั้ง');
       }
       if (insertError) throw new Error('บันทึกข้อมูลเพลงไม่ได้: ' + insertError.message);
       audioUploaded = false;
       coverUploaded = false;
+      bannerUploaded = false;
       await loadTracks();
       const created = tracks.find(track => track.id === trackId);
       if (created) selectTrack(created, false);
@@ -717,6 +803,7 @@
       const cleanup = [];
       if (audioUploaded && storageKey) cleanup.push(db.storage.from('sourcewav-audio').remove([storageKey]));
       if (coverUploaded && coverStorageKey) cleanup.push(db.storage.from('sourcewav-track-covers').remove([coverStorageKey]));
+      if (bannerUploaded && bannerStorageKey) cleanup.push(db.storage.from('sourcewav-track-covers').remove([bannerStorageKey]));
       await Promise.allSettled(cleanup);
       error.textContent = failure.message || 'อัปโหลดไม่สำเร็จ ลองตรวจสอบไฟล์อีกครั้ง';
       error.hidden = false;
@@ -754,7 +841,11 @@
   ['play', 'pause', 'timeupdate', 'loadedmetadata', 'durationchange', 'ended'].forEach(name => audio.addEventListener(name, updatePlayer));
   audio.addEventListener('ended', () => { if (shuffleMode && tracks.length > 1) playTrackStep(1, true); });
   audio.addEventListener('error', () => { if (currentTrack) toast('ไม่สามารถเล่นไฟล์เสียงนี้ได้'); });
-  const clearCoverPreview = () => { if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl); coverPreviewUrl = ''; };
+  const clearCoverPreview = () => {
+    if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+    if (bannerPreviewUrl) URL.revokeObjectURL(bannerPreviewUrl);
+    coverPreviewUrl = ''; bannerPreviewUrl = '';
+  };
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (target?.closest('#modalClose') || target?.id === 'modalBackdrop') clearCoverPreview();

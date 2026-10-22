@@ -506,7 +506,7 @@
     if (!await needUser()) return;
     modal(`<div class="ticket-sell-modal">
       <header class="ticket-sell-heading">
-        <div class="ticket-sell-title-row"><span class="ticket-sell-symbol" aria-hidden="true">✳</span><div><span class="ticket-sell-eyebrow">SELL YOUR EVENT · SOURCEWAV LIVE</span><h2 id="modalTitle">เปิดขายบัตรงานของคุณ</h2></div></div>
+        <div class="ticket-sell-title-row"><img class="ticket-sell-logo" src="assets/sourcewav-logo.svg" alt="Sourcewav" /><div><span class="ticket-sell-eyebrow">SELL YOUR EVENT · SOURCEWAV LIVE</span><h2 id="modalTitle">เปิดขายบัตรงานของคุณ</h2></div></div>
         <p>สร้างหน้ากิจกรรม ตั้งค่าบัตร และรับชำระเงินจากบัญชีของคุณโดยตรง</p>
       </header>
       <section class="ticket-sell-section">

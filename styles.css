@@ -1980,3 +1980,46 @@ body :where(button,a,.ticket-filter,.nav-link,.rail-item){-webkit-text-stroke:.1
 .track-edit-cover-preview img{width:54px;height:54px;object-fit:cover;border:1px solid #d8e0df;border-radius:9px}
 .track-edit-submit{min-height:44px;margin-top:2px}
 @media(max-width:600px){.track-edit-modal{min-width:0}.track-edit-modal h2{font-size:20px}.track-edit-button{width:33px;height:33px;min-height:33px;padding:3px}.track-edit-button img{width:25px;height:25px}}
+
+/* Wide per-track banner artwork and compact edit action. */
+.stream-player.has-banner{isolation:isolate;background:#17151d;color:#fff}
+.stream-player-banner{position:absolute;z-index:0;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.58;pointer-events:none}
+.stream-player.has-banner:before{position:absolute;z-index:0;inset:0;background:linear-gradient(100deg,#17151be8 0%,#17151bcf 42%,#17151b99 100%);content:"";pointer-events:none}
+.stream-player.has-banner:before{z-index:1}
+.stream-player.has-banner:after{z-index:2}
+.stream-player.has-banner>.stream-cover,.stream-player.has-banner>.stream-main{z-index:3}
+.stream-player.has-banner>.stream-main h3,.stream-player.has-banner>.stream-main>p{color:#fff}
+.stream-player.has-banner .stream-now,.stream-player.has-banner .stream-now span,.stream-player.has-banner .stream-times{color:#f0eaf8}
+.stream-player.has-banner .stream-timeline input[type=range]{accent-color:#c9a5ff}
+.track-banner-field{display:grid;gap:7px;margin-top:8px}
+.track-banner-picker{display:grid;grid-template-columns:88px minmax(0,1fr) auto;align-items:center;gap:12px;min-width:0;padding:9px;border:1px dashed #c6b8d8;border-radius:11px;color:#46545e;background:linear-gradient(135deg,#fff,#f6f2fa);cursor:pointer}
+.track-banner-picker input{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%)}
+.track-banner-picker:focus-within{outline:3px solid #9a77d65c;outline-offset:2px}
+.track-banner-preview{display:grid;place-items:center;width:88px;aspect-ratio:3/1;overflow:hidden;border:1px solid #d7cce4;border-radius:7px;color:#826ca0;background:#e9e1f1;font-size:17px}
+.track-banner-preview img{width:100%;height:100%;object-fit:cover}
+.track-banner-picker .track-cover-copy{min-width:0}
+.track-banner-picker .track-cover-copy strong,.track-banner-picker .track-cover-copy small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.track-edit-banner-preview{display:grid;grid-template-columns:120px auto;align-items:center;gap:10px;color:#61717b;font-size:11px}
+.track-edit-banner-preview img{display:block;width:120px;aspect-ratio:3/1;object-fit:cover;border:1px solid #d8e0df;border-radius:8px}
+.track-edit-button{width:28px;height:28px;min-height:28px;padding:2px;border-bottom-width:2px;border-radius:8px;box-shadow:0 2px 0 #a59acb,0 4px 8px #7165a326,inset 0 1px 0 #fff}
+.track-edit-button img{width:21px;height:21px}
+.track-edit-button:hover{box-shadow:0 4px 0 #9284c4,0 7px 11px #7165a33d,inset 0 1px 0 #fff}
+.ticket-sell-heading{border-bottom:1px solid #c2a0f044;background:linear-gradient(115deg,#17151fee,#211a2def 60%,#14151eee)}
+.ticket-sell-title-row{gap:18px}
+.ticket-sell-logo{display:block;width:142px;height:auto;flex:0 0 142px;filter:drop-shadow(0 5px 10px #0005)}
+.ticket-sell-heading h2{font-size:31px;letter-spacing:-.45px;text-shadow:0 4px 20px #c29dff2b}
+.ticket-sell-heading>p{margin-top:9px}
+.ticket-sell-section{border-color:#ffffff24;border-top-color:#c1a0f044;background:linear-gradient(145deg,#201e2a,#151720 76%);box-shadow:0 12px 26px #0003,inset 0 1px #ffffff0c,inset 0 -1px #0002}
+.ticket-sell-section-heading h3{font-size:18px;letter-spacing:.05px}
+@media(max-width:680px){
+  .track-banner-picker{grid-template-columns:72px minmax(0,1fr);gap:8px;padding:7px}
+  .track-banner-preview{width:72px}
+  .track-banner-picker .track-cover-browse{grid-column:2;justify-self:start}
+  .track-edit-button{width:26px;height:26px;min-height:26px;padding:1px;border-bottom-width:2px}
+  .track-edit-button img{width:20px;height:20px}
+  .ticket-sell-heading h2{font-size:25px}
+  .ticket-sell-logo{width:105px;flex-basis:105px}
+  .ticket-sell-title-row{gap:12px}
+  .ticket-sell-section-heading h3{font-size:16px}
+}
+@media(max-width:390px){.ticket-sell-heading h2{font-size:22px}.ticket-sell-logo{width:84px;flex-basis:84px}}
