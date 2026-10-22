@@ -16,6 +16,8 @@
   let coverPreviewUrl = '';
   let bannerPreviewUrl = '';
   let editCoverPreviewUrl = '';
+  let activeTrackComments = null;
+  let trackCommentsRequest = 0;
   const coverMimeByType = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
   const maxCoverSize = 5 * 1024 * 1024;
 
@@ -98,10 +100,60 @@
         : avatar;
       return `<article class="stream-release-card${currentTrack?.id === track.id && !audio.paused ? ' is-playing' : ''}">
       <button type="button" class="stream-release-art" data-track-play="${escapeHTML(track.id)}" aria-label="เล่น ${escapeHTML(track.title)}">${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="" loading="lazy" />` : '<span aria-hidden="true">♫</span>'}<i>▶</i></button>
-      <div class="stream-release-copy"><div class="stream-release-artist-row">${artistLink}<div class="stream-release-artist-details"><small>${profile?.username ? `<a href="#artist/${encodeURIComponent(profile.username)}" data-artist-profile="${escapeHTML(profile.username)}">${escapeHTML(artistName)}</a>` : escapeHTML(artistName)}</small><span>${escapeHTML(track.genre || 'เพลง')}</span></div></div><h4>${escapeHTML(track.title)}</h4><div><span>${formatSize(track.size_bytes)}</span><button type="button" class="track-comment-button" data-track-comments="${escapeHTML(track.id)}" aria-label="ความคิดเห็นเพลง ${escapeHTML(track.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg></button><button type="button" class="stream-like-button${likedTrackIds.has(track.id) ? ' is-liked' : ''}" data-track-like="${escapeHTML(track.id)}" aria-label="${likedTrackIds.has(track.id) ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} ${escapeHTML(track.title)}">${likedTrackIds.has(track.id) ? '♥' : '♡'}</button></div></div>
+      <div class="stream-release-copy"><div class="stream-release-artist-row">${artistLink}<div class="stream-release-artist-details"><small>${profile?.username ? `<a href="#artist/${encodeURIComponent(profile.username)}" data-artist-profile="${escapeHTML(profile.username)}">${escapeHTML(artistName)}</a>` : escapeHTML(artistName)}</small><span>${escapeHTML(track.genre || 'เพลง')}</span></div></div><h4>${escapeHTML(track.title)}</h4><div><span>${formatSize(track.size_bytes)}</span><button type="button" class="track-comment-button" data-track-comments="${escapeHTML(track.id)}" aria-expanded="false" aria-label="ความคิดเห็นเพลง ${escapeHTML(track.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg></button><button type="button" class="stream-like-button${likedTrackIds.has(track.id) ? ' is-liked' : ''}" data-track-like="${escapeHTML(track.id)}" aria-label="${likedTrackIds.has(track.id) ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} ${escapeHTML(track.title)}">${likedTrackIds.has(track.id) ? '♥' : '♡'}</button></div></div>
     </article>`;
     }).join('');
     grid.querySelectorAll('.stream-release-artist-avatar img').forEach(image => image.addEventListener('error', () => image.remove(), { once: true }));
+  }
+
+  async function loadTrackComments(trackId, panel) {
+    const requestId = ++trackCommentsRequest;
+    const list = $('.track-comments-inline-list', panel);
+    if (!list) return;
+    list.innerHTML = '<p class="track-comments-status" role="status">กำลังโหลดความคิดเห็น…</p>';
+    try {
+      const db = window.SourcewavSupabase;
+      if (!db) throw new Error('ยังเชื่อมต่อฐานข้อมูลไม่ได้');
+      const { data, error } = await db.from('comments').select('body,created_at,profiles!comments_author_id_fkey(display_name)')
+        .eq('track_id', trackId).is('deleted_at', null).order('created_at');
+      if (error) throw error;
+      if (requestId !== trackCommentsRequest || !panel.isConnected) return;
+      list.innerHTML = (data || []).map(comment => `<article class="track-comment-entry"><b>${escapeHTML(comment.profiles?.display_name || 'สมาชิก')}</b><p>${escapeHTML(comment.body)}</p><time datetime="${escapeHTML(comment.created_at)}">${new Date(comment.created_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}</time></article>`).join('')
+        || '<p class="track-comments-status">ยังไม่มีความคิดเห็นใต้เพลงนี้ เริ่มคุยได้เลย</p>';
+    } catch (error) {
+      if (requestId !== trackCommentsRequest || !panel.isConnected) return;
+      console.error('Unable to load track comments:', error?.message || error);
+      list.innerHTML = '<div class="track-comments-error" role="alert"><p>โหลดความคิดเห็นไม่สำเร็จ กรุณาลองอีกครั้ง</p><button type="button" data-track-comments-retry>ลองอีกครั้ง</button></div>';
+    }
+  }
+
+  function closeTrackComments() {
+    if (!activeTrackComments) return;
+    activeTrackComments.trigger?.setAttribute('aria-expanded', 'false');
+    activeTrackComments.panel.remove();
+    activeTrackComments = null;
+    trackCommentsRequest++;
+  }
+
+  function openTrackComments(trigger, trackId, trackTitle) {
+    if (activeTrackComments?.trackId === trackId && activeTrackComments.trigger === trigger) {
+      closeTrackComments();
+      return;
+    }
+    closeTrackComments();
+    const anchor = trigger.closest('.track-row, .stream-release-card, .artist-featured-track');
+    if (!anchor) return;
+    const panel = document.createElement('section');
+    panel.className = 'track-comments-inline';
+    panel.dataset.trackCommentsPanel = trackId;
+    panel.setAttribute('aria-label', `ความคิดเห็นเพลง ${trackTitle}`);
+    panel.innerHTML = `<div class="track-comments-inline-head"><div><span>SOURCEWAV · LISTENING ROOM</span><h3>ความคิดเห็น</h3><p>${escapeHTML(trackTitle)}</p></div><button type="button" data-track-comments-close aria-label="ปิดความคิดเห็น">ปิด ×</button></div><div class="track-comments-inline-list" aria-live="polite"></div><form class="track-comments-inline-form" id="trackCommentForm" data-track-id="${escapeHTML(trackId)}"><label for="trackCommentBody">เขียนความคิดเห็น</label><textarea id="trackCommentBody" name="body" maxlength="2000" required placeholder="บอกความรู้สึกหลังฟังเพลงนี้…"></textarea><div class="track-comments-inline-actions"><small>ไม่เกิน 2,000 ตัวอักษร</small><button type="submit">ส่งความคิดเห็น <span aria-hidden="true">↗</span></button></div></form>`;
+    anchor.insertAdjacentElement('afterend', panel);
+    activeTrackComments = { trackId, panel, trigger };
+    trigger.setAttribute('aria-expanded', 'true');
+    panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    $('textarea', panel)?.focus({ preventScroll: true });
+    loadTrackComments(trackId, panel);
   }
 
   function updateRoomTrackInfo() {
@@ -183,7 +235,7 @@
       <button type="button" class="track-row-play" data-track-play="${escapeHTML(track.id)}" aria-label="${currentTrack?.id === track.id && !audio.paused ? 'หยุด' : 'เล่น'} ${escapeHTML(track.title)}">${currentTrack?.id === track.id && !audio.paused ? 'Ⅱ' : '▶'}</button>
       <span class="track-row-cover" aria-hidden="true">${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="" loading="lazy" />` : '♫'}</span>
       <div class="track-row-copy"><strong>${escapeHTML(track.title)}</strong><small>${track.artist_profile?.username ? `<a class="track-artist-link" href="#artist/${encodeURIComponent(track.artist_profile.username)}" data-artist-profile="${escapeHTML(track.artist_profile.username)}">${escapeHTML(track.artist_profile.display_name || track.artist)}</a>` : escapeHTML(track.artist)}</small></div>
-      <div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span><span class="track-size">${formatSize(track.size_bytes)}</span><button type="button" class="track-comment-button" data-track-comments="${escapeHTML(track.id)}" aria-label="ความคิดเห็นเพลง ${escapeHTML(track.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg></button>${track.owner_id === currentUserId ? `<button type="button" class="track-edit-button" data-track-edit="${escapeHTML(track.id)}" aria-label="แก้ไขชื่อเพลงและรูปปก ${escapeHTML(track.title)}" title="แก้ไขชื่อเพลงและรูปปก"><img src="assets/edit-pencil-glass.png" alt="" aria-hidden="true" /></button>` : ''}<button type="button" class="stream-like-button${likedTrackIds.has(track.id) ? ' is-liked' : ''}" data-track-like="${escapeHTML(track.id)}" aria-label="${likedTrackIds.has(track.id) ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} ${escapeHTML(track.title)}">${likedTrackIds.has(track.id) ? '♥' : '♡'}</button></div>
+      <div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span><span class="track-size">${formatSize(track.size_bytes)}</span><button type="button" class="track-comment-button" data-track-comments="${escapeHTML(track.id)}" aria-expanded="false" aria-label="ความคิดเห็นเพลง ${escapeHTML(track.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg></button>${track.owner_id === currentUserId ? `<button type="button" class="track-edit-button" data-track-edit="${escapeHTML(track.id)}" aria-label="แก้ไขชื่อเพลงและรูปปก ${escapeHTML(track.title)}" title="แก้ไขชื่อเพลงและรูปปก"><img src="assets/edit-pencil-glass.png" alt="" aria-hidden="true" /></button>` : ''}<button type="button" class="stream-like-button${likedTrackIds.has(track.id) ? ' is-liked' : ''}" data-track-like="${escapeHTML(track.id)}" aria-label="${likedTrackIds.has(track.id) ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} ${escapeHTML(track.title)}">${likedTrackIds.has(track.id) ? '♥' : '♡'}</button></div>
     </article>`).join('');
   }
 
@@ -687,12 +739,12 @@
         <span class="artist-featured-cover">${latest.cover_url ? `<img src="${escapeHTML(latest.cover_url)}" alt="" />` : '<span aria-hidden="true">♫</span>'}</span>
         <div class="artist-featured-copy"><span>${escapeHTML(profile.display_name || profile.username)}</span><h3>${escapeHTML(latest.title)}</h3><p>${escapeHTML(latest.genre)} · ${formatSize(latest.size_bytes)}</p>
           <div class="artist-profile-wave" data-artist-wave="${escapeHTML(latest.id)}" role="img" aria-label="รูปคลื่นเสียง ${escapeHTML(latest.title)}">${Array.from({ length: 72 }, () => '<i style="--bar:10%"></i>').join('')}</div>
-          <button class="artist-featured-play" type="button" data-track-play="${escapeHTML(latest.id)}" aria-label="เล่น ${escapeHTML(latest.title)}">${currentTrack?.id === latest.id && !audio.paused ? 'Ⅱ หยุดเพลง' : '▶ เล่นเพลง'}</button><button class="track-comment-button artist-track-comment" type="button" data-track-comments="${escapeHTML(latest.id)}">ความคิดเห็นเพลงนี้</button>
+          <button class="artist-featured-play" type="button" data-track-play="${escapeHTML(latest.id)}" aria-label="เล่น ${escapeHTML(latest.title)}">${currentTrack?.id === latest.id && !audio.paused ? 'Ⅱ หยุดเพลง' : '▶ เล่นเพลง'}</button><button class="track-comment-button artist-track-comment" type="button" data-track-comments="${escapeHTML(latest.id)}" aria-expanded="false">ความคิดเห็นเพลงนี้</button>
         </div></div></article>` : '<div class="artist-profile-empty"><span aria-hidden="true">♫</span><h3>ยังไม่มีเพลงที่เผยแพร่</h3><p>เพลงที่เปิดให้ฟังสาธารณะจะแสดงตรงนี้</p></div>';
     const tracksMarkup = profileTracks.map(track => `<article class="track-row${currentTrack?.id === track.id && !audio.paused ? ' is-playing' : ''}" data-track-row="${escapeHTML(track.id)}">
         <button type="button" class="track-row-play" data-track-play="${escapeHTML(track.id)}" aria-label="เล่น ${escapeHTML(track.title)}">${currentTrack?.id === track.id && !audio.paused ? 'Ⅱ' : '▶'}</button>
         <span class="track-row-cover" aria-hidden="true">${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="" loading="lazy" />` : '♫'}</span>
-        <div class="track-row-copy"><strong>${escapeHTML(track.title)}</strong><small>${escapeHTML(track.genre)} · ${new Date(track.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</small></div><div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span><button type="button" class="track-comment-button" data-track-comments="${escapeHTML(track.id)}" aria-label="ความคิดเห็นเพลง ${escapeHTML(track.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg></button>${track.owner_id === currentUserId ? `<button type="button" class="track-edit-button" data-track-edit="${escapeHTML(track.id)}" aria-label="แก้ไขชื่อเพลงและรูปปก ${escapeHTML(track.title)}" title="แก้ไขชื่อเพลงและรูปปก"><img src="assets/edit-pencil-glass.png" alt="" aria-hidden="true" /></button>` : ''}</div>
+        <div class="track-row-copy"><strong>${escapeHTML(track.title)}</strong><small>${escapeHTML(track.genre)} · ${new Date(track.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</small></div><div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span><button type="button" class="track-comment-button" data-track-comments="${escapeHTML(track.id)}" aria-expanded="false" aria-label="ความคิดเห็นเพลง ${escapeHTML(track.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H12.5C7.5 19 3 14 3 11.5 3 7.5 6.5 4 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg></button>${track.owner_id === currentUserId ? `<button type="button" class="track-edit-button" data-track-edit="${escapeHTML(track.id)}" aria-label="แก้ไขชื่อเพลงและรูปปก ${escapeHTML(track.title)}" title="แก้ไขชื่อเพลงและรูปปก"><img src="assets/edit-pencil-glass.png" alt="" aria-hidden="true" /></button>` : ''}</div>
       </article>`).join('');
     const genres = [...new Set(profileTracks.map(track => track.genre).filter(Boolean))].slice(0, 6);
     view.innerHTML = `<header class="artist-profile-hero"><div class="artist-profile-cover-art" aria-hidden="true"></div><div class="artist-profile-hero-shade"></div><div class="artist-profile-identity">
@@ -773,6 +825,10 @@
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
     if (!target) return;
+    const closeComments = target.closest('[data-track-comments-close]');
+    if (closeComments) { event.preventDefault(); event.stopImmediatePropagation(); closeTrackComments(); return; }
+    const retryComments = target.closest('[data-track-comments-retry]');
+    if (retryComments && activeTrackComments) { event.preventDefault(); event.stopImmediatePropagation(); loadTrackComments(activeTrackComments.trackId, activeTrackComments.panel); return; }
     if (target.closest('#navReleaseBtn, #addTrackBtn, #emptyUploadBtn')) { event.preventDefault(); event.stopImmediatePropagation(); showUploadForm(); return; }
     const edit = target.closest('[data-track-edit]');
     if (edit) { event.preventDefault(); event.stopImmediatePropagation(); showTrackEditForm(tracks.find(track => track.id === edit.dataset.trackEdit)); return; }
@@ -805,7 +861,7 @@
       const title = comments.closest('.track-row')?.querySelector('.track-row-copy strong')?.textContent
         || comments.closest('.stream-release-card')?.querySelector('h4')?.textContent
         || comments.closest('.artist-featured-track')?.querySelector('h3')?.textContent || '';
-      window.dispatchEvent(new CustomEvent('sourcewav:track-comments', { detail: { trackId: comments.dataset.trackComments, trackTitle: title } })); return;
+      openTrackComments(comments, comments.dataset.trackComments, title); return;
     }
     const play = target.closest('[data-track-play]');
     if (play) {
@@ -819,6 +875,31 @@
   }, true);
 
   document.addEventListener('submit', async event => {
+    if (event.target instanceof HTMLFormElement && event.target.id === 'trackCommentForm') {
+      event.preventDefault(); event.stopImmediatePropagation();
+      const form = event.target;
+      const body = form.elements.body.value.trim();
+      const submit = form.querySelector('[type="submit"]');
+      if (!body || !activeTrackComments?.panel.contains(form)) return;
+      const db = window.SourcewavSupabase;
+      let user;
+      try { ({ data: { user } } = await db.auth.getUser()); }
+      catch { toast('ตรวจสอบบัญชีไม่ได้ ลองอีกครั้ง'); return; }
+      if (!user) { toast('เข้าสู่ระบบก่อนแสดงความคิดเห็น'); $('#profileBtn')?.click(); return; }
+      submit.disabled = true;
+      try {
+        const { error } = await db.from('comments').insert({ track_id: form.dataset.trackId, author_id: user.id, body });
+        if (error) throw error;
+        form.elements.body.value = '';
+        await loadTrackComments(form.dataset.trackId, activeTrackComments.panel);
+        form.elements.body.focus();
+        $('.track-comments-inline-list', activeTrackComments.panel)?.scrollTo({ top: $('.track-comments-inline-list', activeTrackComments.panel).scrollHeight, behavior: 'smooth' });
+      } catch (error) {
+        console.error('Unable to post track comment:', error?.message || error);
+        toast('ส่งความคิดเห็นไม่สำเร็จ กรุณาลองอีกครั้ง');
+      } finally { if (submit.isConnected) submit.disabled = false; }
+      return;
+    }
     if (event.target instanceof HTMLFormElement && event.target.id === 'trackEditForm') {
       event.preventDefault(); event.stopImmediatePropagation(); await saveTrackEdit(event.target); return;
     }

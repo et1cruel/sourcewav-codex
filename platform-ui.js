@@ -808,49 +808,6 @@
     });
   }
 
-  async function openTrackComments(trackId, trackTitle = '') {
-    const track = trackTitle || (() => {
-      const row = document.querySelector(`[data-track-row="${CSS.escape(trackId)}"]`);
-      const release = document.querySelector(`[data-track-comments="${CSS.escape(trackId)}"]`);
-      return row?.querySelector('.track-row-copy strong')?.textContent
-        || release?.closest('.stream-release-card')?.querySelector('h4')?.textContent
-        || document.querySelector('.stream-main h3')?.textContent
-        || 'เพลงนี้';
-    })();
-    modal(`<section class="track-comments-modal"><span class="track-comments-kicker">SOURCEWAV · LISTENING ROOM</span><h2 id="modalTitle">คุยกันใต้เพลง</h2><p class="track-comments-track">${esc(track)}</p><div class="comment-list track-comment-list" id="trackCommentList" aria-live="polite"><p role="status">กำลังโหลดความคิดเห็น…</p></div><form id="trackCommentForm"><label class="modal-field">เขียนความคิดเห็น<textarea id="trackCommentBody" maxlength="2000" required placeholder="บอกความรู้สึกหลังฟังเพลงนี้…"></textarea></label><button class="modal-primary" type="submit">ส่งความคิดเห็น</button></form></section>`);
-    const list = $('#trackCommentList');
-    try {
-      const { data, error } = await db.from('comments').select('body,created_at,profiles!comments_author_id_fkey(display_name)')
-        .eq('track_id', trackId).is('deleted_at', null).order('created_at');
-      if (error) throw error;
-      list.innerHTML = (data || []).map(comment => `<article class="track-comment-entry"><b>${esc(comment.profiles?.display_name || 'สมาชิก')}</b><p>${esc(comment.body)}</p><time datetime="${esc(comment.created_at)}">${new Date(comment.created_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })}</time></article>`).join('')
-        || '<p class="comment-empty">ยังไม่มีความคิดเห็นใต้เพลงนี้ เริ่มคุยได้เลย</p>';
-    } catch (error) {
-      console.error('Unable to load track comments:', error?.message || error);
-      list.innerHTML = '<div class="comment-load-error" role="alert"><p>โหลดความคิดเห็นเพลงไม่สำเร็จ ลองตรวจสอบการเชื่อมต่อหรือ migration แล้วลองอีกครั้ง</p><button type="button" class="modal-primary" id="retryTrackComments">ลองอีกครั้ง</button></div>';
-      $('#retryTrackComments')?.addEventListener('click', () => openTrackComments(trackId, track));
-    }
-    $('#trackCommentForm')?.addEventListener('submit', async event => {
-      event.preventDefault();
-      const user = window.SourcewavAuthUser || await needUser(); if (!user) return;
-      const body = $('#trackCommentBody')?.value.trim();
-      if (!body) return toast('พิมพ์ความคิดเห็นก่อนส่ง');
-      const submit = event.currentTarget.querySelector('[type="submit"]');
-      submit.disabled = true;
-      const { error } = await db.from('comments').insert({ track_id: trackId, author_id: user.id, body });
-      submit.disabled = false;
-      if (error) return toast('ส่งความคิดเห็นไม่สำเร็จ กรุณาลองอีกครั้ง');
-      await openTrackComments(trackId, track);
-      $('#trackCommentBody')?.focus();
-      $('#trackCommentList')?.scrollTo({ top: $('#trackCommentList').scrollHeight, behavior: 'smooth' });
-    });
-  }
-
-  window.addEventListener('sourcewav:track-comments', event => {
-    const trackId = event.detail?.trackId;
-    if (typeof trackId === 'string' && /^[0-9a-f-]{36}$/i.test(trackId)) openTrackComments(trackId, event.detail?.trackTitle || '');
-  });
-
   document.addEventListener('click', async event => {
     const target = event.target.closest('button'); if (!target) return;
     if (target.dataset.liveLike) {
