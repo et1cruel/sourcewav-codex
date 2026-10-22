@@ -2400,3 +2400,42 @@ body.event-purchase-page-active .chat-fab{display:none!important}
   .topbar #profileBtn .avatar{width:28px;height:28px}
   html,body{overflow-x:clip}
 }
+
+/* Compact chat room sizing while keeping message text and controls readable. */
+.room-chat-page{grid-template-rows:76px minmax(0,1fr)}
+.room-chat-logo{width:128px;height:46px}
+.room-chat-layout{grid-template-columns:minmax(232px,min(18vw,300px)) minmax(0,1fr)}
+.room-chat-main{grid-template-rows:78px minmax(0,1fr) auto}
+.room-active-heading{gap:11px;padding-inline:clamp(16px,3vw,42px)}
+.room-active-mark{width:38px;height:38px;flex-basis:38px;border-radius:12px;font-size:21px}
+.room-active-heading h1{font-size:19px}
+.room-thread{gap:10px;padding:clamp(14px,3vh,28px) clamp(16px,4vw,64px)}
+.room-thread .local-message{width:min(100%,880px);padding:14px 16px;border-radius:14px}
+.room-message-image{width:min(100%,420px);max-height:min(42vh,420px)}
+.room-chat-main .room-compose{gap:8px;padding:11px clamp(13px,3vw,44px) max(13px,env(safe-area-inset-bottom))}
+.room-compose-message{gap:6px}
+.room-compose-message textarea{min-height:64px;max-height:150px;padding:10px 13px}
+.room-send-button{min-width:124px;min-height:44px}
+@media(max-width:720px){
+  .room-chat-page{grid-template-rows:58px minmax(0,1fr)}
+  .room-chat-topbar{gap:8px}
+  .room-chat-logo{width:116px;height:40px}
+  .room-chat-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .room-directory{padding:7px 11px 6px}
+  .room-chat-main{grid-template-rows:58px minmax(0,1fr) auto}
+  .room-active-heading{gap:9px;padding:7px 12px}
+  .room-active-mark{width:34px;height:34px;flex-basis:34px;font-size:18px}
+  .room-thread{gap:8px;padding:11px 10px}
+  .room-thread .local-message{padding:10px 12px}
+  .room-message-image{width:min(100%,360px);max-height:min(36vh,360px)}
+  .room-chat-main .room-compose{gap:7px;padding:8px 10px max(10px,env(safe-area-inset-bottom))}
+  .room-compose-message textarea{min-height:56px;max-height:112px;padding:9px 11px}
+  .room-send-button{min-width:108px;min-height:44px}
+}
+@media(max-width:380px){
+  .room-chat-page{grid-template-rows:54px minmax(0,1fr)}
+  .room-chat-logo{width:96px;height:36px}
+  .room-chat-main{grid-template-rows:54px minmax(0,1fr) auto}
+  .room-thread{padding:9px 8px}
+  .room-chat-main .room-compose{padding-inline:8px}
+}
