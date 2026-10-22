@@ -2322,6 +2322,74 @@ body.event-purchase-page-active .chat-fab{display:none!important}
   #chatBtn.chat-fab{right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));display:grid;width:48px;height:48px;min-height:48px;padding:0;place-items:center;border-radius:50%;font-size:0}
   #chatBtn.chat-fab>span{font-size:18px}
 }
+
+/* Bring community rooms into the Listening Room's liquid-chrome world. */
+#modalBackdrop:has(.room-chat-page).open{background:#a7aaad}
+.room-chat-page{background:linear-gradient(145deg,#d6d8da 0%,#f8f8f8 12%,#aeb2b5 35%,#f2f3f3 58%,#8b9094 82%,#dfe1e2 100%)}
+.room-chat-topbar{border-bottom-color:#64696e;background:linear-gradient(145deg,#17191d 0%,#34393e 24%,#111418 47%,#3d4348 70%,#111317 100%);box-shadow:0 7px 18px #11151a30}
+.room-chat-brand{display:flex;align-items:center;flex:0 0 auto;min-width:0}
+.room-chat-logo{display:block;width:148px;height:54px;object-fit:contain;object-position:left center}
+.room-chat-topbar>span{color:#e4e6e7;border-left-color:#ffffff35}
+.room-chat-topbar>button{border-color:#747a7f;color:#f2f3f4;background:linear-gradient(145deg,#3e4348,#16191d 55%,#34393e);box-shadow:inset 0 1px 2px #fff5,0 4px 10px #0005}
+.room-chat-topbar>button:hover{border-color:#d9dcdf;color:#fff;background:linear-gradient(145deg,#50565b,#202328 55%,#41474c)}
+.room-chat-topbar>button b{color:#dedfe1}
+.room-chat-layout{background:linear-gradient(135deg,#d7d9db 0%,#f7f8f8 27%,#b6b9bc 59%,#f8f8f8 82%,#a0a4a7 100%)}
+.room-directory{border-right-color:#888d91;background:linear-gradient(145deg,#f9f9f9 0%,#d2d4d6 23%,#f5f5f5 48%,#b8bbbe 70%,#f6f6f6 100%)}
+.room-directory-heading{border-bottom-color:#7e838755}
+.room-directory-heading h2{color:#171a1d}
+.room-directory-heading p{color:#34383c}
+.room-directory nav{scrollbar-color:#72777b #d8dadc}
+.room-directory-item{color:#272b2f}
+.room-directory-item:hover,.room-directory-item.is-active{border-color:#555b60;color:#f7f8f9;background:linear-gradient(145deg,#373c41,#171a1e 55%,#34393e)}
+.room-directory-item.is-active{box-shadow:inset 3px 0 #64d9d1,0 4px 12px #0003}
+.room-directory-item .room-dot{background:#61d6cd;box-shadow:0 0 12px #36bdb777}
+.room-directory-empty{color:#34383c}
+.room-create-action{border-color:#686e73;color:#202428;background:linear-gradient(145deg,#fff,#c3c6c8 42%,#f9f9f9 62%,#aeb2b5);box-shadow:inset 0 1px 2px #fff,0 4px 10px #15191d20}
+.room-create-action:hover{border-color:#30353a;color:#080a0c}
+.room-chat-main{background:radial-gradient(ellipse at 50% 0,#fff9,transparent 46%),linear-gradient(135deg,#c5c8ca,#f5f6f6 35%,#aeb2b5 68%,#f4f4f4)}
+.room-active-heading{border-bottom-color:#777c80;background:linear-gradient(145deg,#17191d 0%,#34393e 24%,#111418 47%,#3d4348 70%,#111317 100%);box-shadow:0 5px 15px #11151a25}
+.room-active-mark{border-color:#c4c8cb;background:linear-gradient(145deg,#fff,#aeb2b6 44%,#f7f7f7 61%,#71767a);color:#15181b;box-shadow:inset 0 1px 2px #fff,0 3px 8px #0006}
+.room-active-heading h1{color:#f6f6f4}
+.room-active-heading p{color:#cdd0d2}
+.room-thread{scrollbar-color:#777c81 #d0d2d4}
+.room-thread .local-message{border-color:#93999d;background:linear-gradient(145deg,#171a1e 0%,#30363b 22%,#111418 45%,#373d42 70%,#171a1e 100%);box-shadow:inset 0 1px 2px #fff7,0 8px 18px #13171b30}
+.room-thread .local-message b{color:#76dfd6}
+.room-thread .local-message small{color:#c9ccce}
+.room-thread .room-thread-empty{color:#292d31}
+.room-chat-main .room-compose{border-top-color:#686e73;background:linear-gradient(145deg,#16191d,#34393e 24%,#111418 55%,#292e33 80%,#101317)}
+.room-compose-message{color:#f1f2f2}
+.room-compose-message textarea{border-color:#777d82;color:#f4f5f5;background:linear-gradient(145deg,#1a1d21,#30353a 48%,#171a1e);box-shadow:inset 0 1px 3px #0007}
+.room-compose-message textarea::placeholder{color:#c1c5c8}
+.room-compose-message textarea:focus{border-color:#72dcd4;box-shadow:0 0 0 3px #72dcd433}
+.room-image-pick{border-color:#979ca0;color:#1d2023;background:linear-gradient(145deg,#fff,#c3c6c9 38%,#fafafa 58%,#a4a9ad);box-shadow:inset 0 1px 2px #fff,0 3px 8px #0003}
+.room-image-pick:hover{border-color:#4a5055;color:#090b0d}
+.room-image-pick>span{color:#177d78}
+.room-image-pick small{color:#34393d}
+.room-send-button{border:1px solid #e1e3e4;color:#14171a;background:linear-gradient(145deg,#fff 0%,#c7cacc 28%,#f8f8f8 48%,#969b9f 67%,#f3f4f4);box-shadow:inset 0 1px 2px #fff,0 5px 12px #0004}
+.room-send-button:hover{background:linear-gradient(145deg,#fff,#dadcde 30%,#fff 55%,#a4a8ab)}
+.room-message-image{width:min(100%,520px);max-height:min(54vh,520px);border-color:#c6c9cb;border-radius:12px;background:#090a0c;object-fit:contain}
+@media(max-width:720px){
+  .room-chat-logo{width:122px;height:42px}
+  .room-chat-topbar>span{color:#e4e6e7}
+  .room-directory{background:linear-gradient(110deg,#f8f8f8,#c2c5c7 42%,#f2f3f3 72%,#b5b8bb)}
+  .room-directory-item.is-active{box-shadow:inset 0 -2px #6be0d7,0 3px 8px #0003}
+  .room-thread{background:linear-gradient(145deg,#c8cbcd,#f7f7f7 38%,#b9bdc0 75%,#f4f4f4)}
+  .room-thread .local-message{padding:13px 14px}
+  .room-chat-main .room-compose{padding-bottom:max(12px,env(safe-area-inset-bottom))}
+  .room-image-pick{color:#171a1d}
+}
+@media(max-width:380px){
+  .room-chat-topbar{gap:7px;padding-inline:10px}
+  .room-chat-logo{width:98px;height:38px}
+  .room-chat-topbar>span{padding-left:7px;font-size:10px}
+  .room-chat-topbar>button{min-height:38px;gap:4px;padding-inline:7px;font-size:10px}
+  .room-chat-topbar>button b{font-size:16px}
+  .room-directory{gap:5px;padding-inline:8px}
+  .room-directory-item{max-width:58vw;padding-inline:9px}
+  .room-create-action{padding-inline:7px;font-size:10px}
+  .room-chat-main .room-compose{padding-inline:8px}
+  .room-send-button{min-width:100px}
+}
 @media(max-width:360px){
   .topbar{gap:0 6px;padding-inline:10px}
   .topbar .brand,.topbar .brand .brand-logo{width:84px!important;flex:0 0 84px!important}
