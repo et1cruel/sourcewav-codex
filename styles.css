@@ -1294,7 +1294,7 @@ body{zoom:1.18}
 html[lang="th"] body{line-height:1.65}
 html[lang="th"] :is(p, h1, h2, h3, h4, label, .nav-link, .rail-item, .room-item, .event-info, .post-copy, .section-kicker){line-height:1.65}
 @media(max-width:1050px){.hero-band{min-height:390px}.hero-copy h1{font-size:clamp(34px,4vw,46px);line-height:1.4}}
-@media(max-width:680px){body{zoom:1.06}.hero-band{min-height:350px;height:auto}.hero-copy h1{font-size:clamp(29px,7vw,38px);line-height:1.4}.hero-copy p{font-size:13px;line-height:1.8}}
+@media(max-width:680px){body{zoom:1}.hero-band{min-height:350px;height:auto}.hero-copy h1{font-size:clamp(29px,7vw,38px);line-height:1.4}.hero-copy p{font-size:13px;line-height:1.8}}
 
 /* Keep venue names and addresses inside their map result cards. */
 .map-preview .venue-row,.map-modal .venue-row{min-height:88px;align-items:stretch}
@@ -2303,3 +2303,22 @@ body.event-purchase-page-active .chat-fab{display:none!important}
 
 /* Keep the current track name legible against the dark chrome player. */
 .stream-player .stream-main h3{color:#f0f0ed}
+
+/* The tablet two-column override must not leak into phone layouts. */
+@media(max-width:680px){
+  #home.layout{grid-template-columns:minmax(0,1fr);padding-inline:13px}
+  #home.layout>.right-column{grid-column:1;min-width:0}
+  #chatBtn.chat-fab{right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));display:grid;width:48px;height:48px;min-height:48px;padding:0;place-items:center;border-radius:50%;font-size:0}
+  #chatBtn.chat-fab>span{font-size:18px}
+}
+@media(max-width:360px){
+  .topbar{gap:6px;padding-inline:10px}
+  .brand,.brand .brand-logo{width:84px!important;flex:0 0 84px!important}
+  .main-nav{display:none}
+  .top-actions{min-width:0;gap:2px}
+  .topbar .language-toggle,.topbar #myTicketsBtn,.topbar #searchBtn,.topbar .drop-alert-trigger,.topbar #profileBtn{width:34px;min-width:34px;height:34px;min-height:34px;padding:0}
+  .topbar #myTicketsBtn{justify-content:center;font-size:0}
+  .topbar #profileBtn{justify-content:center;gap:0}
+  .topbar #profileBtn .avatar{width:28px;height:28px}
+  html,body{overflow-x:clip}
+}
