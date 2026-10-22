@@ -516,8 +516,13 @@
   }
   async function stopCamera() { scannerRunning = false; scannerStream?.getTracks().forEach(track => track.stop()); scannerStream = null; const video = $('#ticketCamera'); if (video) video.srcObject = null; }
 
+  let eventFormOpening = false;
   async function openCreateEvent() {
-    if (!await needUser()) return;
+    const page = $('#eventSellPage');
+    if (page && !page.hidden && $('#newEventTitle', page)) return;
+    if (eventFormOpening) return;
+    eventFormOpening = true;
+    if (!await needUser()) { eventFormOpening = false; return; }
     modal(`<div class="ticket-sell-modal">
       <header class="ticket-sell-heading">
         <div class="ticket-sell-title-row"><img class="ticket-sell-logo" src="assets/sourcewav-logo.svg" alt="Sourcewav" /><div><span class="ticket-sell-eyebrow">SELL YOUR EVENT · SOURCEWAV LIVE</span><h2 id="modalTitle">เปิดขายบัตรงานของคุณ</h2></div></div>
@@ -578,6 +583,7 @@
       image.hidden = false;
       label.hidden = true;
     });
+    eventFormOpening = false;
   }
   async function publishEvent() {
     const value = id => $(`#${id}`).value;
@@ -824,7 +830,15 @@
     feedFilter = filter.dataset.filter || 'all'; await loadFeed();
   }, true);
 
-  window.addEventListener('sourcewav:auth', async () => { await loadFeed(); await loadListings(); await loadEvents(); if (location.hash === '#sell-event') openCreateEvent(); });
+  window.addEventListener('sourcewav:auth', async event => {
+    await loadFeed(); await loadListings(); await loadEvents();
+    if (location.hash !== '#sell-event') return;
+    const page = $('#eventSellPage');
+    if (!event.detail?.user && page && !page.hidden && $('#newEventTitle', page)) {
+      closeModal(); location.hash = '#events'; toast('เซสชันสิ้นสุดแล้ว กรุณาเข้าสู่ระบบใหม่'); return;
+    }
+    openCreateEvent();
+  });
   $('#chatBtn')?.addEventListener('click', () => {
     const root = $('#chatPanel');
     const opening = !root.classList.contains('open');
