@@ -1933,6 +1933,15 @@ body :where(button,a,.ticket-filter,.nav-link,.rail-item){-webkit-text-stroke:.1
   .modal:has(.ticket-sell-modal){width:calc(100vw - 28px);max-width:calc(100vw - 28px);max-height:88dvh}
   .ticket-sell-modal{max-height:calc(88dvh - 6px)}
 }
+/* Compact, tactile publish action in the sticky event form footer. */
+.ticket-sell-modal .ticket-sell-footer>#publishEvent{display:flex;flex:0 1 340px;align-items:center;justify-content:center;gap:11px;width:auto;min-width:280px;min-height:52px;margin:0;padding:10px 20px;border:1px solid #74a8ef;border-bottom:5px solid #17427f;border-radius:12px;color:#fff;background:linear-gradient(180deg,#3f7dd0 0%,#2d63ad 55%,#245392 100%);font:750 14px var(--font);box-shadow:0 5px 0 #143a70,0 10px 20px #164a8a55,inset 0 1px 0 #ffffff70;cursor:pointer;transform:translateY(-1px);transition:transform .12s ease,box-shadow .12s ease,filter .12s ease}
+.ticket-sell-modal .ticket-sell-footer>#publishEvent:hover{filter:brightness(1.08);transform:translateY(-3px);box-shadow:0 7px 0 #143a70,0 14px 24px #164a8a66,inset 0 1px 0 #ffffff80}
+.ticket-sell-modal .ticket-sell-footer>#publishEvent:active{transform:translateY(3px);box-shadow:0 1px 0 #143a70,0 3px 8px #164a8a44,inset 0 2px 4px #102e5c55}
+.ticket-sell-modal .ticket-sell-footer>#publishEvent:focus-visible{outline:3px solid #a8cbff;outline-offset:4px}
+.ticket-sell-modal .ticket-sell-footer>#publishEvent:disabled{cursor:wait;filter:saturate(.6);opacity:.72;transform:none;box-shadow:0 5px 0 #143a70,0 8px 14px #164a8a33}
+.ticket-sell-modal .ticket-sell-footer>#publishEvent b{font-size:17px}
+@media(max-width:680px){.ticket-sell-modal .ticket-sell-footer>#publishEvent{flex:0 0 auto;width:100%;min-width:0;min-height:48px;font-size:14px}}
+@media(prefers-reduced-motion:reduce){.ticket-sell-modal .ticket-sell-footer>#publishEvent{transition:none}}
 /* Owner controls for editing a track's display details. */
 .track-edit-button{min-height:30px;padding:0 9px;border:1px solid #c7d2c8;border-radius:8px;color:#35514b;background:#f3f8f3;font:650 10px var(--font);cursor:pointer;white-space:nowrap}
 .track-edit-button:hover,.track-edit-button:focus-visible{border-color:#7caaa0;color:#173f39;background:#e5f2ed;outline:0}
