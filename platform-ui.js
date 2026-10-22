@@ -21,6 +21,17 @@
   const money = n => `฿${(Number(n || 0) / 100).toLocaleString('th-TH', { maximumFractionDigits: 0 })}`;
   const initials = name => [...String(name || '?')][0] || '?';
   const safeImageUrl = value => { try { const url = new URL(value || ''); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; } };
+  const parseSlipOkBranchId = value => {
+    const input = String(value || '').trim();
+    if (/^\d{1,20}$/.test(input)) return input;
+    try {
+      const url = new URL(input);
+      const match = url.protocol === 'https:' && url.hostname === 'api.slipok.com'
+        ? url.pathname.match(/^\/api\/line\/apikey\/(\d{1,20})\/?$/)
+        : null;
+      return match?.[1] || '';
+    } catch { return ''; }
+  };
   const toast = message => { const node = $('#toast'); if (node) { node.textContent = message; node.classList.add('show'); setTimeout(() => node.classList.remove('show'), 3000); } };
   const modal = html => {
     if (html.includes('ticket-sell-modal') && location.hash === '#sell-event') {
@@ -38,16 +49,17 @@
   const call = async (name, body) => {
     const { data, error } = await db.functions.invoke(name, { body });
     if (error) {
-      if (name === 'submit-ticket-payment' && typeof error.context?.clone === 'function') {
+      let payload = null;
+      if (typeof error.context?.clone === 'function') {
         try {
-          const payload = await error.context.clone().json();
-          const paymentError = new Error(payload?.error || error.message || 'ตรวจสลิปไม่สำเร็จ');
-          paymentError.attemptsRemaining = Number.isInteger(payload?.attemptsRemaining) ? payload.attemptsRemaining : null;
-          paymentError.attemptCounted = payload?.attemptCounted === true;
-          throw paymentError;
-        } catch (payloadError) {
-          if (payloadError instanceof Error && 'attemptsRemaining' in payloadError) throw payloadError;
-        }
+          payload = await error.context.clone().json();
+        } catch { /* Use the function client's message when its response isn't JSON. */ }
+      }
+      if (name === 'submit-ticket-payment') {
+        const paymentError = new Error(payload?.error || error.message || 'ตรวจสลิปไม่สำเร็จ');
+        paymentError.attemptsRemaining = Number.isInteger(payload?.attemptsRemaining) ? payload.attemptsRemaining : null;
+        paymentError.attemptCounted = payload?.attemptCounted === true;
+        throw paymentError;
       }
       if (error.context?.status === 404) {
         const messages = {
@@ -61,7 +73,7 @@
         };
         if (messages[name]) throw new Error(messages[name]);
       }
-      throw new Error(error.message || 'เชื่อมต่อบริการไม่สำเร็จ');
+      throw new Error(payload?.error || error.message || 'เชื่อมต่อบริการไม่สำเร็จ');
     }
     if (data?.error) throw new Error(data.error);
     return data;
@@ -257,7 +269,6 @@
   }
 
   async function ticketPicker(eventId) {
-    const user = await needUser(); if (!user) return;
     const { data: event, error } = await db.from('events').select('id,title,cover_url,starts_at,venue_name,venue_address,ticket_types(id,name,price_minor,quantity_total,quantity_sold,quantity_reserved,sales_start,sales_end),event_payment_methods(qr_storage_key,bank_name,beneficiary_name,account_last4)').eq('id', eventId).single();
     if (error) return toast('เปิดรายละเอียดงานไม่ได้');
     const tiers = (event.ticket_types || []).filter(t => t.quantity_total > t.quantity_sold + t.quantity_reserved && (!t.sales_start || new Date(t.sales_start) <= new Date()) && (!t.sales_end || new Date(t.sales_end) >= new Date()));
@@ -557,7 +568,7 @@
           <label class="modal-field">ชื่อบัญชีผู้รับเงิน<input id="newPaymentBeneficiary" maxlength="120" required placeholder="ชื่อที่ตรงกับบัญชีธนาคาร" /></label>
           <label class="modal-field">เลขบัญชี 4 ตัวท้าย<input id="newPaymentLast4" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="ไม่บังคับ" /></label>
           <label class="modal-field ticket-qr-upload">QR Code รับเงิน<input id="newPaymentQr" type="file" accept="image/jpeg,image/png,image/webp" required /><small>JPG, PNG หรือ WebP · ไม่เกิน 5 MB</small></label>
-          <label class="modal-field">SlipOK Branch ID<input id="newSlipOkBranch" maxlength="20" inputmode="numeric" autocomplete="off" required placeholder="Branch ID ของบัญชีผู้รับ" /></label>
+          <label class="modal-field">SlipOK Branch ID<input id="newSlipOkBranch" maxlength="200" inputmode="text" autocomplete="off" required placeholder="เลข Branch ID หรือวาง URL จาก SlipOK" /><small>วาง URL รูปแบบ https://api.slipok.com/api/line/apikey/… ได้ ระบบจะดึงเลข Branch ID ให้อัตโนมัติ</small></label>
           <label class="modal-field">SlipOK API Key<input id="newSlipOkApiKey" type="password" maxlength="512" autocomplete="new-password" required placeholder="API Key ของ Branch นี้" /></label>
         </div>
         <p class="payment-credential-note">API Key จะถูกส่งไปเข้ารหัสบนเซิร์ฟเวอร์และไม่ถูกเก็บไว้ในหน้าเว็บ ต้องใช้ Branch ID และ API Key ที่ตรงกับบัญชีผู้รับเงินใน QR</p>
@@ -598,7 +609,7 @@
     const bankName = value('newPaymentBank').trim();
     const beneficiaryName = value('newPaymentBeneficiary').trim();
     const accountLast4 = value('newPaymentLast4').trim();
-    const slipokBranchId = value('newSlipOkBranch').trim();
+    const slipokBranchId = parseSlipOkBranchId(value('newSlipOkBranch'));
     const slipokApiKeyInput = $('#newSlipOkApiKey');
     const slipokApiKey = slipokApiKeyInput.value.trim();
     const qrFile = $('#newPaymentQr')?.files?.[0];
@@ -611,7 +622,7 @@
     if (!Number.isInteger(price) || price < 20 || price > 150000) return invalid('newTierPrice', 'ราคาบัตรต้องอยู่ระหว่าง ฿20 ถึง ฿150,000');
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10000) return invalid('newTierStock', 'จำนวนบัตรต้องอยู่ระหว่าง 1 ถึง 10,000 ใบ');
     if (!bankName || !beneficiaryName || (accountLast4 && !/^\d{4}$/.test(accountLast4))) return invalid('newPaymentBank', 'กรอกธนาคารและชื่อบัญชี และเลขท้าย 4 หลักถ้าต้องการแสดง');
-    if (!/^\d{1,20}$/.test(slipokBranchId)) return invalid('newSlipOkBranch', 'กรอก SlipOK Branch ID เป็นตัวเลข');
+    if (!slipokBranchId) return invalid('newSlipOkBranch', 'กรอก Branch ID เป็นตัวเลข หรือวาง URL API Key จาก api.slipok.com');
     if (slipokApiKey.length < 8 || slipokApiKey.length > 512) return invalid('newSlipOkApiKey', 'กรอก SlipOK API Key ของบัญชีผู้รับ');
     if (!qrFile || !['image/jpeg', 'image/png', 'image/webp'].includes(qrFile.type) || qrFile.size > 5 * 1024 * 1024) return invalid('newPaymentQr', 'อัปโหลด QR Code เป็น JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
     if (posterFile && (!['image/jpeg', 'image/png', 'image/webp'].includes(posterFile.type) || posterFile.size > 5 * 1024 * 1024)) return invalid('newEventPoster', 'โปสเตอร์ต้องเป็น JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
