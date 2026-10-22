@@ -16,13 +16,14 @@
   const makeId = prefix => `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
   function applyProfile(profile = state().profile) {
-    const name = profile.displayName || 'มิน';
+    const isGuest = !window.SourcewavAuthUser;
+    const name = isGuest ? 'Guest' : (profile.displayName || 'สมาชิก');
     const triggerName = $('#profileBtn span:last-child');
     const railName = $('.rail-profile strong');
     const railRole = $('.rail-profile small');
     if (triggerName) triggerName.textContent = name;
     if (railName) railName.textContent = name;
-    if (railRole) railRole.textContent = [profile.role || 'นักฟังเพลง', profile.province || 'กรุงเทพฯ'].join(' · ');
+    if (railRole) railRole.textContent = isGuest ? 'ผู้เยี่ยมชมเว็บไซต์ · Guest' : [profile.role || 'สมาชิก', profile.province || ''].filter(Boolean).join(' · ');
   }
 
   function applyInteractions() {
