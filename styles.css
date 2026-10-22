@@ -2055,3 +2055,19 @@ body :where(button,a,.ticket-filter,.nav-link,.rail-item){-webkit-text-stroke:.1
   .ticket-sell-section-heading h3{font-size:16px}
 }
 @media(max-width:390px){.ticket-sell-heading h2{font-size:22px}.ticket-sell-logo{width:84px;flex-basis:84px}}
+.ticket-sell-heading h2{color:#fff!important;text-shadow:0 2px 18px #c29dff45}
+.ticket-sell-heading .ticket-sell-eyebrow{color:#d5bcff}
+.ticket-sell-modal .modal-field{color:#f0edf6}
+.ticket-sell-modal .modal-field select{color:#f6f3fb;background-color:#11131c;color-scheme:dark}
+.ticket-sell-modal .modal-field select option{color:#f3f0f8;background:#171923}
+.ticket-sell-modal .modal-field select option:checked{color:#fff;background:#59427b}
+.ticket-sell-modal .modal-field select:focus-visible,.ticket-sell-modal .modal-field input:focus-visible,.ticket-sell-modal .modal-field textarea:focus-visible{outline:3px solid #b99af2;outline-offset:2px}
+.ticket-sell-modal .modal-field input[type=file]{display:block;width:100%;min-height:54px;padding:7px;border:1px dashed #a88bd16e;border-radius:13px;color:#ded9e9;background:linear-gradient(135deg,#171925,#1b1c29);font-size:12px;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s}
+.ticket-sell-modal .modal-field input[type=file]:hover{border-color:#c4a6fa;background:linear-gradient(135deg,#211b30,#201c2b);box-shadow:0 5px 16px #9b7ad51a}
+.ticket-sell-modal .modal-field input[type=file]::file-selector-button{min-height:36px;margin-right:12px;padding:0 15px;border:1px solid #d7c3ff;border-radius:10px;color:#21162d;background:linear-gradient(135deg,#e8dcff,#c8a9fb);font:700 12px var(--font);box-shadow:0 3px 0 #795ca1,0 5px 10px #0003;cursor:pointer;transition:transform .15s,filter .15s,box-shadow .15s}
+.ticket-sell-modal .modal-field input[type=file]::file-selector-button:hover{filter:brightness(1.07);transform:translateY(-1px);box-shadow:0 4px 0 #795ca1,0 7px 13px #0004}
+.ticket-sell-modal .modal-field input[type=file]::file-selector-button:active{transform:translateY(2px);box-shadow:0 1px 0 #795ca1,0 2px 5px #0003}
+.ticket-sell-modal .modal-field input[type=file]:focus-visible{outline:3px solid #b99af2;outline-offset:3px}
+.ticket-sell-modal .modal-field small{color:#b7b3c3}
+.event-poster-upload{border-color:#b99af245;background:linear-gradient(145deg,#191b26,#151720);box-shadow:inset 0 1px #ffffff08,0 8px 22px #0002}
+@media(prefers-reduced-motion:reduce){.ticket-sell-modal .modal-field input[type=file],.ticket-sell-modal .modal-field input[type=file]::file-selector-button{transition:none}}
