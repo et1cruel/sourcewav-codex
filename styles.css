@@ -2410,7 +2410,7 @@ body.event-purchase-page-active .chat-fab{display:none!important}
 .room-active-mark{width:38px;height:38px;flex-basis:38px;border-radius:12px;font-size:21px}
 .room-active-heading h1{font-size:19px}
 .room-thread{gap:10px;padding:clamp(14px,3vh,28px) clamp(16px,4vw,64px)}
-.room-thread .local-message{width:min(100%,880px);padding:14px 16px;border-radius:14px}
+.room-thread .local-message{width:min(100%,1160px);padding:14px 16px;border-radius:14px}
 .room-message-image{width:min(100%,420px);max-height:min(42vh,420px)}
 .room-chat-main .room-compose{gap:8px;padding:11px clamp(13px,3vw,44px) max(13px,env(safe-area-inset-bottom))}
 .room-compose-message{gap:6px}
