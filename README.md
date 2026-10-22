@@ -13,7 +13,7 @@ The server listens on `http://localhost:4173` and binds to loopback only. If ano
 - Accounts, profiles, posts, reactions, comments, bookmarks, follows, direct messages, listings, events, bookings, and tickets use Supabase tables with row-level security.
 - Event ticket payments use organizer-owned PromptPay QR codes and SlipOK slip verification. The site does not use Omise.
 - Audio uses the `audio_tracks` table and the `sourcewav-audio` Supabase Storage bucket after migration `20261021000800_rooms_and_audio_storage.sql` is applied.
-- Community rooms and room messages use Supabase after migration `20261021000800_rooms_and_audio_storage.sql` is applied.
+- Community rooms and text messages use Supabase after migration `20261021000800_rooms_and_audio_storage.sql` is applied. Room image messages also need `20261022000000_community_room_images.sql`.
 - `data-store.js` keeps a per-browser/per-account cache for non-core preferences. It is not the source of truth for the normalized live features.
 - The local Node server's older SQLite `/api/state` and `/api/tracks` endpoints are retained for local compatibility only; the current web UI does not use them.
 - The Bangkok venue map is interactive and uses Leaflet with OpenStreetMap tiles.
@@ -26,4 +26,4 @@ After deployment, add the resulting `https://<worker-name>.<workers-subdomain>.w
 
 ## Remaining launch work
 
-Apply migration `20261021000800_rooms_and_audio_storage.sql` to the configured Supabase project. Verify the public audio bucket policies and account rules. Test registration, login, password recovery, Cloudflare redirect handling, SlipOK against an organizer's real branch, order reconciliation, and ticket QR scan in a controlled environment before taking real payments. Keep the local Node/SQLite endpoints off the public deployment.
+Apply migration `20261022000000_community_room_images.sql` to the configured Supabase project before using room image messages. Email sign-up is enabled and requires users to confirm their email before logging in. Set the deployed site's URL in Supabase Auth's Site URL and Redirect URLs, then test registration, email confirmation, login, room creation, text and image messages, and password recovery with two accounts. Test SlipOK, order reconciliation, and ticket QR scan in a controlled environment before taking real payments. Keep the local Node/SQLite endpoints off the public deployment.

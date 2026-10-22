@@ -8,8 +8,8 @@
   const money = n => `฿${(Number(n || 0) / 100).toLocaleString('th-TH', { maximumFractionDigits: 0 })}`;
   const initials = name => [...String(name || '?')][0] || '?';
   const toast = message => { const node = $('#toast'); if (node) { node.textContent = message; node.classList.add('show'); setTimeout(() => node.classList.remove('show'), 3000); } };
-  const modal = html => { const backdrop = $('#modalBackdrop'); $('#modalContent').innerHTML = html; backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden', 'false'); };
-  const closeModal = () => { const backdrop = $('#modalBackdrop'); backdrop.classList.remove('open'); backdrop.setAttribute('aria-hidden', 'true'); };
+  const modal = html => { const backdrop = $('#modalBackdrop'); backdrop.classList.toggle('tickets-page-open', html.includes('my-tickets-page')); $('#modalContent').innerHTML = html; backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden', 'false'); };
+  const closeModal = () => { const backdrop = $('#modalBackdrop'); backdrop.classList.remove('open', 'tickets-page-open'); backdrop.setAttribute('aria-hidden', 'true'); };
   const needUser = async () => { const { data } = await db.auth.getUser(); if (!data.user) { toast('เข้าสู่ระบบก่อนใช้ฟีเจอร์นี้'); $('#profileBtn')?.click(); return null; } return data.user; };
   const call = async (name, body) => {
     const { data, error } = await db.functions.invoke(name, { body });
@@ -31,7 +31,7 @@
     if (data?.error) throw new Error(data.error);
     return data;
   };
-  let feedFilter = 'all', activeConversation = null, chatChannel = null, paymentTimer = null, scannerStream = null, scannerRunning = false;
+  let feedFilter = 'all', activeConversation = null, chatChannel = null, roomChannel = null, activeRoomId = null, paymentTimer = null, scannerStream = null, scannerRunning = false;
 
   async function searchSourcewav() {
     const input = $('#modalContent .modal-field input');
@@ -72,20 +72,77 @@
     (data || []).forEach(room => button.insertAdjacentHTML('beforebegin', `<button type="button" class="room-item" data-live-room="${esc(room.id)}" data-room-name="${esc(room.name)}" title="${esc(room.description)}"><i class="room-dot lime"></i><span>${esc(room.name)}</span></button>`));
   }
 
+  async function getRoomMessages(roomId) {
+    const { data, error } = await db.from('community_room_messages').select('id,body,image_storage_key,author_id,created_at,profiles!community_room_messages_author_id_fkey(display_name)').eq('room_id', roomId).order('created_at', { ascending: true }).limit(100);
+    if (error) throw error;
+    return (data || []).map(m => {
+      const imageUrl = m.image_storage_key
+        ? db.storage.from('sourcewav-room-images').getPublicUrl(m.image_storage_key).data.publicUrl
+        : '';
+      return `<article class="local-message"><b>${esc(m.profiles?.display_name || 'สมาชิก')}</b>${m.body ? `<p>${esc(m.body).replace(/\n/g, '<br>')}</p>` : ''}${imageUrl ? `<img class="room-message-image" src="${esc(imageUrl)}" alt="รูปที่ส่งในห้องคุย" loading="lazy" />` : ''}<small>${esc(new Date(m.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }))}</small></article>`;
+    }).join('');
+  }
+
+  async function refreshRoomMessages(roomId) {
+    try {
+      const messages = await getRoomMessages(roomId);
+      if (activeRoomId !== roomId) return;
+      const thread = $('#modalContent .chat-thread');
+      if (thread) thread.innerHTML = messages || '<p>ยังไม่มีข้อความ เริ่มคุยได้เลย</p>';
+    } catch (error) { toast('โหลดข้อความไม่ได้: ' + error.message); }
+  }
+
+  async function closeRoomChannel() {
+    activeRoomId = null;
+    if (roomChannel) {
+      await db.removeChannel(roomChannel);
+      roomChannel = null;
+    }
+  }
+
   async function openRoom(roomId, roomName) {
-    const { data, error } = await db.from('community_room_messages').select('id,body,author_id,created_at,profiles!community_room_messages_author_id_fkey(display_name)').eq('room_id', roomId).order('created_at', { ascending: true }).limit(100);
-    if (error) return toast('เปิดห้องคุยไม่ได้: ' + error.message);
-    const rows = data || [];
-    const messages = rows.map(m => `<p class="local-message"><b>${esc(m.profiles?.display_name || 'สมาชิก')}</b><br>${esc(m.body)}<small>${esc(new Date(m.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }))}</small></p>`).join('');
-    modal(`<h2 id="modalTitle">${esc(roomName)}</h2><div class="chat-thread">${messages || '<p>ยังไม่มีข้อความ เริ่มคุยได้เลย</p>'}</div><form id="roomMessageForm"><label class="modal-field">ข้อความ<textarea id="roomMessage" maxlength="2000" required></textarea></label><button class="modal-primary">ส่งข้อความ</button></form>`);
+    activeRoomId = roomId;
+    let messages;
+    try { messages = await getRoomMessages(roomId); }
+    catch (error) { return toast('เปิดห้องคุยไม่ได้: ' + error.message); }
+    if (roomChannel) await closeRoomChannel();
+    activeRoomId = roomId;
+    modal(`<h2 id="modalTitle">${esc(roomName)}</h2><div class="chat-thread">${messages || '<p>ยังไม่มีข้อความ เริ่มคุยได้เลย</p>'}</div><form id="roomMessageForm"><label class="modal-field">ข้อความ<textarea id="roomMessage" maxlength="2000" placeholder="พิมพ์ข้อความ (ไม่บังคับเมื่อแนบรูป)"></textarea></label><label class="modal-field room-image-field">แนบรูป<input id="roomImage" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG หรือ WebP · ไม่เกิน 5 MB</small></label><button class="modal-primary" type="submit">ส่งข้อความ</button></form>`);
     $('#roomMessageForm').onsubmit = async event => {
       event.preventDefault();
       const user = await needUser(); if (!user) return;
-      const body = $('#roomMessage').value.trim(); if (!body) return;
-      const result = await db.from('community_room_messages').insert({ room_id: roomId, author_id: user.id, body });
-      if (result.error) return toast('ส่งข้อความไม่ได้: ' + result.error.message);
-      await openRoom(roomId, roomName);
+      const body = $('#roomMessage').value.trim();
+      const imageFile = $('#roomImage').files?.[0];
+      if (!body && !imageFile) return toast('พิมพ์ข้อความหรือเลือกรูปก่อนส่ง');
+      if (body.length > 2000) return toast('ข้อความยาวได้ไม่เกิน 2,000 ตัวอักษร');
+      if (imageFile && (!['image/jpeg', 'image/png', 'image/webp'].includes(imageFile.type) || imageFile.size > 5 * 1024 * 1024)) return toast('เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
+      const submit = event.submitter || event.currentTarget.querySelector('[type="submit"]');
+      submit.disabled = true;
+      let imageStorageKey = null;
+      try {
+        if (imageFile) {
+          const extension = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' })[imageFile.type];
+          imageStorageKey = `${user.id}/${roomId}/${crypto.randomUUID()}.${extension}`;
+          const { error: uploadError } = await db.storage.from('sourcewav-room-images').upload(imageStorageKey, imageFile, {
+            contentType: imageFile.type, cacheControl: '3600', upsert: false
+          });
+          if (uploadError) throw uploadError;
+        }
+        const { error } = await db.from('community_room_messages').insert({ room_id: roomId, author_id: user.id, body, image_storage_key: imageStorageKey });
+        if (error) throw error;
+        await refreshRoomMessages(roomId);
+        $('#roomMessage').value = '';
+        $('#roomImage').value = '';
+      } catch (error) {
+        if (imageStorageKey) await db.storage.from('sourcewav-room-images').remove([imageStorageKey]);
+        toast('ส่งข้อความไม่ได้: ' + error.message);
+      } finally {
+        if (submit?.isConnected) submit.disabled = false;
+      }
     };
+    roomChannel = db.channel(`community-room-${roomId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'community_room_messages', filter: `room_id=eq.${roomId}` }, () => refreshRoomMessages(roomId))
+      .subscribe();
   }
 
   async function createRoom() {
@@ -239,51 +296,78 @@
   }
 
   async function openMyTickets() {
-    const user = await needUser(); if (!user) return;
+    const previewMode = location.hostname === 'localhost' && new URLSearchParams(location.search).get('preview') === 'tickets';
+    const user = previewMode ? { id: 'local-ticket-preview' } : await needUser(); if (!user) return;
     try {
-      const { tickets = [] } = await call('my-tickets', {});
+      const previewTickets = [{
+        id: 'local-preview-ticket', status: 'valid', issued_at: '2026-08-18T12:00:00+07:00', qr_payload: 'SOURCEWAV-LOCAL-PREVIEW',
+        events: { title: 'SUMMER ECHO FESTIVAL', category: 'music', starts_at: '2026-11-14T18:00:00+07:00', venue_name: 'IMPACT ARENA', venue_address: 'อิมแพ็ค เมืองทองธานี', status: 'published' },
+        order_items: { unit_price_minor: 250000, ticket_types: { name: 'Zone A · Row 12 · Seat 34' }, orders: { id: 'SW-92481', created_at: '2026-08-18T12:00:00+07:00' } }
+      }];
+      const { tickets = previewTickets } = previewMode ? {} : await call('my-tickets', {});
       const classify = ticket => {
         if (ticket.status === 'checked_in') return 'used';
-        if (ticket.status !== 'valid' || (ticket.events?.starts_at && new Date(ticket.events.starts_at) < new Date())) return 'expired';
+        if (['cancelled', 'refunded'].includes(ticket.status) || ticket.events?.status === 'cancelled') return 'cancelled';
         return 'valid';
       };
       const when = value => value && !Number.isNaN(new Date(value).getTime())
-        ? new Date(value).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }) : 'ยังไม่ระบุวันเวลา';
-      const ticketCards = tickets.map(ticket => {
+        ? new Date(value).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) : 'Date to be announced';
+      const shortDate = value => value && !Number.isNaN(new Date(value).getTime())
+        ? new Date(value).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+      const ticketCards = tickets.map((ticket, index) => {
         const state = classify(ticket);
-        const status = state === 'valid' ? 'ใช้งานได้' : state === 'used' ? 'ใช้แล้ว' : 'หมดอายุ';
+        const status = state === 'valid' ? 'Upcoming' : state === 'used' ? 'Used' : 'Cancelled';
         const venue = ticket.events?.venue_name || ticket.events?.venues?.name || 'ยังไม่ระบุสถานที่';
         const address = ticket.events?.venue_address || ticket.events?.venues?.address || '';
         const date = when(ticket.events?.starts_at || ticket.issued_at);
+        const order = ticket.order_items?.orders || {};
+        const ticketType = ticket.order_items?.ticket_types?.name || 'General Admission';
+        const cover = ticket.events?.cover_url || 'assets/tickets-live-cover.svg';
+        const orderId = String(order.id || ticket.id).replace(/-/g, '').slice(-5).toUpperCase();
         return `<article class="my-ticket ticket-state-${state}" data-ticket-id="${esc(ticket.id)}" data-ticket-state="${state}">
-          <div class="ticket-art" aria-hidden="true"><span class="ticket-vinyl"><i></i></span><small>SOURCEWAV<br>LIVE PASS</small></div>
-          <div class="ticket-copy"><span class="ticket-status"><i></i>${status}</span><h3>${esc(ticket.events?.title || 'อีเวนต์')}</h3>
-            <p class="ticket-type">${esc(ticket.order_items?.ticket_types?.name || 'บัตรเข้าชม')} <span>·</span> ${esc(venue)}</p>
-            <div class="ticket-meta"><span><b>วันและเวลา</b>${esc(date)}</span><span><b>สถานที่</b>${esc(address || venue)}</span></div>
-            <div class="ticket-actions"><button type="button" class="ticket-detail-toggle" aria-expanded="false">รายละเอียดบัตร <span>＋</span></button>${state === 'valid' ? `<button type="button" class="ticket-show-qr" aria-expanded="false">แสดง QR <span>⌗</span></button>` : ''}</div>
-            <div class="ticket-extra" hidden><span>ประเภทบัตร</span><strong>${esc(ticket.order_items?.ticket_types?.name || 'บัตรเข้าชม')}</strong><span>ออกบัตรเมื่อ</span><strong>${esc(when(ticket.issued_at))}</strong></div>
-            ${state === 'valid' ? `<div class="ticket-qr-wrap" hidden><div class="ticket-qr" data-qr="${esc(ticket.qr_payload)}"></div><small>แสดง QR นี้ที่ทางเข้างาน · ห้ามแชร์รหัสบัตร</small></div>` : ''}
-          </div><span class="ticket-notch ticket-notch-top" aria-hidden="true"></span><span class="ticket-notch ticket-notch-bottom" aria-hidden="true"></span>
+          <div class="ticket-art"><img src="${esc(cover)}" alt="" loading="lazy"><span>LIVE · ${esc(new Date(ticket.events?.starts_at || ticket.issued_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).toUpperCase())}</span></div>
+          <div class="ticket-copy"><span class="ticket-status">${status}</span><h3>${esc(ticket.events?.title || 'Live event')}</h3>
+            <p class="ticket-detail-line"><i aria-hidden="true">♙</i>${esc(ticketType)}</p>
+            <p class="ticket-detail-line"><i aria-hidden="true">⌖</i>${esc(venue)}${address ? ` · ${esc(address)}` : ''}</p>
+            <p class="ticket-detail-line"><i aria-hidden="true">▦</i>${esc(date)}</p>
+            ${ticket.order_items?.unit_price_minor != null ? `<p class="ticket-price">${esc(money(ticket.order_items.unit_price_minor))} THB</p>` : ''}
+            <button type="button" class="ticket-detail-toggle" aria-expanded="false">รายละเอียดบัตร</button>
+            <div class="ticket-extra" hidden><span>Ticket type</span><strong>${esc(ticketType)}</strong><span>Issued</span><strong>${esc(when(ticket.issued_at))}</strong><span>Event address</span><strong>${esc(address || venue)}</strong></div>
+          </div>
+          <aside class="ticket-qr-panel">${state === 'valid' ? `<div class="ticket-qr" data-qr="${esc(ticket.qr_payload)}"></div><small>Scan at entrance</small>` : `<span class="ticket-qr-state">${state === 'used' ? 'Ticket used' : 'Ticket cancelled'}</span>`}</aside>
+          <footer class="ticket-order-summary">${index + 1} of ${tickets.length} ticket${tickets.length === 1 ? '' : 's'} <span>·</span> Order #SW-${orderId} <span>·</span> Purchased ${shortDate(order.created_at || ticket.issued_at)}</footer>
         </article>`;
       }).join('');
-      modal(`<div class="my-tickets-page"><header class="my-tickets-heading"><span class="my-tickets-kicker">SOURCEWAV · YOUR PASSES</span><h2 id="modalTitle">บัตรของฉัน <span>— ตั๋วที่ซื้อแล้ว</span></h2><p>รวมบัตรอีเวนต์ของคุณ พร้อมรายละเอียดและ QR สำหรับเข้างาน</p><div class="ticket-filters" role="group" aria-label="กรองบัตรตามสถานะ">${[['all','ทั้งหมด'],['valid','ใช้งานได้'],['used','ใช้แล้ว'],['expired','หมดอายุ']].map(([key,label]) => `<button type="button" class="ticket-filter${key === 'all' ? ' is-active' : ''}" data-ticket-filter="${key}" aria-pressed="${key === 'all'}"><span>${label}</span><b>${key === 'all' ? tickets.length : tickets.filter(ticket => classify(ticket) === key).length}</b></button>`).join('')}</div></header>
-        <div class="my-ticket-list">${ticketCards || '<div class="tickets-empty"><span class="empty-record" aria-hidden="true">◉</span><h3>ยังไม่มีบัตรในกระเป๋า</h3><p>บัตรที่คุณซื้อสำเร็จจะแสดงอยู่ตรงนี้ พร้อม QR สำหรับเข้างาน</p></div>'}</div><footer class="tickets-footnote"><span>◈</span> บัตรนี้ผูกกับบัญชีของคุณ · กรุณาเตรียม QR ก่อนเข้างาน</footer></div>`);
+      const statusFilters = [['all','All','▱'],['valid','Upcoming','▦'],['used','Used','✓'],['cancelled','Cancelled','×']];
+      const counts = Object.fromEntries(statusFilters.map(([key]) => [key, key === 'all' ? tickets.length : tickets.filter(ticket => classify(ticket) === key).length]));
+      modal(`<div class="my-tickets-page"><nav class="tickets-page-nav" aria-label="Ticket navigation"><a class="tickets-page-brand" href="#home" data-ticket-nav="home" aria-label="Sourcewav dashboard">SOURCEWAV</a><div class="tickets-page-links"><a href="#home" data-ticket-nav="home">Dashboard</a><a href="#my-tickets" class="is-current" aria-current="page">My Tickets</a><a href="#events" data-ticket-nav="events">Events</a></div><button type="button" class="tickets-search" data-ticket-nav="events" aria-label="Search events"></button><button type="button" class="tickets-user-icon" data-ticket-profile aria-label="Account"><span aria-hidden="true"></span></button></nav><div class="tickets-page-content"><header class="my-tickets-heading"><h2 id="modalTitle">My Tickets</h2><div class="ticket-filters" role="group" aria-label="Filter tickets by status">${statusFilters.map(([key,label,icon]) => `<button type="button" class="ticket-filter${key === 'all' ? ' is-active' : ''}" data-ticket-filter="${key}" aria-pressed="${key === 'all'}"><span class="ticket-filter-icon" aria-hidden="true">${icon}</span><span>${label}</span><b>${counts[key]}</b></button>`).join('')}</div></header>
+        <div class="my-ticket-list">${ticketCards || '<div class="tickets-empty"><h3>ยังไม่มีบัตรในกระเป๋า</h3><p>บัตรที่ซื้อสำเร็จจะแสดงอยู่ที่นี่</p></div>'}</div><div class="tickets-filter-empty" hidden>ไม่มีบัตรในหมวดนี้</div></div></div>`);
       const host = $('#modalContent');
       host.querySelectorAll('.ticket-qr').forEach(node => { if (window.QRCode && node.dataset.qr) new QRCode(node, { text: node.dataset.qr, width: 148, height: 148, correctLevel: QRCode.CorrectLevel.M }); });
       host.querySelectorAll('[data-ticket-filter]').forEach(button => button.addEventListener('click', () => {
         host.querySelectorAll('[data-ticket-filter]').forEach(filter => { const active = filter === button; filter.classList.toggle('is-active', active); filter.setAttribute('aria-pressed', String(active)); });
-        host.querySelectorAll('.my-ticket').forEach(card => { card.hidden = button.dataset.ticketFilter !== 'all' && card.dataset.ticketState !== button.dataset.ticketFilter; });
+        const filterKey = button.dataset.ticketFilter;
+        const cards = [...host.querySelectorAll('.my-ticket')];
+        cards.forEach(card => { card.hidden = filterKey !== 'all' && card.dataset.ticketState !== filterKey; });
+        const noMatches = cards.length > 0 && cards.every(card => card.hidden);
+        host.querySelector('.tickets-filter-empty').hidden = !noMatches;
       }));
-      host.querySelectorAll('.ticket-detail-toggle,.ticket-show-qr').forEach(button => button.addEventListener('click', () => {
-        const card = button.closest('.my-ticket');
-        const target = button.classList.contains('ticket-show-qr') ? card.querySelector('.ticket-qr-wrap') : card.querySelector('.ticket-extra');
+      host.querySelectorAll('.ticket-detail-toggle').forEach(button => button.addEventListener('click', () => {
+        const target = button.closest('.my-ticket').querySelector('.ticket-extra');
         const expanded = button.getAttribute('aria-expanded') === 'true';
         target.hidden = expanded; button.setAttribute('aria-expanded', String(!expanded));
-        button.querySelector('span').textContent = button.classList.contains('ticket-show-qr') ? (expanded ? '⌗' : '×') : (expanded ? '＋' : '−');
+        button.textContent = expanded ? 'รายละเอียดบัตร' : 'ซ่อนรายละเอียด';
       }));
+      host.querySelectorAll('[data-ticket-nav]').forEach(link => link.addEventListener('click', event => {
+        event.preventDefault();
+        const destination = link.dataset.ticketNav;
+        closeModal();
+        if (destination === 'events') document.querySelector('#events')?.scrollIntoView({ behavior: 'smooth' });
+        else window.scrollTo({ top: 0, behavior: 'smooth' });
+      }));
+      host.querySelector('[data-ticket-profile]')?.addEventListener('click', () => { closeModal(); $('#profileBtn')?.click(); });
     } catch (error) { toast(error.message); }
   }
-
   async function openScan() {
     const user = await needUser(); if (!user) return;
     modal(`<h2 id="modalTitle">สแกนบัตรเข้างาน</h2><p>เฉพาะ Organizer ของงานหรือผู้ดูแลระบบ</p><div class="scanner-wrap"><video id="ticketCamera" playsinline muted></video></div><div id="scanResult" role="status">กดเปิดกล้องเพื่อเริ่มสแกน</div><div class="scanner-actions"><button class="modal-primary" id="startCamera">เปิดกล้อง</button><button class="outline-btn" id="stopCamera">ปิดกล้อง</button></div><label class="modal-field">หรือวางรหัส QR<input id="manualTicketCode" autocomplete="off" placeholder="รหัสบัตร" /></label><button class="outline-btn" id="validateManual">ตรวจบัตร</button>`);
@@ -492,8 +576,8 @@
   window.addEventListener('sourcewav:auth', async () => { await loadFeed(); await loadListings(); await loadEvents(); });
   $('#chatBtn')?.addEventListener('click', () => { if (!$('#chatPanel').dataset.liveBound) { $('#chatPanel').dataset.liveBound = '1'; loadChatList(); } });
   $('#chatBtn')?.addEventListener('click', () => { if ($('#chatPanel').classList.contains('open')) { $('#chatPanel').dataset.liveBound = ''; } });
-  $('#modalClose')?.addEventListener('click', stopCamera);
-  $('#modalBackdrop')?.addEventListener('click', event => { if (event.target.id === 'modalBackdrop') stopCamera(); });
+  $('#modalClose')?.addEventListener('click', () => { stopCamera(); closeRoomChannel(); });
+  $('#modalBackdrop')?.addEventListener('click', event => { if (event.target.id === 'modalBackdrop') { stopCamera(); closeRoomChannel(); } });
   if (location.pathname === '/scan') openScan();
   window.SourcewavSupabaseReady?.then(client => {
     if (!client) return;
@@ -504,4 +588,5 @@
   db.channel('sourcewav-post-activity').on('postgres_changes', { event: '*', schema: 'public', table: 'comments' }, loadFeed).on('postgres_changes', { event: '*', schema: 'public', table: 'reactions' }, loadFeed).subscribe();
   db.channel('sourcewav-public-market').on('postgres_changes', { event: '*', schema: 'public', table: 'listings' }, loadListings).subscribe();
   db.channel('sourcewav-public-events').on('postgres_changes', { event: '*', schema: 'public', table: 'events' }, loadEvents).subscribe();
+  db.channel('sourcewav-community-rooms').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'community_rooms' }, loadRooms).subscribe();
 })();

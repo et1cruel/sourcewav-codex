@@ -853,7 +853,7 @@
 .profile-editor .editor-avatar.has-avatar-image{overflow:hidden}
 .profile-editor .editor-avatar img{width:100%;height:100%;border-radius:inherit;object-fit:cover}
 .profile-editor .avatar-camera-pick{position:absolute;right:-1px;bottom:3px;display:grid;width:42px;height:42px;place-items:center;overflow:hidden;border:2px solid #b2f3fb;border-radius:50%;background:linear-gradient(145deg,#a5f4fb,#23a9d0);box-shadow:0 5px 15px #0313219c,0 0 16px #55d7ed8c;cursor:pointer}
-.profile-editor .avatar-camera-pick svg{width:22px;height:22px;flex:none;transform:none}
+.profile-editor .avatar-camera-pick svg{position:static;top:auto;left:auto;width:22px;height:22px;flex:none;margin:0;transform:none}
 .profile-editor .avatar-camera-pick .camera-body{fill:#0c4969;stroke:#e2fbff;stroke-width:1.8}
 .profile-editor .avatar-camera-pick .camera-lens{fill:#6ee4f1;stroke:#083c5d;stroke-width:2}
 .profile-editor .avatar-camera-pick .camera-glint{fill:#fff}
@@ -1007,3 +1007,223 @@
 .auth-shell.auth-register .auth-panel .auth-local-note{border-color:#77afc25e;background:#d7edf3;color:#375b70}
 .auth-shell.auth-register .auth-panel .auth-local-note p{color:#47697e}
 .auth-shell.auth-register .auth-panel .auth-bottom{color:#527286}
+
+/* Monochrome ticket-inspired account surfaces */
+.modal.account-modal:has(.profile-page),
+.modal.account-modal:has(.profile-editor){
+  border:1px solid #333438;
+  border-top:1px solid #48494c;
+  border-radius:18px;
+  background:#111113;
+  color:#f5f5f5;
+  box-shadow:0 28px 90px #000b;
+  overflow-x:hidden;
+  overflow-y:auto;
+}
+.modal.account-modal:has(.profile-page)>.modal-close,
+.modal.account-modal:has(.profile-editor)>.modal-close{
+  border-color:#414145;background:#1b1b1e;color:#e6e6e7;box-shadow:none;
+}
+.modal.account-modal:has(.profile-page) .profile-page{color:#f2f2f3;background:#101012}
+.modal.account-modal:has(.profile-page) .profile-cover{
+  border-color:#343438;
+  background:radial-gradient(ellipse at 70% 20%,#ffffff0b,transparent 42%),repeating-linear-gradient(165deg,transparent 0 18px,#ffffff06 19px 20px),#151517;
+}
+.modal.account-modal:has(.profile-page) .profile-cover:before{background:linear-gradient(110deg,transparent 15%,#ffffff08 48%,transparent 76%)}
+.modal.account-modal:has(.profile-page) .profile-cover-tag{color:#c4c4c7}
+.modal.account-modal:has(.profile-page) .profile-soundwave{opacity:.38}
+.modal.account-modal:has(.profile-page) .profile-soundwave i{background:#c5c5c8}
+.modal.account-modal:has(.profile-page) .profile-identity-card,
+.modal.account-modal:has(.profile-page) .profile-work{
+  border-color:#333337;border-radius:14px;background:#171719;box-shadow:none;backdrop-filter:none;
+}
+.modal.account-modal:has(.profile-page) .profile-avatar{
+  border:1px solid #55555a;border-radius:50%;background:#252528;color:#f3f3f4;box-shadow:none;
+}
+.modal.account-modal:has(.profile-page) .profile-identity-copy .account-status{border-color:#414145;background:#222225;color:#d5d5d7}
+.modal.account-modal:has(.profile-page) .profile-identity-copy .account-status i{background:#d9d9db;box-shadow:none}
+.modal.account-modal:has(.profile-page) .profile-identity-copy h2,
+.modal.account-modal:has(.profile-page) .profile-work-heading h3{color:#f6f6f7}
+.modal.account-modal:has(.profile-page) .profile-identity-copy p,
+.modal.account-modal:has(.profile-page) .profile-bio,
+.modal.account-modal:has(.profile-page) .profile-work>p{color:#b6b6ba}
+.modal.account-modal:has(.profile-page) .profile-edit-icon,
+.modal.account-modal:has(.profile-page) .profile-work-mark{
+  border-color:#414145;border-radius:11px;background:#222225;color:#e4e4e6;box-shadow:none;
+}
+.modal.account-modal:has(.profile-page) .profile-edit-icon:hover{border-color:#85858a;background:#29292c}
+.modal.account-modal:has(.profile-page) .profile-location{border-color:#414145;background:#222225;color:#dedee0}
+.modal.account-modal:has(.profile-page) .profile-location-note{color:#aaaab0}
+.modal.account-modal:has(.profile-page) .profile-stats div{border:1px solid #353539;border-radius:11px;background:#1d1d20;box-shadow:none}
+.modal.account-modal:has(.profile-page) .profile-stats b{color:#f4f4f5}
+.modal.account-modal:has(.profile-page) .profile-stats span{color:#aaaab0}
+.modal.account-modal:has(.profile-page) .profile-work:before{background:linear-gradient(90deg,transparent,#ffffff24,transparent)}
+.modal.account-modal:has(.profile-page) .account-eyebrow{border-color:#444449;background:#222225;color:#d2d2d5}
+.modal.account-modal:has(.profile-page) .profile-first-work,
+.modal.account-modal:has(.profile-page) .profile-work-actions .profile-first-work:first-child,
+.modal.account-modal:has(.profile-page) .profile-actions .profile-edit-button{
+  border:1px solid #4b4b50;border-radius:10px;background:#252528;color:#f2f2f3;text-shadow:none;box-shadow:none;
+}
+.modal.account-modal:has(.profile-page) .profile-work-actions .profile-first-work:first-child{font-size:15px}
+.modal.account-modal:has(.profile-page) .profile-first-work:hover{transform:translateY(-1px);border-color:#85858a;background:#303034;box-shadow:none}
+.modal.account-modal:has(.profile-page) .profile-account-note{border-color:#37373b;background:#1b1b1e;color:#d0d0d3}
+.modal.account-modal:has(.profile-page) .profile-account-note>span,
+.modal.account-modal:has(.profile-page) .profile-account-note p{color:#b8b8bd}
+.modal.account-modal:has(.profile-page) .profile-logout{color:#c3aeb0}
+.modal.account-modal:has(.profile-page) .profile-auth-links{border-color:#3a3a3e;color:#aaaab0}
+.modal.account-modal:has(.profile-page) .profile-auth-links button{color:#ededee}
+.modal.account-modal:has(.profile-page) :is(.profile-edit-icon,.profile-first-work,.profile-actions button,.profile-auth-links button):focus-visible{outline:3px solid #e5e5e7;outline-offset:3px}
+.modal.account-modal:has(.profile-editor) .profile-editor{color:#f1f1f2}
+.modal.account-modal:has(.profile-editor) .editor-heading h2{color:#f5f5f6}
+.modal.account-modal:has(.profile-editor) .editor-heading p,
+.modal.account-modal:has(.profile-editor) .editor-avatar-field small,
+.modal.account-modal:has(.profile-editor) .editor-profile-fields small{color:#aaaab0}
+.modal.account-modal:has(.profile-editor) .editor-avatar-row{border-color:#37373b;background:#19191b;box-shadow:none}
+.modal.account-modal:has(.profile-editor) .editor-avatar{border-color:#65656a;background:#252528;color:#f5f5f6;box-shadow:none}
+.modal.account-modal:has(.profile-editor) .avatar-camera-pick{border-color:#55555a;background:#29292c;color:#f1f1f2;box-shadow:none}
+.modal.account-modal:has(.profile-editor) .account-field{color:#d4d4d7}
+.modal.account-modal:has(.profile-editor) .account-field input,
+.modal.account-modal:has(.profile-editor) .account-field select,
+.modal.account-modal:has(.profile-editor) .account-field textarea,
+.modal.account-modal:has(.profile-editor) .handle-control{
+  border-color:#414145;background:#1b1b1e;color:#f1f1f2;
+}
+.modal.account-modal:has(.profile-editor) .account-field input::placeholder,
+.modal.account-modal:has(.profile-editor) .account-field textarea::placeholder{color:#85858b}
+.modal.account-modal:has(.profile-editor) .account-field input:focus,
+.modal.account-modal:has(.profile-editor) .account-field select:focus,
+.modal.account-modal:has(.profile-editor) .account-field textarea:focus,
+.modal.account-modal:has(.profile-editor) .handle-control:focus-within{border-color:#a1a1a6;background:#202023;box-shadow:0 0 0 3px #ffffff12}
+.modal.account-modal:has(.profile-editor) .handle-control>span{color:#a5a5aa}
+.modal.account-modal:has(.profile-editor) .editor-save-note{border-color:#37373b;background:#1b1b1e;color:#c4c4c8}
+.modal.account-modal:has(.profile-editor) .editor-actions .editor-cancel{border-color:#414145;background:#1c1c1f;color:#e2e2e4}
+.modal.account-modal:has(.profile-editor) .editor-actions .auth-submit{border-color:#55555a;background:#e6e6e8;color:#141416;box-shadow:none}
+.modal.account-modal:has(.profile-editor) :is(button,input,select,textarea,label):focus-visible{outline:3px solid #e5e5e7;outline-offset:3px}
+.modal.account-modal:has(.profile-editor) .handle-control input:focus-visible{outline:0}
+.modal.account-modal:has(.profile-editor) .handle-control:has(input:focus-visible){outline:3px solid #e5e5e7;outline-offset:3px}
+
+/* Profile shortcuts: richer cards with clearer actions */
+.modal.account-modal:has(.profile-page) .profile-work-actions{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:18px;
+}
+.modal.account-modal:has(.profile-page) .profile-first-work,
+.modal.account-modal:has(.profile-page) .profile-work-actions .profile-first-work:first-child{
+  position:relative;
+  display:grid;
+  grid-template-columns:38px minmax(0,1fr) 16px;
+  min-width:0;
+  min-height:74px;
+  align-items:center;
+  justify-content:initial;
+  gap:10px;
+  padding:11px 12px;
+  border:1px solid #38383c;
+  border-radius:12px;
+  background:linear-gradient(145deg,#232326,#1b1b1e 68%);
+  color:#f2f2f3;
+  text-align:left;
+  text-decoration:none;
+  text-shadow:none;
+  box-shadow:inset 0 1px #ffffff08;
+}
+.modal.account-modal:has(.profile-page) .profile-first-work:before{
+  position:absolute;inset:0 auto 0 0;width:2px;border-radius:12px 0 0 12px;
+  background:#bdbdc2;content:"";opacity:.55;
+}
+.modal.account-modal:has(.profile-page) .profile-first-work.profile-music-action{
+  grid-column:1/-1;
+  min-height:78px;
+  background:radial-gradient(ellipse at 0 50%,#ffffff0d,transparent 52%),linear-gradient(110deg,#29292d,#1d1d20 68%);
+}
+.modal.account-modal:has(.profile-page) .profile-action-icon{
+  display:grid;width:38px;height:38px;place-items:center;
+  border:1px solid #46464b;border-radius:10px;
+  background:#303034;color:#f0f0f2;font-size:19px;
+}
+.modal.account-modal:has(.profile-page) .profile-action-copy{display:grid;min-width:0;gap:4px}
+.modal.account-modal:has(.profile-page) .profile-action-copy b{color:#f3f3f4;font-size:13px;line-height:1.4}
+.modal.account-modal:has(.profile-page) .profile-action-copy small{color:#a8a8ae;font-size:10px;font-weight:400;line-height:1.5}
+.modal.account-modal:has(.profile-page) .profile-action-arrow{align-self:start;color:#99999f;font-size:16px;line-height:1}
+.modal.account-modal:has(.profile-page) .profile-first-work:hover{
+  transform:translateY(-2px);border-color:#737379;background:#2a2a2e;
+  box-shadow:0 9px 22px #0005,inset 0 1px #ffffff10;
+}
+.modal.account-modal:has(.profile-page) .profile-first-work:hover .profile-action-arrow{color:#fff;transform:translate(2px,-2px)}
+.modal.account-modal:has(.profile-page) .profile-action-arrow{transition:transform .18s ease,color .18s ease}
+@media(max-width:420px){
+  .modal.account-modal:has(.profile-page) .profile-work-actions{grid-template-columns:1fr;gap:8px}
+  .modal.account-modal:has(.profile-page) .profile-first-work.profile-music-action{grid-column:auto}
+  .modal.account-modal:has(.profile-page) .profile-first-work,
+  .modal.account-modal:has(.profile-page) .profile-work-actions .profile-first-work:first-child{min-height:66px}
+}
+@media(prefers-reduced-motion:reduce){.modal.account-modal:has(.profile-page) .profile-action-arrow{transition:none}}
+
+/* Keep PROFILE SETTINGS compact, with the photo and fields sharing the dialog. */
+.modal.account-modal:has(.profile-editor){
+  width:min(620px,calc(100vw - 32px));
+  max-width:620px;
+  max-height:min(680px,86dvh);
+}
+.modal.account-modal:has(.profile-editor) .profile-editor{padding:24px 28px 22px}
+.modal.account-modal:has(.profile-editor) .editor-heading{margin-bottom:16px}
+.modal.account-modal:has(.profile-editor) .editor-heading h2{font-size:25px}
+.modal.account-modal:has(.profile-editor) .profile-editor #profileForm{
+  grid-template-columns:minmax(170px,.7fr) minmax(0,1.3fr);
+  grid-template-rows:auto auto auto auto;
+  column-gap:18px;
+}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-avatar-row{grid-column:1;grid-row:1;min-height:205px;padding:14px 12px}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-avatar-stage{width:120px;height:120px}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-avatar{width:94px;height:94px;font-size:36px}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-avatar-field{grid-column:1;grid-row:2;align-items:center;margin-top:9px;text-align:center}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-profile-fields{grid-column:2;grid-row:1 / span 2}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-save-note{grid-column:1/-1;grid-row:3}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-actions{grid-column:1/-1;grid-row:4}
+.modal.account-modal:has(.profile-editor) .profile-editor .account-field{margin-bottom:9px;font-size:12px}
+.modal.account-modal:has(.profile-editor) .profile-editor .account-field>span:first-child{margin-bottom:4px}
+.modal.account-modal:has(.profile-editor) .profile-editor .account-field input,
+.modal.account-modal:has(.profile-editor) .profile-editor .account-field select{min-height:40px;padding:8px 10px;font-size:12px}
+.modal.account-modal:has(.profile-editor) .profile-editor .account-field textarea{min-height:66px;padding:8px 10px;font-size:12px}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-save-note{margin-top:10px;padding:9px 11px;font-size:11px}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-actions{margin-top:10px}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-actions .auth-submit,
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-cancel{min-height:42px}
+@media(max-width:700px){
+  .modal.account-modal:has(.profile-editor){width:min(560px,calc(100vw - 24px));max-height:88dvh}
+  .modal.account-modal:has(.profile-editor) .profile-editor{padding:22px 20px 18px}
+  .modal.account-modal:has(.profile-editor) .profile-editor #profileForm{grid-template-columns:minmax(0,1fr);grid-template-rows:auto;column-gap:0}
+  .modal.account-modal:has(.profile-editor) .profile-editor .editor-avatar-row{grid-column:1;grid-row:1;min-height:0}
+  .modal.account-modal:has(.profile-editor) .profile-editor .editor-avatar-field{grid-column:1;grid-row:2}
+  .modal.account-modal:has(.profile-editor) .profile-editor .editor-profile-fields{grid-column:1;grid-row:3}
+  .modal.account-modal:has(.profile-editor) .profile-editor .editor-save-note{grid-column:1;grid-row:4}
+  .modal.account-modal:has(.profile-editor) .profile-editor .editor-actions{grid-column:1;grid-row:5}
+  .modal.account-modal:has(.profile-editor) .profile-editor .editor-avatar-stage{width:102px;height:102px}
+  .modal.account-modal:has(.profile-editor) .profile-editor .editor-avatar{width:78px;height:78px;font-size:32px}
+}
+@media(max-width:390px){
+  .modal.account-modal:has(.profile-editor){width:calc(100vw - 16px);max-height:calc(100dvh - 24px)}
+  .modal.account-modal:has(.profile-editor) .profile-editor{padding:19px 15px 16px}
+}
+.modal.account-modal:has(.profile-editor) .profile-editor #profileForm{display:block}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-layout{
+  display:grid;
+  grid-template-columns:minmax(155px,.7fr) minmax(0,1.3fr);
+  grid-template-areas:"avatar fields" "actions actions";
+  gap:0 18px;
+  align-items:start;
+}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-avatar-row{grid-area:avatar;min-height:205px}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-profile-fields{grid-area:fields}
+.modal.account-modal:has(.profile-editor) .profile-editor .editor-actions{grid-area:actions}
+.modal.account-modal:has(.profile-editor) .profile-editor .avatar-file-input{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;border:0}
+@media(max-width:700px){
+  .modal.account-modal:has(.profile-editor) .profile-editor .editor-layout{
+    grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"avatar" "fields" "actions";
+  }
+  .modal.account-modal:has(.profile-editor) .profile-editor .editor-avatar-row{grid-area:avatar;min-height:0}
+  .modal.account-modal:has(.profile-editor) .profile-editor .editor-profile-fields{grid-area:fields}
+  .modal.account-modal:has(.profile-editor) .profile-editor .editor-actions{grid-area:actions}
+}
