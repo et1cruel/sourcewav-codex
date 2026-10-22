@@ -336,6 +336,11 @@
           } catch (error) { button.disabled = false; button.textContent = 'ลองออกบัตรอีกครั้ง'; toast(error.message); }
         };
         input.value = '';
+      } else if (verification.status === 'review_required') {
+        clearInterval(paymentTimer);
+        result.innerHTML = `<div class="slip-check-result is-verified"><strong>ส่งรายการให้ผู้จัดตรวจสอบแล้ว</strong><span>${esc(verification.message || 'ระบบตรวจพบการโอนหลังเวลาจอง')}</span><small>ระบบยังไม่ออกบัตรอัตโนมัติ ผู้จัดต้องตรวจยอดและจำนวนบัตรคงเหลือก่อน</small></div>`;
+        button.disabled = true; button.textContent = 'ส่งตรวจสอบแล้ว';
+        button.dataset.exhausted = 'true'; input.value = '';
       } else {
         const remaining = Number.isInteger(verification.attemptsRemaining) ? verification.attemptsRemaining : null;
         const exhausted = remaining === 0;

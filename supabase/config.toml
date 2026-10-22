@@ -23,3 +23,9 @@ verify_jwt = false
 
 [functions.finalize-ticket-payment]
 verify_jwt = false
+
+[functions.admin-list-ticket-payments]
+verify_jwt = false
+
+[functions.admin-review-ticket-payment]
+verify_jwt = false

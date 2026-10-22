@@ -9,6 +9,7 @@
   let currentUserId = null;
   let artistRouteRequest = 0;
   let currentTrack = null;
+  const waveformCache = new Map();
   let likedTrackIds = new Set();
   let musicTab = 'library';
   let shuffleMode = false;
@@ -319,9 +320,71 @@
     });
     const featuredPlay = $('#artistProfileView .artist-featured-play');
     if (featuredPlay) featuredPlay.textContent = currentTrack?.id === featuredPlay.dataset.trackPlay && playing ? 'Ⅱ หยุดเพลง' : '▶ เล่นเพลง';
+    document.querySelectorAll('#artistProfileView [data-artist-wave]').forEach(wave => {
+      const isCurrent = wave.dataset.artistWave === currentTrack?.id;
+      const played = isCurrent && audio.duration ? Math.floor(audio.currentTime / audio.duration * wave.children.length) : 0;
+      [...wave.children].forEach((bar, index) => bar.classList.toggle('is-played', isCurrent && index < played));
+    });
     document.querySelectorAll('.stream-release-card').forEach(card => card.classList.toggle('is-playing', Boolean(currentTrack && !audio.paused && card.querySelector(`[data-track-play="${currentTrack.id}"]`))));
     updateRoomTrackInfo();
     updateArtistMini();
+  }
+
+  function applyWaveform(wave, peaks) {
+    const fragment = document.createDocumentFragment();
+    peaks.forEach(peak => {
+      const bar = document.createElement('i');
+      bar.style.setProperty('--bar', `${peak}%`);
+      fragment.append(bar);
+    });
+    wave.replaceChildren(fragment);
+    wave.dataset.waveReady = 'true';
+  }
+
+  async function renderArtistWaveform(track, requestId) {
+    const wave = $('#artistProfileView [data-artist-wave]');
+    if (!wave || !track || wave.dataset.artistWave !== track.id) return;
+    if (waveformCache.has(track.id)) { applyWaveform(wave, waveformCache.get(track.id)); return; }
+    if (!Number.isFinite(track.size_bytes) || track.size_bytes < 1 || track.size_bytes > 50 * 1024 * 1024) return;
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    const context = new AudioContextClass();
+    try {
+      const response = await fetch(track.audio_url, { signal: AbortSignal.timeout(30000), credentials: 'omit' });
+      if (!response.ok) throw new Error('Audio download failed');
+      const buffer = await response.arrayBuffer();
+      if (buffer.byteLength > 50 * 1024 * 1024) throw new Error('Audio file exceeds waveform limit');
+      const decoded = await context.decodeAudioData(buffer);
+      const count = 72;
+      const energy = Array(count).fill(0);
+      const sampleCounts = Array(count).fill(0);
+      const samples = decoded.length;
+      for (let bar = 0; bar < count; bar++) {
+        const start = Math.floor(bar * samples / count);
+        const end = Math.max(start + 1, Math.floor((bar + 1) * samples / count));
+        const stride = Math.max(1, Math.floor((end - start) / 1200));
+        for (let channel = 0; channel < decoded.numberOfChannels; channel++) {
+          const data = decoded.getChannelData(channel);
+          for (let index = start; index < end; index += stride) {
+            const sample = data[index] || 0;
+            energy[bar] += sample * sample;
+            sampleCounts[bar]++;
+          }
+        }
+      }
+      const rms = energy.map((sum, index) => Math.sqrt(sum / Math.max(1, sampleCounts[index])));
+      const maximum = Math.max(...rms, 0.0001);
+      const normalized = rms.map(value => Math.round(8 + Math.pow(value / maximum, 1.2) * 92));
+      waveformCache.set(track.id, normalized);
+      if (requestId === artistRouteRequest) {
+        const currentWave = $('#artistProfileView [data-artist-wave]');
+        if (currentWave?.dataset.artistWave === track.id) applyWaveform(currentWave, normalized);
+      }
+    } catch (error) {
+      console.warn('Unable to generate artist track waveform:', error instanceof Error ? error.message : 'unknown error');
+    } finally {
+      await context.close().catch(() => {});
+    }
   }
 
   function selectTrack(track, autoplay = true) {
@@ -597,7 +660,7 @@
       <span class="artist-profile-kicker">SPOTLIGHT · เพลงล่าสุด</span><div class="artist-featured-main">
         <span class="artist-featured-cover">${latest.cover_url ? `<img src="${escapeHTML(latest.cover_url)}" alt="" />` : '<span aria-hidden="true">♫</span>'}</span>
         <div class="artist-featured-copy"><span>${escapeHTML(profile.display_name || profile.username)}</span><h3>${escapeHTML(latest.title)}</h3><p>${escapeHTML(latest.genre)} · ${formatSize(latest.size_bytes)}</p>
-          <div class="artist-profile-wave" aria-hidden="true">${Array.from({ length: 46 }, (_, index) => `<i style="--bar:${10 + ((index * 31 + index * index * 7) % 39)}%"></i>`).join('')}</div>
+          <div class="artist-profile-wave" data-artist-wave="${escapeHTML(latest.id)}" role="img" aria-label="รูปคลื่นเสียง ${escapeHTML(latest.title)}">${Array.from({ length: 72 }, () => '<i style="--bar:10%"></i>').join('')}</div>
           <button class="artist-featured-play" type="button" data-track-play="${escapeHTML(latest.id)}" aria-label="เล่น ${escapeHTML(latest.title)}">${currentTrack?.id === latest.id && !audio.paused ? 'Ⅱ หยุดเพลง' : '▶ เล่นเพลง'}</button>
         </div></div></article>` : '<div class="artist-profile-empty"><span aria-hidden="true">♫</span><h3>ยังไม่มีเพลงที่เผยแพร่</h3><p>เพลงที่เปิดให้ฟังสาธารณะจะแสดงตรงนี้</p></div>';
     const tracksMarkup = profileTracks.map(track => `<article class="track-row${currentTrack?.id === track.id && !audio.paused ? ' is-playing' : ''}" data-track-row="${escapeHTML(track.id)}">
@@ -627,6 +690,7 @@
       <footer class="artist-mini-player" id="artistMiniPlayer" hidden><span class="artist-mini-cover" id="artistMiniCover">♫</span><span class="artist-mini-copy"><b id="artistMiniTitle"></b><small id="artistMiniArtist"></small></span><span class="artist-mini-time" id="artistMiniTime">0:00</span><input id="artistMiniSeek" type="range" min="0" max="1000" value="0" aria-label="ตำแหน่งเพลง" /><button type="button" data-artist-mini-play aria-label="เล่นเพลง">▶</button></footer>
       <a class="artist-profile-back" href="#music">← กลับไปหน้าฟังเพลง</a>`;
     tracks = [...new Map([...tracks, ...profileTracks].map(track => [track.id, track])).values()];
+    if (latest) renderArtistWaveform(latest, requestId);
     const tabButtons = view.querySelectorAll('[data-artist-tab]');
     tabButtons.forEach(button => button.addEventListener('click', () => {
       const tab = button.dataset.artistTab;

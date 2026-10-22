@@ -1578,6 +1578,38 @@ body.artist-profile-active .layout.artist-profile-active{display:block;width:100
 }
 #myTicketsBtn:disabled{opacity:.72;cursor:progress}
 #myTicketsBtn[aria-busy="true"]{box-shadow:0 0 0 3px #51d4d329}
+
+/* Double the artist profile's scan hierarchy and render a real, playable track waveform. */
+.artist-profile-names h1{font-size:clamp(60px,8.4vw,104px);letter-spacing:-2px}
+.artist-profile-tabs button{font-size:28px}
+.artist-profile-tabs button span{font-size:22px}
+.artist-profile-side-block h2{font-size:28px}
+.artist-profile-section-head h2{font-size:34px}
+.artist-featured-copy h3{font-size:clamp(32px,4vw,44px);line-height:1.15}
+.artist-profile-about-panel h2{font-size:44px}
+.artist-profile-wave{height:50px;margin:18px 0 15px;gap:3px;opacity:1}
+.artist-profile-wave i{min-width:2px;background:linear-gradient(180deg,#d9e9cf,#9fb598);box-shadow:0 1px 4px #c9efa122;transition:background-color .14s,filter .14s}
+.artist-profile-wave i.is-played{background:linear-gradient(180deg,#dcffb3,#a6df76);filter:drop-shadow(0 0 4px #c8f59b8c)}
+@media(max-width:680px){
+  .artist-profile-names h1{font-size:clamp(48px,12vw,56px)}
+  .artist-profile-tabs button{font-size:24px}
+  .artist-profile-tabs button span{font-size:20px}
+  .artist-profile-side-block h2{font-size:24px}
+  .artist-profile-section-head h2{font-size:28px}
+  .artist-featured-copy h3{font-size:30px}
+  .artist-profile-about-panel h2{font-size:36px}
+  .artist-profile-wave{height:34px;margin:13px 0 10px;gap:2px}
+}
+@media(max-width:400px){
+  .artist-profile-names h1{font-size:46px}
+  .artist-profile-tabs button{font-size:22px}
+  .artist-profile-tabs button span{font-size:18px}
+  .artist-profile-side-block h2{font-size:22px}
+  .artist-profile-section-head h2{font-size:24px}
+  .artist-featured-copy h3{font-size:26px}
+  .artist-profile-about-panel h2{font-size:32px}
+  .artist-profile-wave{height:28px;margin:10px 0 8px}
+}
 .tickets-load-state,.tickets-load-error{display:grid;justify-items:center;align-content:center;min-height:60vh;padding:32px;text-align:center}
 .tickets-load-state h2,.tickets-load-error h2{margin:18px 0 5px;color:#f5f5f6;font-size:clamp(25px,4vw,38px)}
 .tickets-load-state p,.tickets-load-error p{max-width:460px;margin:0;color:#a5a5aa;font-size:16px;line-height:1.65}
