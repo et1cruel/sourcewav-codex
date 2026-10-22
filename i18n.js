@@ -71,7 +71,7 @@
     'เลือกรายชื่อเพื่อดูเส้นทาง': 'Choose a venue to view directions',
     'ชื่อเพลง': 'Track title', 'ศิลปิน / โปรดิวเซอร์': 'Artist / producer', 'แนวเพลง': 'Genre',
     'วางไฟล์เพลงตรงนี้': 'Drop your track here', 'หรือคลิกเพื่อเลือกจากเครื่อง': 'or click to browse your device',
-    'เลือกไฟล์': 'Choose file', 'ปล่อยเพลงเข้าสู่วง': 'Release to the community',
+    'เลือกไฟล์': 'Choose file', 'ปล่อยเพลงเข้าสู่วงใน': 'Release to the community',
     'ไฟล์ใหญ่เกินกำหนด': 'File is too large', 'ไฟล์พร้อมอัปโหลด': 'File ready to upload',
     'เลือกไฟล์เสียงก่อนอัปโหลด': 'Choose an audio file before uploading', 'กำลังอัปโหลด…': 'Uploading…',
     'อัปโหลดไม่สำเร็จ': 'Upload failed', 'ลองอัปโหลดอีกครั้ง': 'Try uploading again',

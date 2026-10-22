@@ -460,7 +460,7 @@
           <p class="upload-file-note" id="uploadFileNote">รองรับ MP3, WAV, FLAC, OGG, M4A, AAC, WEBM · สูงสุด 50 MB</p>
           <p class="upload-rights-note">อัปโหลดเฉพาะเพลงที่คุณมีสิทธิ์เผยแพร่</p>
           <p class="stream-error" id="uploadError" role="alert" hidden></p>
-          <button class="modal-primary upload-submit" id="trackSubmit" type="submit"><span>ปล่อยเพลงเข้าสู่วง</span><b aria-hidden="true">↗</b></button>
+          <button class="modal-primary upload-submit" id="trackSubmit" type="submit"><span>ปล่อยเพลงเข้าสู่วงใน</span><b aria-hidden="true">↗</b></button>
         </form>
       </div>
     </div>`);
@@ -805,11 +805,11 @@
     if (bannerFile && bannerFile.size > maxCoverSize) { error.textContent = 'แบนเนอร์มีขนาดใหญ่เกิน 5 MB'; error.hidden = false; return; }
     const db = window.SourcewavSupabase;
     const auth = await db?.auth.getUser();
-    if (!db || auth?.error || !auth?.data?.user) { error.textContent = 'เข้าสู่ระบบก่อนอัปโหลดเพลง'; error.hidden = false; submit.disabled = false; submit.textContent = 'ปล่อยเพลงเข้าสู่วง'; return; }
+    if (!db || auth?.error || !auth?.data?.user) { error.textContent = 'เข้าสู่ระบบก่อนอัปโหลดเพลง'; error.hidden = false; submit.disabled = false; submit.textContent = 'ปล่อยเพลงเข้าสู่วงใน'; return; }
     const mimeByExtension = { mp3: 'audio/mpeg', wav: 'audio/wav', flac: 'audio/flac', ogg: 'audio/ogg', m4a: 'audio/mp4', aac: 'audio/aac', webm: 'audio/webm' };
     const extension = file.name.split('.').pop()?.toLowerCase();
     const mime = mimeByExtension[extension];
-    if (!mime) { error.textContent = 'รองรับเฉพาะ MP3, WAV, FLAC, OGG, M4A, AAC หรือ WEBM'; error.hidden = false; submit.disabled = false; submit.textContent = 'ปล่อยเพลงเข้าสู่วง'; return; }
+    if (!mime) { error.textContent = 'รองรับเฉพาะ MP3, WAV, FLAC, OGG, M4A, AAC หรือ WEBM'; error.hidden = false; submit.disabled = false; submit.textContent = 'ปล่อยเพลงเข้าสู่วงใน'; return; }
     submit.disabled = true; submit.textContent = 'กำลังอัปโหลด…';
     let storageKey = '';
     let coverStorageKey = null;
