@@ -2088,3 +2088,11 @@ body :where(button,a,.ticket-filter,.nav-link,.rail-item){-webkit-text-stroke:.1
 .venue-photo-credit:hover{text-decoration:underline;opacity:1}
 .venue-photo-credit:focus-visible{outline:2px solid #fff;outline-offset:3px;border-radius:2px}
 @media(max-width:600px){.map-preview .venue-row{min-height:88px}.map-preview .venue-select{min-height:64px}.venue-photo-credit{font-size:7px}}
+.stream-upload{transform:translateY(0);transition:transform .22s cubic-bezier(.2,.75,.25,1),box-shadow .22s ease,border-color .22s ease,background-color .22s ease}
+.stream-upload>span{display:inline-block;transition:transform .28s cubic-bezier(.2,.75,.25,1)}
+.stream-upload:hover{transform:translateY(-3px);box-shadow:0 10px 24px #7859a032;border-color:#c4a8e2}
+.stream-upload:hover>span{transform:rotate(90deg) scale(1.12)}
+.stream-upload:active{transform:translateY(0) scale(.97);box-shadow:0 3px 9px #7859a024}
+.stream-upload:focus-visible{outline:3px solid #a986d8;outline-offset:3px}
+@media(max-width:680px){.stream-heading{flex-direction:column;align-items:center;text-align:center}.stream-heading>div{width:100%}.stream-heading .stream-upload{align-self:center;margin:2px auto 0}}
+@media(prefers-reduced-motion:reduce){.stream-upload,.stream-upload>span{transition:none}.stream-upload:hover,.stream-upload:active{transform:none}.stream-upload:hover>span{transform:none}}
