@@ -201,7 +201,8 @@
     const kind = { music: 'เพลง', art: 'ศิลปะ', talk: 'พูดคุย', collab: 'หาเพื่อนร่วมงาน', announcement: 'ประกาศ' }[post.kind] || post.kind;
     const date = new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(post.created_at));
     const saved = savedSet?.has(post.id);
-    return `<article class="post-card live-post-card" data-live-post="${esc(post.id)}" data-kind="${esc(post.kind)}"><div class="post-top"><div class="avatar avatar-purple">${esc(initials(author.display_name))}</div><div class="post-author"><strong>${esc(author.display_name || author.username || 'ศิลปิน')}</strong><small>${esc(kind)} · ${esc(date)}</small></div></div>${post.title ? `<h3 class="live-post-title">${esc(post.title)}</h3>` : ''}<p class="post-copy">${esc(post.body).replace(/\n/g, '<br>')}</p><div class="post-actions"><button class="live-like-btn ${liked ? 'liked' : ''}" data-live-like="${esc(post.id)}" aria-pressed="${Boolean(liked)}">${liked ? '♥' : '♡'} <span>ถูกใจ</span> <b>${likes.length}</b></button><button data-live-comment="${esc(post.id)}">▢ <span>ความคิดเห็น</span> <b>${comments}</b></button><button data-live-share="${esc(post.id)}">↗ <span>แชร์</span></button><button class="${saved ? 'liked' : ''}" data-live-save="${esc(post.id)}" aria-pressed="${Boolean(saved)}">♧ <span>${saved ? 'บันทึกแล้ว' : 'เก็บไว้'}</span></button></div></article>`;
+    const avatarUrl = (() => { try { const url = new URL(author.avatar_url || ''); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; } })();
+    return `<article class="post-card live-post-card" data-live-post="${esc(post.id)}" data-kind="${esc(post.kind)}"><div class="post-top"><div class="avatar avatar-purple live-post-avatar">${esc(initials(author.display_name || author.username))}${avatarUrl ? `<img src="${esc(avatarUrl)}" alt="" loading="lazy" />` : ''}</div><div class="post-author"><strong>${esc(author.display_name || author.username || 'ศิลปิน')}</strong><small>${esc(kind)} · ${esc(date)}</small></div></div>${post.title ? `<h3 class="live-post-title">${esc(post.title)}</h3>` : ''}<p class="post-copy">${esc(post.body).replace(/\n/g, '<br>')}</p><div class="post-actions"><button class="live-like-btn ${liked ? 'liked' : ''}" data-live-like="${esc(post.id)}" aria-pressed="${Boolean(liked)}">${liked ? '♥' : '♡'} <span>ถูกใจ</span> <b>${likes.length}</b></button><button data-live-comment="${esc(post.id)}">▢ <span>ความคิดเห็น</span> <b>${comments}</b></button><button data-live-share="${esc(post.id)}">↗ <span>แชร์</span></button><button class="${saved ? 'liked' : ''}" data-live-save="${esc(post.id)}" aria-pressed="${Boolean(saved)}">♧ <span>${saved ? 'บันทึกแล้ว' : 'เก็บไว้'}</span></button></div></article>`;
   }
 
   async function loadFeed() {
@@ -217,6 +218,7 @@
       savedSet = new Set((saved || []).map(item => item.item_id));
     }
     root.innerHTML = posts.length ? posts.map(post => postCard(post, userResult.user?.id, savedSet)).join('') : '<p class="platform-empty">ยังไม่มีโพสต์ในหมวดนี้ — เริ่มบทสนทนาแรกได้เลย</p>';
+    root.querySelectorAll('.live-post-avatar img').forEach(image => image.addEventListener('error', () => image.remove(), { once: true }));
   }
 
   async function loadListings() {
