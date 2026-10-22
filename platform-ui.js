@@ -322,16 +322,29 @@
       $('#ticketTier').addEventListener('change', updateTotal);
       $('#ticketQuantity').addEventListener('input', updateTotal);
     }
+    $('#startManualCheckout', page)?.addEventListener('click', event => {
+      event.preventDefault();
+      event.stopPropagation();
+      beginManualCheckout();
+    });
   }
 
   async function beginManualCheckout() {
     const tier = $('#ticketTier')?.value, quantity = Number($('#ticketQuantity')?.value || 1);
-    if (!tier || !await needUser()) return;
-    const button = $('#startManualCheckout'); button.disabled = true; button.textContent = 'กำลังสร้างรายการ…';
+    const button = $('#startManualCheckout');
+    if (!tier || !button || button.disabled) return;
+    const { data: authData, error: authError } = await db.auth.getUser();
+    if (authError) return toast('ตรวจสอบการเข้าสู่ระบบไม่ได้ กรุณาลองใหม่');
+    if (!authData.user) {
+      toast('เข้าสู่ระบบก่อนเพื่อจองบัตรและเปิด QR ชำระเงิน');
+      $('#profileBtn')?.click();
+      return;
+    }
+    button.disabled = true; button.textContent = 'กำลังสร้างรายการ…';
     try {
       const checkout = await call('create-manual-ticket-order', { ticketTypeId: tier, quantity, idempotencyKey: button.dataset.idempotencyKey ||= crypto.randomUUID() });
       showManualPayment(checkout);
-    } catch (error) { button.disabled = false; button.textContent = 'ดู QR และชำระเงิน'; toast(error.message); }
+    } catch (error) { button.disabled = false; button.innerHTML = 'ดู QR และชำระเงิน <span aria-hidden="true">↗</span>'; toast(error.message || 'สร้างรายการจองไม่สำเร็จ กรุณาลองใหม่'); }
   }
 
   function showManualPayment(checkout) {
@@ -816,7 +829,6 @@
     if (target.dataset.liveComment) { event.preventDefault(); event.stopImmediatePropagation(); return openPostComments(target.dataset.liveComment); }
     if (target.dataset.liveShare) { const url = `${location.origin}${location.pathname}#post-${target.dataset.liveShare}`; try { await navigator.clipboard.writeText(url); toast('คัดลอกลิงก์โพสต์แล้ว'); } catch (_) { toast(url); } return; }
     if (target.dataset.buyEvent) { event.preventDefault(); event.stopImmediatePropagation(); return openTicketPurchase(target.dataset.buyEvent); }
-    if (target.id === 'startManualCheckout') { event.preventDefault(); event.stopImmediatePropagation(); return beginManualCheckout(); }
     if (target.id === 'searchGo') { event.preventDefault(); event.stopImmediatePropagation(); return searchSourcewav(); }
     if (target.id === 'createRoomBtn') { event.preventDefault(); event.stopImmediatePropagation(); return createRoom(); }
     if (target.dataset.liveRoom || target.dataset.openRoom || target.dataset.roomSwitch) { event.preventDefault(); event.stopImmediatePropagation(); return openRoom(target.dataset.liveRoom || target.dataset.openRoom || target.dataset.roomSwitch, target.dataset.roomName || target.textContent.trim()); }
