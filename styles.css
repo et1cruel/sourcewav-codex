@@ -1983,6 +1983,21 @@ body :where(button,a,.ticket-filter,.nav-link,.rail-item){-webkit-text-stroke:.1
 .ticket-sell-modal .ticket-sell-footer>#publishEvent b{font-size:17px}
 @media(max-width:680px){.ticket-sell-modal .ticket-sell-footer>#publishEvent{flex:0 0 auto;width:100%;min-width:0;min-height:48px;font-size:14px}}
 @media(prefers-reduced-motion:reduce){.ticket-sell-modal .ticket-sell-footer>#publishEvent{transition:none}}
+
+/* Sell-event is a dedicated route so the form cannot be dismissed by clicking outside it. */
+body.event-sell-page-active #home{display:none!important}
+body.event-sell-page-active .chat-fab{display:none!important}
+.event-sell-page{width:min(100%,1020px);min-height:calc(100dvh - 76px);margin:0 auto;padding:24px clamp(14px,3vw,30px) 64px;color:#f1eff6}
+.event-sell-page-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}
+.event-sell-page-toolbar a{display:inline-flex;align-items:center;min-height:40px;padding:0 14px;border:1px solid #ffffff22;border-radius:12px;color:#e8ddf8;background:#191b24;text-decoration:none;font-size:14px;font-weight:700;transition:background .16s,border-color .16s,transform .16s}
+.event-sell-page-toolbar a:hover{border-color:#b998f0aa;background:#252031;transform:translateY(-1px)}
+.event-sell-page-toolbar>span{color:#c2a5f3;font-size:11px;font-weight:800;letter-spacing:.14em}
+.event-sell-page .ticket-sell-modal{width:100%;max-height:none;overflow:visible;padding:0 0 20px;gap:16px}
+.event-sell-page .ticket-sell-heading{position:relative;top:auto;margin:0;padding:20px 24px;border:1px solid #ffffff16;border-radius:18px;background:radial-gradient(ellipse at 95% 0%,#7c59ad25,transparent 42%),linear-gradient(135deg,#171923,#12141c);box-shadow:0 14px 32px #0003}
+.event-sell-page .ticket-sell-heading>p{margin-left:55px}
+.event-sell-page .ticket-sell-section{padding:20px 22px;border-radius:17px}
+.event-sell-page .ticket-sell-footer{position:sticky;bottom:0;margin:0;padding:14px 16px max(14px,env(safe-area-inset-bottom));border:1px solid #ffffff20;border-radius:16px;background:#11131bf5;box-shadow:0 12px 32px #0005}
+@media(max-width:680px){.event-sell-page{min-height:calc(100dvh - 64px);padding:12px 12px 38px}.event-sell-page .ticket-sell-modal{gap:11px;padding-bottom:12px}.event-sell-page .ticket-sell-heading{padding:14px 54px 14px 13px}.event-sell-page .ticket-sell-heading>p{margin:8px 0 0 49px}.event-sell-page .ticket-sell-section{padding:12px}.event-sell-page .ticket-sell-footer{border-radius:14px}}
 .event-poster-upload{display:grid;grid-template-columns:minmax(0,1fr) 112px;align-items:center;gap:16px;margin-top:8px;padding:12px 14px;border:1px solid #30323e;border-radius:13px;background:#141720}
 .event-poster-upload .modal-field{margin:0}
 .event-poster-preview{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:2/3;overflow:hidden;border:1px dashed #645b78;border-radius:9px;color:#aaa4b7;background:linear-gradient(145deg,#282533,#181a22);font-size:11px;text-align:center}

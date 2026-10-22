@@ -22,9 +22,18 @@
   const initials = name => [...String(name || '?')][0] || '?';
   const safeImageUrl = value => { try { const url = new URL(value || ''); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; } };
   const toast = message => { const node = $('#toast'); if (node) { node.textContent = message; node.classList.add('show'); setTimeout(() => node.classList.remove('show'), 3000); } };
-  const modal = html => { const backdrop = $('#modalBackdrop'); backdrop.classList.toggle('tickets-page-open', html.includes('my-tickets-page')); backdrop.querySelector('.modal')?.classList.toggle('is-ticket-payment', html.includes('manual-payment')); $('#modalContent').innerHTML = html; backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden', 'false'); };
+  const modal = html => {
+    if (html.includes('ticket-sell-modal') && location.hash === '#sell-event') {
+      const page = $('#eventSellPage');
+      page.innerHTML = `<div class="event-sell-page-toolbar"><a href="#events">← กลับหน้ากิจกรรม</a><span>SOURCEWAV LIVE</span></div>${html}`;
+      page.hidden = false;
+      document.body.classList.add('event-sell-page-active');
+      return;
+    }
+    const backdrop = $('#modalBackdrop'); backdrop.classList.toggle('tickets-page-open', html.includes('my-tickets-page')); backdrop.querySelector('.modal')?.classList.toggle('is-ticket-payment', html.includes('manual-payment')); $('#modalContent').innerHTML = html; backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden', 'false');
+  };
   let eventPosterPreviewUrl = '';
-  const closeModal = () => { const backdrop = $('#modalBackdrop'); backdrop.classList.remove('open', 'tickets-page-open'); backdrop.setAttribute('aria-hidden', 'true'); if (eventPosterPreviewUrl) URL.revokeObjectURL(eventPosterPreviewUrl); eventPosterPreviewUrl = ''; };
+  const closeModal = () => { const backdrop = $('#modalBackdrop'); backdrop.classList.remove('open', 'tickets-page-open'); backdrop.setAttribute('aria-hidden', 'true'); if (eventPosterPreviewUrl) URL.revokeObjectURL(eventPosterPreviewUrl); eventPosterPreviewUrl = ''; document.body.classList.remove('event-sell-page-active'); const page = $('#eventSellPage'); if (page) { page.hidden = true; page.replaceChildren(); } };
   const needUser = async () => { const { data } = await db.auth.getUser(); if (!data.user) { toast('เข้าสู่ระบบก่อนใช้ฟีเจอร์นี้'); $('#profileBtn')?.click(); return null; } return data.user; };
   const call = async (name, body) => {
     const { data, error } = await db.functions.invoke(name, { body });
@@ -615,7 +624,7 @@
       if (uploadError) throw new Error('อัปโหลด QR รับเงินไม่สำเร็จ: ' + uploadError.message);
       await call('create-event', { title, category: value('newEventCategory'), startsAt: value('newEventStarts'), endsAt: value('newEventEnds'), venueName: venue, venueAddress: address, description: value('newEventDescription'), tierName: value('newTierName'), priceBaht: price, quantity, paymentQrKey, posterStorageKey, bankName, beneficiaryName, accountLast4, slipokBranchId, slipokApiKey });
       slipokApiKeyInput.value = '';
-      closeModal(); await loadEvents(); toast('สร้างอีเวนต์และ Tier บัตรแล้ว');
+      location.hash = '#events'; closeModal(); await loadEvents(); toast('สร้างอีเวนต์และ Tier บัตรแล้ว');
     } catch (error) { slipokApiKeyInput.value = ''; await db.storage.from('sourcewav-event-payment-qr').remove([paymentQrKey]); if (posterStorageKey) await db.storage.from('sourcewav-event-payment-qr').remove([posterStorageKey]); button.disabled = false; button.textContent = 'เผยแพร่งานและเปิดขายบัตร'; toast(error.message); }
   }
 
@@ -759,7 +768,7 @@
     if (target.dataset.contactSeller) { event.preventDefault(); const user = await needUser(); if (user) { if (user.id === target.dataset.contactSeller) return toast('นี่คือผลงานของคุณ'); $('#chatPanel').classList.add('open'); await loadChatList(); await startConversation(target.dataset.contactSeller, target.dataset.sellerName); } return; }
     if (target.id === 'createListingBtn') { event.preventDefault(); event.stopImmediatePropagation(); return openCreateListing(); }
     if (target.id === 'listingPublishBtn') { event.preventDefault(); event.stopImmediatePropagation(); return createListing(); }
-    if (target.id === 'createEventBtn') { event.preventDefault(); event.stopImmediatePropagation(); return openCreateEvent(); }
+    if (target.id === 'createEventBtn') { event.preventDefault(); event.stopImmediatePropagation(); if (location.hash !== '#sell-event') location.hash = '#sell-event'; else return openCreateEvent(); return; }
     if (target.id === 'publishEvent') { event.preventDefault(); return publishEvent(); }
     if (target.id === 'scanTicketBtn') { event.preventDefault(); if (location.pathname !== '/scan') history.pushState({}, '', '/scan'); return openScan(); }
     if (target.id === 'startCamera') { event.preventDefault(); return startCamera(); }
@@ -815,7 +824,7 @@
     feedFilter = filter.dataset.filter || 'all'; await loadFeed();
   }, true);
 
-  window.addEventListener('sourcewav:auth', async () => { await loadFeed(); await loadListings(); await loadEvents(); });
+  window.addEventListener('sourcewav:auth', async () => { await loadFeed(); await loadListings(); await loadEvents(); if (location.hash === '#sell-event') openCreateEvent(); });
   $('#chatBtn')?.addEventListener('click', () => {
     const root = $('#chatPanel');
     const opening = !root.classList.contains('open');
@@ -825,7 +834,12 @@
   $('#modalClose')?.addEventListener('click', () => { stopCamera(); closeRoomChannel(); });
   $('#modalBackdrop')?.addEventListener('click', event => { if (event.target.id === 'modalBackdrop') { stopCamera(); closeRoomChannel(); } });
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && roomChannel) closeRoomChannel(); });
+  window.addEventListener('hashchange', () => {
+    if (location.hash === '#sell-event') openCreateEvent();
+    else if (document.body.classList.contains('event-sell-page-active')) closeModal();
+  });
   if (location.pathname === '/scan') openScan();
+  if (location.hash === '#sell-event') openCreateEvent();
   window.SourcewavSupabaseReady?.then(client => {
     if (!client) return;
     window.SourcewavPlatform.isLive = true;
