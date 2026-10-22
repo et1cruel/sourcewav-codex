@@ -12,7 +12,9 @@ Deno.serve(async (request) => {
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
   try {
     const user = await authenticatedUser(request);
-    const body = await request.json();
+    const rawBody = await request.text();
+    if (rawBody.length > 4096) return json({ error: 'คำขอตรวจสลิปมีขนาดใหญ่เกินไป' }, 413);
+    const body = JSON.parse(rawBody);
     const orderId = String(body.orderId || '');
     const storageKey = String(body.slipStorageKey || '');
     if (!/^[0-9a-f-]{36}$/i.test(orderId) || !storageKey.startsWith(`${user.id}/${orderId}/`) || storageKey.length > 300) {
@@ -52,6 +54,17 @@ Deno.serve(async (request) => {
     form.append('amount', (Number(order.total_minor) / 100).toFixed(2));
     // log=true binds receiver checking and duplicate detection to this seller's SlipOK branch.
     form.append('log', 'true');
+    const { data: attempts, error: attemptsError } = await db.rpc('claim_slipok_ticket_verification', {
+      p_order: order.id, p_buyer: user.id,
+    });
+    if (attemptsError) {
+      console.error('Unable to reserve SlipOK verification attempt:', attemptsError.message);
+      return json({ error: 'เริ่มตรวจสลิปไม่ได้ กรุณาลองใหม่ภายหลัง' }, 503);
+    }
+    if (!Number.isInteger(Number(attempts)) || Number(attempts) < 1 || Number(attempts) > 5) {
+      return json({ error: 'รายการนี้ตรวจสลิปครบ 5 ครั้งแล้ว หรือหมดเวลาจองบัตร กรุณาเริ่มรายการใหม่', attemptsRemaining: 0 }, 429);
+    }
+    const attemptsRemaining = 5 - Number(attempts);
     let response: Response;
     try {
       response = await fetch(`https://api.slipok.com/api/line/apikey/${method.slipok_branch_id}`, {
@@ -59,8 +72,10 @@ Deno.serve(async (request) => {
         signal: AbortSignal.timeout(20000),
       });
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'TimeoutError') return json({ error: 'SlipOK ใช้เวลาตรวจนานเกินไป กรุณาลองใหม่ภายหลัง' }, 504);
-      return json({ error: 'ติดต่อ SlipOK ไม่ได้ กรุณาลองใหม่ภายหลัง' }, 502);
+      const message = error instanceof DOMException && error.name === 'TimeoutError'
+        ? 'SlipOK ใช้เวลาตรวจนานเกินไป ระบบยังยืนยันผลไม่ได้ กรุณาตรวจประวัติการโอนก่อนส่งสลิปใหม่'
+        : 'ติดต่อ SlipOK ไม่ได้ ระบบยังยืนยันผลไม่ได้ กรุณาลองใหม่ภายหลัง';
+      return json({ error: message, attemptsRemaining, attemptCounted: true }, error instanceof DOMException && error.name === 'TimeoutError' ? 504 : 502);
     }
     const result = await response.json().catch(() => ({}));
     if (response.status === 401 || response.status === 403 || response.status === 429 || response.status >= 500) {
@@ -69,7 +84,7 @@ Deno.serve(async (request) => {
         ? 'SlipOK ปฏิเสธ API Key หรือ Branch ID ของผู้จัด กรุณาตรวจการตั้งค่าบัญชี'
         : response.status === 429 ? 'SlipOK ใช้โควต้าตรวจสลิปครบแล้ว กรุณาติดต่อผู้จัด'
           : 'SlipOK ยังตอบกลับไม่ได้ กรุณาลองใหม่ภายหลัง';
-      return json({ error: message }, response.status === 429 ? 503 : 502);
+      return json({ error: message, attemptsRemaining, attemptCounted: true }, response.status === 429 ? 503 : 502);
     }
 
     const slipData = result.data && typeof result.data === 'object' ? result.data : {};
@@ -86,6 +101,15 @@ Deno.serve(async (request) => {
     const slipStatus = isVerified ? 'verified' : 'rejected';
     const slipCode = Number.isInteger(Number(result.code)) ? Number(result.code) : null;
     const slipMessage = String(result.message || slipData.message || (isVerified ? 'SlipOK verified' : 'Slip did not pass verification')).slice(0, 500);
+    // Keep only facts needed for payment reconciliation. The raw provider response can
+    // include the sender's masked name/account and is unnecessary for ticket issuance.
+    const auditResult = {
+      success: result.success === true,
+      slipSuccess: slipData.success === true,
+      transRef,
+      amount: observedMinor,
+      countryCode: typeof slipData.countryCode === 'string' ? slipData.countryCode.slice(0, 2) : null,
+    };
     const { data: submissionId, error: insertError } = await db.rpc('record_slipok_ticket_submission', {
       p_order: order.id,
       p_buyer: user.id,
@@ -96,7 +120,7 @@ Deno.serve(async (request) => {
       p_message: slipMessage,
       p_amount_minor: observedMinor,
       p_trans_ref: isVerified ? transRef : null,
-      p_result: result,
+      p_result: auditResult,
     });
     if (!insertError && submissionId === 'already_paid') {
       return json({ status: 'paid', message: 'คำสั่งซื้อนี้ออกบัตรเรียบร้อยแล้ว' });
@@ -109,7 +133,7 @@ Deno.serve(async (request) => {
       console.error('Unable to save SlipOK verification:', insertError?.message || 'missing submission id');
       return json({ error: 'บันทึกผลตรวจสลิปไม่ได้ กรุณาติดต่อผู้จัดพร้อมเลขคำสั่งซื้อ' }, 500);
     }
-    if (!isVerified) return json({ submissionId, status: 'rejected', message: slipMessage, amountMinor: observedMinor, receiver });
+    if (!isVerified) return json({ submissionId, status: 'rejected', message: slipMessage, amountMinor: observedMinor, receiver, attemptsRemaining });
 
     let issuance: Awaited<ReturnType<typeof issueSlipOkSubmission>>;
     try { issuance = await issueSlipOkSubmission(db, submissionId, user.id); }
@@ -117,18 +141,18 @@ Deno.serve(async (request) => {
       console.error('Verified SlipOK payment could not issue tickets:', error instanceof Error ? error.message : 'unknown error');
       return json({
         submissionId, status: 'verified_pending', message: 'SlipOK ตรวจผ่านแล้ว แต่ระบบออกบัตรสะดุด กรุณากดลองออกบัตรอีกครั้ง',
-        amountMinor: observedMinor, receiver,
+        amountMinor: observedMinor, receiver, attemptsRemaining,
       });
     }
     if (issuance.error) {
       return json({
         submissionId, status: 'verified_pending', message: issuance.error,
-        amountMinor: observedMinor, receiver,
+        amountMinor: observedMinor, receiver, attemptsRemaining,
       });
     }
     return json({
       submissionId, status: 'paid', message: 'SlipOK ตรวจยอด ผู้รับ และสลิปซ้ำผ่าน ออกบัตรให้อัตโนมัติแล้ว',
-      amountMinor: observedMinor, receiver, ticketCount: issuance.ticketCount,
+      amountMinor: observedMinor, receiver, ticketCount: issuance.ticketCount, attemptsRemaining,
     });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : 'ตรวจสลิปไม่สำเร็จ' }, 400);

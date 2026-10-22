@@ -30,8 +30,13 @@ Deno.serve(async (request) => {
     const db = serviceClient();
     const { data: qrFile, error: qrError } = await db.storage.from('sourcewav-event-payment-qr').download(paymentQrKey);
     if (qrError || !qrFile || qrFile.size > 5 * 1024 * 1024 || !['image/jpeg','image/png','image/webp'].includes(qrFile.type)) return json({ error: 'ไม่พบ QR รับเงินที่อัปโหลด หรือไฟล์ไม่ถูกต้อง' }, 400);
-    const { data: profile, error: profileError } = await db.from('profiles').select('roles').eq('user_id', user.id).single();
-    if (profileError || !profile?.roles?.some((role: string) => ['organizer', 'admin'].includes(role))) return json({ error: 'ฟีเจอร์นี้สำหรับบัญชี Organizer ที่ผ่านการยืนยันเท่านั้น' }, 403);
+    const { data: roles, error: rolesError } = await db.from('user_roles')
+      .select('role').eq('user_id', user.id).in('role', ['organizer', 'admin']);
+    if (rolesError) {
+      console.error('Unable to load event publisher authorization:', rolesError.message);
+      return json({ error: 'ตรวจสอบสิทธิ์ผู้จัดงานไม่ได้ กรุณาลองอีกครั้งภายหลัง' }, 503);
+    }
+    if (!roles?.length) return json({ error: 'ฟีเจอร์นี้สำหรับบัญชี Organizer ที่ผ่านการยืนยันเท่านั้น' }, 403);
     const { data: event, error } = await db.from('events').insert({ organizer_id: user.id, title, description: String(body.description || '').slice(0, 5000), category, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), venue_name: venueName, venue_address: venueAddress, status: 'published', currency: 'THB' }).select('id').single();
     if (error) throw error;
     const { error: tierError } = await db.from('ticket_types').insert({ event_id: event.id, name: String(body.tierName || 'บัตรทั่วไป').slice(0, 100), price_minor: price, currency: 'THB', quantity_total: stock });

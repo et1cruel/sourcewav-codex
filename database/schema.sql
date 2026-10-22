@@ -19,18 +19,51 @@ create table public.profiles (
   deleted_at timestamptz
 );
 
+-- Authorization roles are granted by trusted server/admin workflows, never profile metadata.
+create table public.user_roles (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  role text not null check (role in ('organizer', 'admin')),
+  granted_at timestamptz not null default now(),
+  primary key (user_id, role)
+);
+
+create function public.strip_profile_authorization_labels()
+returns trigger language plpgsql set search_path = '' as $$
+begin
+  new.roles := coalesce(
+    (select array_agg(role_label)
+     from unnest(coalesce(new.roles, '{}'::text[])) as role_labels(role_label)
+     where lower(btrim(role_label)) not in ('organizer', 'admin')),
+    '{}'::text[]
+  );
+  return new;
+end;
+$$;
+revoke all on function public.strip_profile_authorization_labels() from public, anon, authenticated;
+create trigger profiles_strip_authorization_labels
+  before insert or update on public.profiles
+  for each row execute function public.strip_profile_authorization_labels();
+
 -- Create the user's profile from Supabase Auth metadata at signup. The function runs
 -- as its owner so the profiles RLS policy can remain closed to anonymous inserts.
 create function public.handle_new_user() returns trigger
 language plpgsql security definer set search_path = '' as $$
+declare
+  v_roles jsonb;
 begin
+  v_roles := case
+    when jsonb_typeof(new.raw_user_meta_data -> 'roles') = 'array'
+      then new.raw_user_meta_data -> 'roles'
+    else '[]'::jsonb
+  end;
+
   insert into public.profiles (user_id, username, display_name, province, roles)
   values (
     new.id,
     coalesce(nullif(new.raw_user_meta_data ->> 'username', ''), 'user_' || substr(replace(new.id::text, '-', ''), 1, 24)),
     coalesce(nullif(trim(new.raw_user_meta_data ->> 'display_name'), ''), 'New artist'),
     nullif(trim(new.raw_user_meta_data ->> 'province'), ''),
-    array(select jsonb_array_elements_text(coalesce(new.raw_user_meta_data -> 'roles', '[]'::jsonb)))
+    array(select jsonb_array_elements_text(v_roles))
   );
   return new;
 end;
@@ -414,6 +447,7 @@ revoke all on function public.is_conversation_member(uuid) from public;
 grant execute on function public.is_conversation_member(uuid) to anon, authenticated;
 
 alter table public.profiles enable row level security;
+alter table public.user_roles enable row level security;
 alter table public.follows enable row level security;
 alter table public.blocks enable row level security;
 alter table public.posts enable row level security;
@@ -442,6 +476,9 @@ alter table public.notifications enable row level security;
 alter table public.reports enable row level security;
 alter table public.moderation_actions enable row level security;
 alter table public.audit_logs enable row level security;
+
+revoke all on public.user_roles from public, anon, authenticated;
+grant select, insert, update, delete on public.user_roles to service_role;
 
 create policy profiles_read_visible on public.profiles for select using (visibility = 'public' and deleted_at is null or user_id = auth.uid());
 create policy profiles_update_self on public.profiles for update using (user_id = auth.uid()) with check (user_id = auth.uid());

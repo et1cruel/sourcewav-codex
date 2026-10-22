@@ -30,6 +30,10 @@ The build copies only the files the web app needs into `dist/`, so workspace fil
 
 The production site is `https://sourcewav-community.pages.dev`. Supabase Auth's Site URL and Redirect URLs are configured for that Pages domain. Email signup requires email confirmation; production email delivery depends on Supabase SMTP settings.
 
+## Vercel static deployment
+
+`vercel.json` deploys the same static output to Vercel: it forces the "Other" framework, skips dependency installation, runs `npm run build:pages`, and serves `dist/`. `server.js` stays local-only and is excluded in `.vercelignore` so Vercel never auto-detects it as a Node server entrypoint. The `/scan` path rewrites to `index.html` because the app uses client-side history routing.
+
 ## Remaining launch work
 
 Test registration, email confirmation, login, room creation, text and image messages, and password recovery with two accounts. Test SlipOK, order reconciliation, and ticket QR scan in a controlled environment before taking real payments. Keep the local Node/SQLite endpoints off the public deployment.
