@@ -44,7 +44,9 @@
     const backdrop = $('#modalBackdrop'); backdrop.classList.toggle('tickets-page-open', html.includes('my-tickets-page')); const modalRoot = backdrop.querySelector('.modal'); modalRoot?.classList.toggle('is-ticket-payment', html.includes('manual-payment')); modalRoot?.classList.toggle('is-ticket-purchase', html.includes('ticket-purchase')); $('#modalContent').innerHTML = html; backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden', 'false');
   };
   let eventPosterPreviewUrl = '';
+  let eventPurchaseRequest = 0;
   const closeModal = () => { const backdrop = $('#modalBackdrop'); backdrop.classList.remove('open', 'tickets-page-open'); backdrop.setAttribute('aria-hidden', 'true'); if (eventPosterPreviewUrl) URL.revokeObjectURL(eventPosterPreviewUrl); eventPosterPreviewUrl = ''; document.body.classList.remove('event-sell-page-active'); const page = $('#eventSellPage'); if (page) { page.hidden = true; page.replaceChildren(); } };
+  const closeTicketPurchasePage = () => { eventPurchaseRequest++; document.body.classList.remove('event-purchase-page-active'); const page = $('#eventPurchasePage'); if (page) { page.hidden = true; page.replaceChildren(); } };
   const needUser = async () => { const { data } = await db.auth.getUser(); if (!data.user) { toast('เข้าสู่ระบบก่อนใช้ฟีเจอร์นี้'); $('#profileBtn')?.click(); return null; } return data.user; };
   const call = async (name, body) => {
     const { data, error } = await db.functions.invoke(name, { body });
@@ -268,19 +270,58 @@
     root.querySelectorAll('.live-event-poster-image').forEach(image => image.addEventListener('error', () => image.remove(), { once: true }));
   }
 
+  const ticketPurchaseHash = eventId => `#buy-ticket/${encodeURIComponent(eventId)}`;
+  function openTicketPurchase(eventId) {
+    const nextHash = ticketPurchaseHash(eventId);
+    if (location.hash === nextHash) return ticketPicker(eventId);
+    location.hash = nextHash;
+  }
   async function ticketPicker(eventId) {
-    const { data: event, error } = await db.from('events').select('id,title,cover_url,starts_at,venue_name,venue_address,ticket_types(id,name,price_minor,quantity_total,quantity_sold,quantity_reserved,sales_start,sales_end),event_payment_methods(qr_storage_key,bank_name,beneficiary_name,account_last4)').eq('id', eventId).single();
-    if (error) return toast('เปิดรายละเอียดงานไม่ได้');
-    const tiers = (event.ticket_types || []).filter(t => t.quantity_total > t.quantity_sold + t.quantity_reserved && (!t.sales_start || new Date(t.sales_start) <= new Date()) && (!t.sales_end || new Date(t.sales_end) >= new Date()));
-    if (!tiers.length) return toast('บัตรหมดหรือยังไม่เปิดขาย');
+    const page = $('#eventPurchasePage');
+    const requestId = ++eventPurchaseRequest;
+    page.hidden = false;
+    document.body.classList.add('event-purchase-page-active');
+    window.scrollTo(0, 0);
+    page.innerHTML = '<div class="event-purchase-toolbar"><a href="#events">← กลับหน้าอีเวนต์</a><span>SOURCEWAV TICKETS</span></div><div class="event-purchase-loading" role="status">กำลังโหลดรายละเอียดงาน…</div>';
+    const { data: event, error } = await db.from('events').select('id,title,description,category,cover_url,starts_at,ends_at,venue_name,venue_address,ticket_types(id,name,price_minor,quantity_total,quantity_sold,quantity_reserved,sales_start,sales_end),event_payment_methods(qr_storage_key,bank_name,beneficiary_name,account_last4)').eq('id', eventId).single();
+    if (requestId !== eventPurchaseRequest || location.hash !== ticketPurchaseHash(eventId)) return;
+    if (error || !event) {
+      page.innerHTML = '<div class="event-purchase-toolbar"><a href="#events">← กลับหน้าอีเวนต์</a><span>SOURCEWAV TICKETS</span></div><section class="event-purchase-error"><h1>เปิดรายละเอียดงานไม่ได้</h1><p>งานนี้อาจถูกนำออกหรือไม่พร้อมให้เข้าชม ลองกลับไปเลือกงานอีกครั้ง</p></section>';
+      return;
+    }
+    const now = Date.now();
+    const tiers = (event.ticket_types || []).filter(t => t.quantity_total > t.quantity_sold + t.quantity_reserved && (!t.sales_start || new Date(t.sales_start).getTime() <= now) && (!t.sales_end || new Date(t.sales_end).getTime() >= now));
     const method = Array.isArray(event.event_payment_methods) ? event.event_payment_methods[0] : event.event_payment_methods;
-    const checkoutAction = method
-      ? '<p>ชำระตรงเข้าบัญชีผู้จัด ระบบใช้ SlipOK ตรวจผู้รับ ยอดเงิน และสลิปซ้ำ ก่อนออกบัตร</p><button class="modal-primary" id="startManualCheckout">ดู QR และชำระเงิน</button>'
-      : '<p>งานนี้ยังไม่ได้ตั้งค่าบัญชีรับเงิน SlipOK จึงยังเปิดขายบัตรไม่ได้</p><button class="modal-primary" disabled>ยังไม่พร้อมรับชำระ</button>';
+    const categoryNames = { music: 'ดนตรี', art: 'ศิลปะ', community: 'คอมมูนิตี้', market: 'ตลาด', other: 'อีเวนต์' };
+    const dateOptions = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+    const startDate = new Date(event.starts_at);
+    const endDate = event.ends_at ? new Date(event.ends_at) : null;
     const poster = safeImageUrl(event.cover_url);
-    modal(`<div class="ticket-purchase">${poster ? `<div class="event-sale-poster"><img src="${esc(poster)}" alt="โปสเตอร์งาน ${esc(event.title)}" /></div>` : ''}<header class="ticket-purchase-heading"><span class="ticket-purchase-label">บัตรเข้างาน</span><h2 id="modalTitle">${esc(event.title)}</h2><p>${esc(event.venue_name || '')} · ${esc(new Date(event.starts_at).toLocaleString('th-TH'))}</p></header><label class="modal-field">ประเภทบัตร<select id="ticketTier">${tiers.map(t => `<option value="${esc(t.id)}" data-price="${t.price_minor}" data-left="${t.quantity_total - t.quantity_sold - t.quantity_reserved}">${esc(t.name)} · ${money(t.price_minor)} · เหลือ ${t.quantity_total - t.quantity_sold - t.quantity_reserved} ใบ</option>`).join('')}</select></label><label class="modal-field">จำนวน<input id="ticketQuantity" type="number" min="1" max="10" value="1" /></label><div class="checkout-event"><div class="checkout-row"><span>ยอดรวม</span><b id="ticketTotal">${money(tiers[0].price_minor)}</b></div>${checkoutAction}</div></div>`);
-    const updateTotal = () => { const selected = $('#ticketTier')?.selectedOptions[0]; const qty = Math.max(1, Math.min(10, Number($('#ticketQuantity')?.value || 1), Number(selected?.dataset.left || 1))); if ($('#ticketQuantity')) $('#ticketQuantity').value = qty; if ($('#ticketTotal')) $('#ticketTotal').textContent = money(Number(selected?.dataset.price) * qty); };
-    $('#ticketTier').addEventListener('change', updateTotal); $('#ticketQuantity').addEventListener('input', updateTotal);
+    const posterMarkup = poster
+      ? `<figure class="event-purchase-poster"><img src="${esc(poster)}" alt="โปสเตอร์งาน ${esc(event.title)}" /><figcaption>โปสเตอร์งาน</figcaption></figure>`
+      : '<div class="event-purchase-poster event-purchase-poster-empty"><span aria-hidden="true">✦</span><p>ผู้จัดยังไม่ได้เพิ่มโปสเตอร์</p></div>';
+    const tierOptions = tiers.map(t => {
+      const left = t.quantity_total - t.quantity_sold - t.quantity_reserved;
+      return `<option value="${esc(t.id)}" data-price="${t.price_minor}" data-left="${left}">${esc(t.name)} · ${money(t.price_minor)} · เหลือ ${left.toLocaleString('th-TH')} ใบ</option>`;
+    }).join('');
+    const purchaseAction = method && tiers.length
+      ? '<p>ชำระตรงเข้าบัญชีผู้จัด ระบบตรวจสลิปผ่าน SlipOK ก่อนออกบัตร</p><button class="modal-primary" id="startManualCheckout" type="button">ดู QR และชำระเงิน <span aria-hidden="true">↗</span></button>'
+      : `<p>${!tiers.length ? 'บัตรหมดหรือยังไม่เปิดขายในขณะนี้' : 'งานนี้ยังไม่ได้ตั้งค่าบัญชีรับเงิน จึงยังชำระเงินไม่ได้'}</p><button class="modal-primary" id="startManualCheckout" type="button" disabled>${!tiers.length ? 'ยังไม่มีบัตรพร้อมขาย' : 'ยังไม่พร้อมรับชำระ'}</button>`;
+    page.innerHTML = `<div class="event-purchase-page-inner"><div class="event-purchase-toolbar"><a href="#events">← กลับหน้าอีเวนต์</a><span>SOURCEWAV TICKETS</span></div><div class="event-purchase-layout"><section class="event-purchase-art" aria-label="โปสเตอร์งาน">${posterMarkup}</section><div class="event-purchase-content"><article class="event-purchase-info"><span class="event-purchase-category">${esc(categoryNames[event.category] || 'อีเวนต์')}</span><h1 id="eventPurchaseTitle">${esc(event.title)}</h1><div class="event-purchase-facts"><div><span aria-hidden="true">◷</span><p><b>วันและเวลา</b><time datetime="${esc(event.starts_at)}">${esc(startDate.toLocaleString('th-TH', dateOptions))}</time>${endDate ? `<time datetime="${esc(event.ends_at)}">ถึง ${esc(endDate.toLocaleString('th-TH', dateOptions))}</time>` : ''}</p></div><div><span aria-hidden="true">⌖</span><p><b>สถานที่</b><strong>${esc(event.venue_name || 'แจ้งสถานที่ภายหลัง')}</strong>${event.venue_address ? `<span>${esc(event.venue_address)}</span>` : ''}</p></div></div><section class="event-purchase-description"><h2>รายละเอียดงาน</h2><p>${event.description ? esc(event.description) : 'ผู้จัดยังไม่ได้เพิ่มรายละเอียดงาน'}</p></section></article><section class="event-purchase-checkout" aria-labelledby="ticketPurchaseHeading"><header><span>เลือกบัตรเข้าร่วมงาน</span><h2 id="ticketPurchaseHeading">เลือก Tier บัตร</h2></header><label class="modal-field">ประเภทบัตร<select id="ticketTier" ${tiers.length ? '' : 'disabled'}>${tiers.length ? tierOptions : '<option value="">ไม่มีบัตรพร้อมขาย</option>'}</select></label><label class="modal-field">จำนวน<input id="ticketQuantity" type="number" min="1" max="10" value="1" ${tiers.length ? '' : 'disabled'} /></label><div class="checkout-event"><div class="checkout-row"><span>ยอดรวม</span><b id="ticketTotal">${tiers.length ? money(tiers[0].price_minor) : '—'}</b></div>${purchaseAction}</div></section></div></div></div>`;
+    const updateTotal = () => {
+      const selected = $('#ticketTier')?.selectedOptions[0];
+      const maxQuantity = Math.min(10, Number(selected?.dataset.left || 0));
+      const quantityInput = $('#ticketQuantity');
+      if (!selected || !maxQuantity || !quantityInput) return;
+      const quantity = Math.max(1, Math.min(maxQuantity, Number(quantityInput.value || 1)));
+      quantityInput.max = String(maxQuantity);
+      quantityInput.value = String(quantity);
+      $('#ticketTotal').textContent = money(Number(selected.dataset.price) * quantity);
+    };
+    if (tiers.length) {
+      $('#ticketTier').addEventListener('change', updateTotal);
+      $('#ticketQuantity').addEventListener('input', updateTotal);
+    }
   }
 
   async function beginManualCheckout() {
@@ -774,7 +815,7 @@
     if (target.dataset.liveSave) { event.preventDefault(); event.stopImmediatePropagation(); const user = await needUser(); if (!user) return; const id = target.dataset.liveSave; const saved = target.getAttribute('aria-pressed') === 'true'; const result = saved ? await db.from('saved_items').delete().eq('user_id', user.id).eq('item_type', 'post').eq('item_id', id) : await db.from('saved_items').insert({ user_id: user.id, item_type: 'post', item_id: id }); if (result.error) toast(result.error.message); else await loadFeed(); return; }
     if (target.dataset.liveComment) { event.preventDefault(); event.stopImmediatePropagation(); return openPostComments(target.dataset.liveComment); }
     if (target.dataset.liveShare) { const url = `${location.origin}${location.pathname}#post-${target.dataset.liveShare}`; try { await navigator.clipboard.writeText(url); toast('คัดลอกลิงก์โพสต์แล้ว'); } catch (_) { toast(url); } return; }
-    if (target.dataset.buyEvent) { event.preventDefault(); event.stopImmediatePropagation(); return ticketPicker(target.dataset.buyEvent); }
+    if (target.dataset.buyEvent) { event.preventDefault(); event.stopImmediatePropagation(); return openTicketPurchase(target.dataset.buyEvent); }
     if (target.id === 'startManualCheckout') { event.preventDefault(); event.stopImmediatePropagation(); return beginManualCheckout(); }
     if (target.id === 'searchGo') { event.preventDefault(); event.stopImmediatePropagation(); return searchSourcewav(); }
     if (target.id === 'createRoomBtn') { event.preventDefault(); event.stopImmediatePropagation(); return createRoom(); }
@@ -872,10 +913,18 @@
   document.addEventListener('keydown', event => { if (event.key === 'Escape' && roomChannel) closeRoomChannel(); });
   window.addEventListener('hashchange', () => {
     if (location.hash === '#sell-event') openCreateEvent();
-    else if (document.body.classList.contains('event-sell-page-active')) closeModal();
+    else if (/^#buy-ticket\/[^/?#]+$/.test(location.hash)) {
+      try { ticketPicker(decodeURIComponent(location.hash.slice('#buy-ticket/'.length))); } catch { closeTicketPurchasePage(); }
+    } else {
+      if (document.body.classList.contains('event-sell-page-active')) closeModal();
+      if (document.body.classList.contains('event-purchase-page-active')) closeTicketPurchasePage();
+    }
   });
   if (location.pathname === '/scan') openScan();
   if (location.hash === '#sell-event') openCreateEvent();
+  else if (/^#buy-ticket\/[^/?#]+$/.test(location.hash)) {
+    try { ticketPicker(decodeURIComponent(location.hash.slice('#buy-ticket/'.length))); } catch { closeTicketPurchasePage(); }
+  }
   window.SourcewavSupabaseReady?.then(client => {
     if (!client) return;
     window.SourcewavPlatform.isLive = true;
