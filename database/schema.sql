@@ -142,13 +142,15 @@ create table public.audio_track_likes (
 
 create table public.comments (
   id uuid primary key default gen_random_uuid(),
-  post_id uuid not null references public.posts(id) on delete cascade,
+  post_id uuid references public.posts(id) on delete cascade,
+  track_id uuid references public.audio_tracks(id) on delete cascade,
   author_id uuid not null references public.profiles(user_id) on delete cascade,
   parent_id uuid references public.comments(id) on delete cascade,
   body text not null check (char_length(body) between 1 and 2000),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  deleted_at timestamptz
+  deleted_at timestamptz,
+  constraint comments_one_subject check (num_nonnulls(post_id, track_id) = 1)
 );
 
 create table public.reactions (
@@ -422,6 +424,7 @@ create index posts_author_idx on public.posts (author_id, created_at desc);
 create index audio_tracks_public_idx on public.audio_tracks (created_at desc) where status = 'published' and visibility = 'public' and deleted_at is null;
 create index audio_tracks_owner_idx on public.audio_tracks (owner_id, created_at desc);
 create index comments_post_idx on public.comments (post_id, created_at);
+create index comments_track_idx on public.comments (track_id, created_at) where track_id is not null;
 create index follows_followed_idx on public.follows (followed_id, created_at desc);
 create index venues_city_category_idx on public.venues (country_code, province, is_active);
 create index events_public_schedule_idx on public.events (starts_at, category) where status = 'published' and deleted_at is null;
@@ -501,10 +504,14 @@ create policy audio_track_likes_insert_self on public.audio_track_likes for inse
 create policy audio_track_likes_delete_self on public.audio_track_likes for delete using (user_id = auth.uid());
 create policy post_media_read_public on public.post_media for select using (exists (select 1 from public.posts p where p.id = post_id and (p.status = 'published' and p.visibility = 'public' or p.author_id = auth.uid())));
 create policy post_media_insert_author on public.post_media for insert with check (exists (select 1 from public.posts p where p.id = post_id and p.author_id = auth.uid()));
-create policy comments_read_public on public.comments for select using (deleted_at is null and exists (select 1 from public.posts p where p.id = post_id and p.status = 'published' and p.visibility = 'public'));
+create policy comments_read_public on public.comments for select using (deleted_at is null and (
+  (post_id is not null and exists (select 1 from public.posts p where p.id = post_id and p.status = 'published' and p.visibility = 'public' and p.deleted_at is null))
+  or (track_id is not null and exists (select 1 from public.audio_tracks t where t.id = track_id and t.status = 'published' and t.visibility = 'public' and t.deleted_at is null))
+));
 create policy comments_insert_self on public.comments for insert with check (
-  author_id = auth.uid() and exists (
-    select 1 from public.posts p where p.id = post_id and p.status = 'published' and p.visibility = 'public' and p.deleted_at is null
+  author_id = auth.uid() and (
+    (post_id is not null and exists (select 1 from public.posts p where p.id = post_id and p.status = 'published' and p.visibility = 'public' and p.deleted_at is null))
+    or (track_id is not null and exists (select 1 from public.audio_tracks t where t.id = track_id and t.status = 'published' and t.visibility = 'public' and t.deleted_at is null))
   )
 );
 create policy comments_update_self on public.comments for update using (author_id = auth.uid()) with check (author_id = auth.uid());

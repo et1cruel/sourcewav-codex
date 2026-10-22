@@ -2439,3 +2439,29 @@ body.event-purchase-page-active .chat-fab{display:none!important}
   .room-thread{padding:9px 8px}
   .room-chat-main .room-compose{padding-inline:8px}
 }
+
+/* Make track comments reachable from releases, library rows, and artist pages. */
+.track-comment-button{display:inline-grid;place-items:center;width:36px;height:36px;flex:0 0 auto;padding:0;border:1px solid #8b9298;border-radius:10px;color:#24282c;background:linear-gradient(145deg,#fff,#c9ccce 50%,#f8f8f8);box-shadow:inset 0 1px 2px #fff,0 2px 6px #12161a20;cursor:pointer}
+.track-comment-button:hover{border-color:#338e89;color:#126c68;filter:none}
+.track-comment-button:focus-visible{outline:3px solid #55c9c1;outline-offset:2px}
+.track-comment-button svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.track-row-meta .track-comment-button{width:34px;height:34px}
+.stream-release-copy>div:last-child{display:flex;align-items:center;gap:8px}
+.artist-track-comment{min-height:42px;padding:0 13px;border-radius:10px;font:600 13px var(--font)}
+.stream-extra-control.stream-current-comments{width:36px;height:36px}
+.stream-extra-control.stream-current-comments svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.track-comments-modal{display:grid;gap:11px}
+.track-comments-modal>h2{margin:0;color:#17191c;font-size:24px}
+.track-comments-kicker{color:#3e6c87;font-size:10px;font-weight:750;letter-spacing:.14em}
+.track-comments-track{margin:-5px 0 1px;color:#485762;font-size:14px;font-weight:650}
+.comment-list.track-comment-list{display:grid;align-content:start;gap:8px;max-height:min(44dvh,380px);padding:10px;border-color:#9da3a7;border-radius:12px;background:linear-gradient(145deg,#e7e9ea,#fff 45%,#d9dcde)}
+.track-comment-entry{padding:10px 12px;border:1px solid #92999e;border-radius:11px;color:#f3f4f5;background:linear-gradient(145deg,#171a1e,#34393e 48%,#15181b);box-shadow:0 3px 8px #12161a20}
+.track-comment-entry b{color:#75ded5;font-size:13px}
+.track-comment-entry p{margin:5px 0;color:#f3f4f5;font-size:14px;line-height:1.55;overflow-wrap:anywhere;white-space:pre-wrap}
+.track-comment-entry time{color:#c9cdd0;font-size:11px}
+.comment-empty{padding:14px;color:#343a3f;text-align:center}
+@media(max-width:680px){
+  .track-row-meta .track-comment-button{width:32px;height:32px}
+  .stream-release-copy>div:last-child{gap:5px}
+  .artist-track-comment{min-height:40px}
+}
