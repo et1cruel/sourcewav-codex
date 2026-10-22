@@ -122,7 +122,7 @@
     renderAvatar(railAvatar, [...profile.name][0] || 'S');
     renderAvatar(composerAvatar, [...profile.name][0] || 'S');
     if (railName) railName.textContent = profile.name;
-    if (railMeta) railMeta.textContent = `@${profile.handle} · ${profile.city}`;
+    if (railMeta) railMeta.textContent = window.SourcewavAuthUser ? `@${profile.handle} · ${profile.city}` : `Guest · ${profile.role}`;
   }
 
   function swShow(html) {
