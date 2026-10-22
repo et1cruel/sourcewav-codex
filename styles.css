@@ -2077,6 +2077,7 @@ body :where(button,a,.ticket-filter,.nav-link,.rail-item){-webkit-text-stroke:.1
 .map-preview .venue-select,.map-modal .venue-select{min-height:68px;padding:4px 3px 15px;background:transparent}
 .venue-copy strong,.venue-copy small,.venue-arrow,.venue-photo-credit{-webkit-text-stroke:.55px #050505;paint-order:stroke fill;text-shadow:-1px -1px 0 #000,1px -1px 0 #000,-1px 1px 0 #000,1px 1px 0 #000,0 2px 5px #000;color:#fff}
 .map-preview .venue-copy strong,.map-modal .venue-copy strong{font-size:15px!important;font-weight:800}
+.map-preview .venue-copy strong,.map-modal .venue-copy strong{color:#fff!important;-webkit-text-stroke:.8px #050505;paint-order:stroke fill;text-shadow:0 0 5px #fff9,0 0 12px #fff7,1px 2px 3px #000}
 .map-preview .venue-copy small,.map-modal .venue-copy small{font-size:11px!important;color:#fff!important;line-height:1.4}
 .map-preview .venue-type,.map-modal .venue-type{border:1px solid #ffffff85;background:#101116db;color:#fff;box-shadow:0 2px 8px #0008}
 .map-preview .venue-type.art,.map-modal .venue-type.art{background:#291a1be8;color:#fff}
