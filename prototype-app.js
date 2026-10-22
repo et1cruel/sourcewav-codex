@@ -51,7 +51,9 @@
   function setSaveLabel(button, saved) {
     button.classList.toggle('liked', saved);
     button.setAttribute('aria-pressed', String(saved));
-    button.textContent = saved ? '✓ เก็บไว้แล้ว' : '♧ เก็บไว้';
+    button.setAttribute('aria-label', saved ? 'นำโพสต์ออกจากรายการที่บันทึก' : 'บันทึกโพสต์');
+    const label = $('span', button);
+    if (label) label.textContent = saved ? 'บันทึกแล้ว' : 'เก็บไว้';
   }
 
   function setFollowLabel(button, following) {
@@ -65,7 +67,7 @@
     return `<article class="post-card user-post" data-post-id="${escapeHTML(post.id)}" data-kind="${escapeHTML(post.kind)}">
       <div class="post-top"><div class="avatar avatar-purple">${escapeHTML((post.author || 'ม').slice(0, 1))}</div><div class="post-author"><strong>${escapeHTML(post.author || 'มิน')}</strong><small>โพสต์เมื่อสักครู่ · ${escapeHTML(kindLabels[post.kind] || 'คอมมูนิตี้')}</small></div></div>
       ${post.title ? `<h3 class="user-post-title">${escapeHTML(post.title)}</h3>` : ''}<p class="post-copy">${escapeHTML(post.body).replace(/\n/g, '<br>')}</p>
-      <div class="post-actions"><button class="like-btn" aria-pressed="false">♡ <span>ถูกใจ</span> <b>0</b></button><button class="comment-btn" aria-pressed="false">▢ <span>ความคิดเห็น</span> <b>0</b></button><button class="save-btn" aria-pressed="false">♧ เก็บไว้</button></div>
+      <div class="post-actions"><button class="like-btn" aria-pressed="false" aria-label="ถูกใจโพสต์นี้"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.9c0 5.1-8.8 10-8.8 10S3.2 14 3.2 8.9a4.4 4.4 0 0 1 8.8-.1 4.4 4.4 0 0 1 8.8.1Z"/></svg><span>ถูกใจ</span> <b>0</b></button><button class="comment-btn" aria-label="แสดงความคิดเห็น"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg><span>ความคิดเห็น</span> <b>0</b></button><button class="save-btn" aria-pressed="false" aria-label="บันทึกโพสต์"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h12v16l-6-4-6 4v-16Z"/></svg><span>เก็บไว้</span></button></div>
     </article>`;
   }
 
@@ -189,8 +191,9 @@
     const result = persist(data => { data.interactions[postId] = { liked, likeCount }; });
     button.classList.toggle('liked', liked);
     button.setAttribute('aria-pressed', String(liked));
+    button.setAttribute('aria-label', `${liked ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} โพสต์นี้`);
     $('b', button).textContent = likeCount;
-    button.firstChild.textContent = liked ? '♥ ' : '♡ ';
+    button.classList.remove('is-bouncing'); void button.offsetWidth; if (liked) button.classList.add('is-bouncing');
     feedback(result, liked ? 'ถูกใจโพสต์นี้แล้ว' : 'นำการถูกใจออกแล้ว');
   }
 
