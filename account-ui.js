@@ -9,6 +9,18 @@
     bio: 'กำลังสำรวจเพลง อีเวนต์ และชุมชนบน Sourcewav',
     avatarUrl: ''
   };
+  let swGuestHandleCache = '';
+
+  function swGuestHandle() {
+    if (swGuestHandleCache) return swGuestHandleCache;
+    try { swGuestHandleCache = localStorage.getItem('sourcewav.guest-handle.v1') || ''; } catch {}
+    if (!/^sourcewavguest\d{5,7}$/.test(swGuestHandleCache)) {
+      swGuestHandleCache = `sourcewavguest${Math.floor(100000 + Math.random() * 900000)}`;
+      try { localStorage.setItem('sourcewav.guest-handle.v1', swGuestHandleCache); } catch {}
+    }
+    window.SourcewavGuestHandle = swGuestHandleCache;
+    return swGuestHandleCache;
+  }
 
   function swEscape(value) {
     return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -34,7 +46,10 @@
   }
   function swGetProfile() {
     try {
-      if (!window.SourcewavAuthUser) return { ...swDefaultProfile };
+      if (!window.SourcewavAuthUser) {
+        const handle = swGuestHandle();
+        return { ...swDefaultProfile, name: handle, handle };
+      }
       const stored = swProfileCache || window.SourcewavStore?.getState?.().profile || JSON.parse(localStorage.getItem(swProfileKey) || '{}');
       return {
         ...swDefaultProfile,
@@ -122,7 +137,7 @@
     renderAvatar(railAvatar, [...profile.name][0] || 'S');
     renderAvatar(composerAvatar, [...profile.name][0] || 'S');
     if (railName) railName.textContent = profile.name;
-    if (railMeta) railMeta.textContent = window.SourcewavAuthUser ? `@${profile.handle} · ${profile.city}` : `Guest · ${profile.role}`;
+    if (railMeta) railMeta.textContent = `@${profile.handle} · ${window.SourcewavAuthUser ? profile.city : profile.role}`;
   }
 
   function swShow(html) {
@@ -137,7 +152,7 @@
       swShow(`<section class="profile-page guest-profile-page">
         <div class="profile-cover"><div class="profile-soundwave" aria-hidden="true">${Array.from({ length: 34 }, (_, i) => `<i style="--wave:${10 + ((i * 17 + 9) % 29)}px"></i>`).join('')}</div><span class="profile-cover-tag">SOURCEWAV / GUEST</span></div>
         <div class="profile-grid"><section class="profile-identity-card" aria-label="สถานะผู้เยี่ยมชม">
-          <div class="profile-identity"><div class="profile-avatar">G</div><div class="profile-identity-copy"><span class="account-status"><i></i>ผู้เยี่ยมชมเว็บไซต์</span><h2 id="modalTitle">Guest</h2><p>เข้าชมแบบไม่ต้องสมัครสมาชิก</p></div></div>
+          <div class="profile-identity"><div class="profile-avatar">G</div><div class="profile-identity-copy"><span class="account-status"><i></i>ผู้เยี่ยมชมเว็บไซต์</span><h2 id="modalTitle">${swEscape(profile.handle)}</h2><p>เข้าชมแบบไม่ต้องสมัครสมาชิก · username สำหรับผู้เยี่ยมชม</p></div></div>
           <p class="profile-bio">ฟังเพลง ดูโพสต์ ค้นหาศิลปินและดูอีเวนต์สาธารณะได้เลย</p>
           <div class="profile-guest-links"><a href="#music" data-account-action="close">♫ ไปหน้าฟังเพลง</a><a href="#events" data-account-action="close">ตั๋ว · ดูอีเวนต์</a></div>
           <div class="profile-auth-links"><span>อยากโพสต์ กดถูกใจ หรือเก็บรายการไว้?</span><button type="button" data-account-action="register">สร้างบัญชี</button><button type="button" data-account-action="login">เข้าสู่ระบบ</button></div>

@@ -129,8 +129,8 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <label class="modal-field">
-            ราคาเรทเริ่มต้น (บาท)
-            <input id="newArtistRate" type="number" min="500" step="100" value="4500" required />
+            ราคาเรทเริ่มต้น (บาท) <small>กรอกเป็นจำนวนเต็ม เช่น 4,500 บาท</small>
+            <input id="newArtistRate" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="9" value="4500" autocomplete="off" required />
           </label>
           <label class="modal-field">
             หน่วยเรทราคา
@@ -162,6 +162,8 @@
 
     const portfolioImageInput = $('#newArtistPortfolioImage');
     const portfolioPreview = $('#newArtistPortfolioPreview');
+    const rateInput = $('#newArtistRate');
+    rateInput?.addEventListener('input', () => { rateInput.value = rateInput.value.replace(/\D/g, ''); });
     portfolioImageInput?.addEventListener('change', () => {
       const file = portfolioImageInput.files?.[0];
       if (!file) { portfolioPreview.hidden = true; portfolioPreview.removeAttribute('src'); return; }
@@ -188,11 +190,13 @@
 
       const role = $('#newArtistRole').value;
       const imageFile = portfolioImageInput.files?.[0] || null;
+      const rate = Number(rateInput.value);
+      if (!Number.isInteger(rate) || rate < 500) { toast('กรอกราคาเริ่มต้นอย่างน้อย 500 บาท'); rateInput.focus(); return; }
       const newCard = {
         artistName: $('#newArtistName').value.trim(),
         role: role,
         roleLabel: roleMap[role] || 'ศิลปิน',
-        rate: Number($('#newArtistRate').value || 4000),
+        rate,
         rateUnit: $('#newArtistRateUnit').value.trim(),
         availability: $('#newArtistAvailability').value.trim(),
         availableStatus: 'ready',

@@ -17,13 +17,13 @@
 
   function applyProfile(profile = state().profile) {
     const isGuest = !window.SourcewavAuthUser;
-    const name = isGuest ? 'Guest' : (profile.displayName || 'สมาชิก');
+    const name = isGuest ? (window.SourcewavGuestHandle || 'Guest') : (profile.displayName || 'สมาชิก');
     const triggerName = $('#profileBtn span:last-child');
     const railName = $('.rail-profile strong');
     const railRole = $('.rail-profile small');
     if (triggerName) triggerName.textContent = name;
     if (railName) railName.textContent = name;
-    if (railRole) railRole.textContent = isGuest ? 'ผู้เยี่ยมชมเว็บไซต์ · Guest' : [profile.role || 'สมาชิก', profile.province || ''].filter(Boolean).join(' · ');
+    if (railRole) railRole.textContent = isGuest ? `@${name} · ผู้เยี่ยมชมเว็บไซต์` : [profile.role || 'สมาชิก', profile.province || ''].filter(Boolean).join(' · ');
   }
 
   function applyInteractions() {
