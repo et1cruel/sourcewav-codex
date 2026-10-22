@@ -1998,6 +1998,15 @@ body.event-sell-page-active .chat-fab{display:none!important}
 .event-sell-page .ticket-sell-section{padding:20px 22px;border-radius:17px}
 .event-sell-page .ticket-sell-footer{position:sticky;bottom:0;margin:0;padding:14px 16px max(14px,env(safe-area-inset-bottom));border:1px solid #ffffff20;border-radius:16px;background:#11131bf5;box-shadow:0 12px 32px #0005}
 @media(max-width:680px){.event-sell-page{min-height:calc(100dvh - 64px);padding:12px 12px 38px}.event-sell-page .ticket-sell-modal{gap:11px;padding-bottom:12px}.event-sell-page .ticket-sell-heading{padding:14px 54px 14px 13px}.event-sell-page .ticket-sell-heading>p{margin:8px 0 0 49px}.event-sell-page .ticket-sell-section{padding:12px}.event-sell-page .ticket-sell-footer{border-radius:14px}}
+
+/* Inflatable glass ticket mark for the event publishing form. */
+.ticket-sell-section-heading>.ticket-sell-icon-ticket{position:relative;display:grid;width:48px;height:44px;flex:0 0 48px;place-items:center;overflow:visible;border:1px solid #f0e6ff8c;border-radius:15px;color:#fff;background:radial-gradient(ellipse at 28% 8%,#ffffff9c,transparent 42%),linear-gradient(145deg,#554379,#30283e 70%);box-shadow:0 8px 14px #07050e66,0 2px 0 #100c18,inset 0 1.5px 1px #ffffff75,inset 0 -3px 5px #100a204d;transform:translateZ(0);animation:sell-ticket-float 4.2s ease-in-out infinite}
+.ticket-sell-section-heading>.ticket-sell-icon-ticket:before{position:absolute;z-index:-1;right:9px;bottom:-5px;left:9px;height:6px;border-radius:50%;background:#bea5f275;filter:blur(5px);content:""}
+.ticket-sell-section-heading>.ticket-sell-icon-ticket:after{position:absolute;top:5px;left:7px;width:13px;height:5px;border-radius:50%;background:#fff9;filter:blur(2px);content:"";transform:rotate(-25deg)}
+.ticket-sell-icon-ticket svg{position:relative;z-index:1;width:42px;height:34px;overflow:visible;filter:drop-shadow(0 3px 2px #17102566)}
+@keyframes sell-ticket-float{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-3px) rotate(1.5deg)}}
+@media(max-width:680px){.ticket-sell-section-heading>.ticket-sell-icon-ticket{width:44px;height:41px;flex-basis:44px;border-radius:13px}.ticket-sell-icon-ticket svg{width:39px;height:32px}}
+@media(prefers-reduced-motion:reduce){.ticket-sell-section-heading>.ticket-sell-icon-ticket{animation:none}}
 .event-poster-upload{display:grid;grid-template-columns:minmax(0,1fr) 112px;align-items:center;gap:16px;margin-top:8px;padding:12px 14px;border:1px solid #30323e;border-radius:13px;background:#141720}
 .event-poster-upload .modal-field{margin:0}
 .event-poster-preview{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:2/3;overflow:hidden;border:1px dashed #645b78;border-radius:9px;color:#aaa4b7;background:linear-gradient(145deg,#282533,#181a22);font-size:11px;text-align:center}
