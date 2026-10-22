@@ -2103,6 +2103,14 @@ body.event-sell-page-active .chat-fab{display:none!important}
 .map-preview .venue-copy strong,.map-modal .venue-copy strong{font-size:15px!important;font-weight:800}
 .map-preview .venue-copy strong,.map-modal .venue-copy strong{color:#fff!important;-webkit-text-stroke:.8px #050505;paint-order:stroke fill;text-shadow:0 0 5px #fff9,0 0 12px #fff7,1px 2px 3px #000}
 .map-preview .venue-copy small,.map-modal .venue-copy small{font-size:11px!important;color:#fff!important;line-height:1.4}
+.ticket-sell-modal .modal-field input[type="datetime-local"]{min-height:54px;padding:11px 14px;color:#f8f5ff;color-scheme:dark;accent-color:#c4a0ff;font-size:15px;font-variant-numeric:tabular-nums;cursor:pointer;}
+.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-calendar-picker-indicator{width:22px;height:22px;padding:3px;border-radius:7px;filter:invert(1);opacity:.95;cursor:pointer;}
+.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover{background:#b994f52e;}
+.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-datetime-edit-fields-wrapper{padding:2px 0;}
+.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-datetime-edit{color:#f8f5ff;}
+.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-datetime-edit-hour-field:focus,.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-datetime-edit-minute-field:focus,.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-datetime-edit-day-field:focus,.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-datetime-edit-month-field:focus,.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-datetime-edit-year-field:focus{color:#fff;background:#7656a8;border-radius:4px;}
+.ticket-sell-modal .modal-field input[type="datetime-local"]:hover{border-color:#9f80ce;background:#15131d;}
+@media(prefers-reduced-motion:reduce){.ticket-sell-modal .modal-field input[type="datetime-local"]{scroll-behavior:auto}}
 .map-preview .venue-type,.map-modal .venue-type{border:1px solid #ffffff85;background:#101116db;color:#fff;box-shadow:0 2px 8px #0008}
 .map-preview .venue-type.art,.map-modal .venue-type.art{background:#291a1be8;color:#fff}
 .map-preview .venue-arrow,.map-modal .venue-arrow{color:#fff}

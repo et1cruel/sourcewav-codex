@@ -545,8 +545,8 @@
         <div class="ticket-sell-grid">
           <label class="modal-field">ประเภทงาน<select id="newEventCategory"><option value="music">ดนตรี</option><option value="art">ศิลปะ</option><option value="community">คอมมูนิตี้</option><option value="market">ตลาด</option></select></label>
           <label class="modal-field">ชื่อสถานที่<input id="newEventVenue" maxlength="160" required placeholder="เช่น Warehouse 30" /></label>
-          <label class="modal-field">วันและเวลาเริ่ม<input id="newEventStarts" type="datetime-local" required /></label>
-          <label class="modal-field">วันและเวลาจบ<input id="newEventEnds" type="datetime-local" required /></label>
+          <label class="modal-field">วันและเวลาเริ่ม<input id="newEventStarts" type="datetime-local" step="60" required /><small>คลิกช่องหรือไอคอนเพื่อเลือกวันและเวลา</small></label>
+          <label class="modal-field">วันและเวลาจบ<input id="newEventEnds" type="datetime-local" step="60" required /><small>เลือกเวลาจบหลังเวลาเริ่มงาน</small></label>
         </div>
         <label class="modal-field">ที่อยู่สถานที่<input id="newEventAddress" maxlength="400" required placeholder="ที่อยู่สำหรับผู้เข้าร่วมงาน" /></label>
         <div class="event-poster-upload"><label class="modal-field">โปสเตอร์งาน<input id="newEventPoster" type="file" accept="image/jpeg,image/png,image/webp" /><small>แนวตั้ง 2:3 แนะนำ 1200 × 1800 px · JPG, PNG หรือ WebP · ไม่เกิน 5 MB</small></label><div class="event-poster-preview" id="eventPosterPreview"><img id="eventPosterPreviewImage" alt="ตัวอย่างโปสเตอร์งาน" hidden /><span id="eventPosterPreviewLabel">ตัวอย่าง 2:3</span></div></div>
@@ -575,6 +575,17 @@
       </section>
       <footer class="ticket-sell-footer"><span>ตรวจข้อมูลและบัญชีรับเงินก่อนเผยแพร่</span><button class="modal-primary" id="publishEvent" type="button"><span>เผยแพร่งานและเปิดขายบัตร</span><b aria-hidden="true">↗</b></button></footer>
     </div>`);
+    const startsInput = $('#newEventStarts');
+    const endsInput = $('#newEventEnds');
+    const localDateTimeNow = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    startsInput.min = localDateTimeNow();
+    startsInput.addEventListener('change', () => { endsInput.min = startsInput.value || localDateTimeNow(); });
+    endsInput.min = startsInput.value || localDateTimeNow();
+    [startsInput, endsInput].forEach(input => input.addEventListener('click', () => {
+      if (typeof input.showPicker === 'function') {
+        try { input.showPicker(); } catch { /* Native picker may already be open. */ }
+      }
+    }));
     $('#newEventPoster')?.addEventListener('change', event => {
       const file = event.currentTarget.files?.[0];
       const image = $('#eventPosterPreviewImage');
