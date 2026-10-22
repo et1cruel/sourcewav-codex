@@ -40,6 +40,13 @@
     volumeSteps.className = 'stream-volume-steps';
     volumeSteps.setAttribute('role', 'group');
     volumeSteps.setAttribute('aria-label', 'ปรับระดับเสียง');
+    const volumeSlider = document.createElement('input');
+    volumeSlider.type = 'range';
+    volumeSlider.id = 'streamVolume';
+    volumeSlider.className = 'stream-volume-slider';
+    volumeSlider.min = '0'; volumeSlider.max = '100'; volumeSlider.step = '1';
+    volumeSlider.setAttribute('aria-label', 'ปรับระดับเสียงเพลง');
+    volumeSlider.title = 'ลากเพื่อปรับระดับเสียง';
     const actionButton = (action, glyph, label, className = '') => {
       const button = document.createElement('button');
       button.type = 'button'; button.className = `stream-extra-control ${className}`.trim();
@@ -47,9 +54,8 @@
       return button;
     };
     volumeSteps.replaceChildren(
-      actionButton('volume-down', '−', 'ลดเสียง', 'is-secondary stream-volume-step'),
       mute,
-      actionButton('volume-up', '+', 'เพิ่มเสียง', 'is-secondary stream-volume-step')
+      volumeSlider
     );
     controls.replaceChildren(
       actionButton('shuffle', '⤨', 'สลับเพลง', 'is-secondary'),
@@ -623,11 +629,6 @@
     if (action) {
       event.preventDefault(); event.stopImmediatePropagation();
       if (action.dataset.streamAction === 'shuffle') { shuffleMode = !shuffleMode; updateRoomTrackInfo(); }
-      else if (action.dataset.streamAction === 'volume-down' || action.dataset.streamAction === 'volume-up') {
-        const delta = action.dataset.streamAction === 'volume-up' ? 0.1 : -0.1;
-        audio.volume = Math.max(0, Math.min(1, Math.round((audio.volume + delta) * 10) / 10));
-        if (delta > 0) audio.muted = false;
-      }
       else if (action.dataset.streamAction === 'previous') playTrackStep(-1, false);
       else if (action.dataset.streamAction === 'next' || action.dataset.streamAction === 'radio') {
         if (action.dataset.streamAction === 'radio') musicTab = 'radio';
@@ -735,10 +736,19 @@
     mute.textContent = audio.muted ? '×' : '◖';
     mute.setAttribute('aria-label', audio.muted ? 'เปิดเสียง' : 'ปิดเสียง');
     mute.title = `${audio.muted ? 'เปิดเสียง' : 'ปิดเสียง'} · ${Math.round(audio.volume * 100)}%`;
-    $('[data-stream-action="volume-down"]')?.setAttribute('aria-label', `ลดเสียง · ${Math.round(audio.volume * 100)}%`);
-    $('[data-stream-action="volume-up"]')?.setAttribute('aria-label', `เพิ่มเสียง · ${Math.round(audio.volume * 100)}%`);
+    const slider = $('#streamVolume');
+    if (slider) {
+      const percent = Math.round(audio.volume * 100);
+      slider.value = String(percent);
+      slider.style.setProperty('--stream-volume-level', `${percent}%`);
+      slider.setAttribute('aria-valuetext', `${percent}%${audio.muted ? ' ปิดเสียง' : ''}`);
+    }
   };
   $('#streamMute').addEventListener('click', () => { audio.muted = !audio.muted; });
+  $('#streamVolume').addEventListener('input', event => {
+    audio.volume = Number(event.currentTarget.value) / 100;
+    if (audio.volume > 0 && audio.muted) audio.muted = false;
+  });
   audio.addEventListener('volumechange', updateVolumeControls);
   updateVolumeControls();
   ['play', 'pause', 'timeupdate', 'loadedmetadata', 'durationchange', 'ended'].forEach(name => audio.addEventListener(name, updatePlayer));
