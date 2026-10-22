@@ -442,8 +442,9 @@
 
   async function loadChatList() {
     const root = $('#chatPanel');
-    root.innerHTML = `<div class="chat-head"><div><b>ข้อความ</b><small>แชทส่วนตัวระหว่างสมาชิก</small></div><button id="chatClose" aria-label="ปิดแชท">×</button></div><div class="chat-search"><input id="peopleSearch" placeholder="ค้นหาชื่อหรือ @username..." autocomplete="off" /><div id="peopleResults"></div></div><div id="conversationList"><p class="platform-loading">กำลังโหลดแชท…</p></div><div id="chatThreadView" hidden></div>`;
-    $('#chatClose').onclick = () => root.classList.remove('open');
+    root.classList.remove('has-active-chat');
+    root.innerHTML = `<div class="chat-head"><div class="chat-page-title"><span class="chat-page-kicker">SOURCEWAV · INBOX</span><h1>ข้อความ</h1><small>พื้นที่สำหรับบทสนทนาของคุณ</small></div><button id="chatClose" aria-label="กลับไปหน้า Sourcewav"><span aria-hidden="true">←</span><span>กลับไปหน้าเว็บ</span></button></div><div class="chat-search"><label for="peopleSearch">ค้นหาแชท</label><input id="peopleSearch" aria-label="ค้นหาชื่อหรือชื่อผู้ใช้" placeholder="ค้นหาชื่อหรือ @username..." autocomplete="off" /><div id="peopleResults"></div></div><div id="conversationList"><p class="platform-loading">กำลังโหลดแชท…</p></div><div id="chatThreadView" hidden></div>`;
+    $('#chatClose').onclick = () => { root.classList.remove('open'); root.dataset.liveBound = ''; $('#chatBtn')?.focus(); };
     $('#peopleSearch').oninput = async e => {
       const q = e.target.value.trim(); const results = $('#peopleResults');
       if (q.length < 2) { results.innerHTML = ''; return; }
@@ -475,11 +476,11 @@
     const { data, error } = await db.from('messages').select('id,body,sender_id,created_at,profiles!messages_sender_id_fkey(display_name)').eq('conversation_id', id).order('created_at', { ascending: true }).limit(200);
     if (error) return toast('เปิดแชทไม่ได้: ' + error.message);
     const { data: me } = await db.auth.getUser();
-    const view = $('#chatThreadView'); view.hidden = false;
-    view.innerHTML = `<div class="chat-thread-head"><button id="backToChats">←</button><b>${esc(displayName || 'บทสนทนา')}</b></div><div class="chat-thread-messages" id="threadMessages">${(data || []).map(m => `<p class="live-chat-message ${m.sender_id === me.user?.id ? 'mine' : ''}"><b>${esc(m.profiles?.display_name || 'สมาชิก')}</b><br>${esc(m.body)}<small>${esc(new Date(m.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }))}</small></p>`).join('')}</div><form id="chatCompose" class="chat-compose"><input id="chatText" maxlength="5000" placeholder="พิมพ์ข้อความ…" required /><button>ส่ง</button></form>`;
-    $('#conversationList').hidden = true; $('.chat-search').hidden = true;
-    $('#backToChats').onclick = async () => { if (chatChannel) db.removeChannel(chatChannel); chatChannel = null; view.hidden = true; $('#conversationList').hidden = false; $('.chat-search').hidden = false; await refreshConversationList(); };
-    $('#chatCompose').onsubmit = async e => { e.preventDefault(); const body = $('#chatText').value.trim(); if (!body) return; const { error: sendError } = await db.from('messages').insert({ conversation_id: id, sender_id: me.user.id, body }); if (sendError) return toast(sendError.message); $('#chatText').value = ''; };
+    const root = $('#chatPanel');
+    const view = $('#chatThreadView'); view.hidden = false; root.classList.add('has-active-chat');
+    view.innerHTML = `<div class="chat-thread-head"><button id="backToChats" type="button" aria-label="กลับไปยังรายชื่อแชท">← <span>แชททั้งหมด</span></button><div class="chat-recipient"><span class="chat-recipient-avatar">${esc(initials(displayName))}</span><span><b>${esc(displayName || 'บทสนทนา')}</b><small>บทสนทนาส่วนตัว</small></span></div></div><div class="chat-thread-messages" id="threadMessages">${(data || []).map(m => `<p class="live-chat-message ${m.sender_id === me.user?.id ? 'mine' : ''}"><b>${esc(m.profiles?.display_name || 'สมาชิก')}</b><br>${esc(m.body)}<small>${esc(new Date(m.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }))}</small></p>`).join('') || '<p class="chat-first-message">เริ่มบทสนทนาด้วยข้อความสั้น ๆ ได้เลย</p>'}</div><form id="chatCompose" class="chat-compose"><input id="chatText" maxlength="5000" aria-label="ข้อความที่จะส่ง" placeholder="เขียนข้อความ..." required /><button type="submit"><span>ส่งข้อความ</span><span aria-hidden="true">↗</span></button></form>`;
+    $('#backToChats').onclick = async () => { if (chatChannel) db.removeChannel(chatChannel); chatChannel = null; root.classList.remove('has-active-chat'); view.hidden = true; await refreshConversationList(); };
+    $('#chatCompose').onsubmit = async e => { e.preventDefault(); const body = $('#chatText').value.trim(); if (!body) return; const { error: sendError } = await db.from('messages').insert({ conversation_id: id, sender_id: me.user.id, body }); if (sendError) return toast(sendError.message); $('#chatText').value = ''; await refreshConversationList(); };
     view.querySelector('#threadMessages').scrollTop = 999999;
     if (chatChannel) db.removeChannel(chatChannel);
     chatChannel = db.channel(`conversation:${id}`).on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${id}` }, () => openConversation(id, displayName)).subscribe();
@@ -576,8 +577,12 @@
   }, true);
 
   window.addEventListener('sourcewav:auth', async () => { await loadFeed(); await loadListings(); await loadEvents(); });
-  $('#chatBtn')?.addEventListener('click', () => { if (!$('#chatPanel').dataset.liveBound) { $('#chatPanel').dataset.liveBound = '1'; loadChatList(); } });
-  $('#chatBtn')?.addEventListener('click', () => { if ($('#chatPanel').classList.contains('open')) { $('#chatPanel').dataset.liveBound = ''; } });
+  $('#chatBtn')?.addEventListener('click', () => {
+    const root = $('#chatPanel');
+    const opening = !root.classList.contains('open');
+    root.classList.toggle('open', opening);
+    if (opening && !root.dataset.liveBound) { root.dataset.liveBound = '1'; loadChatList(); $('#peopleSearch')?.focus(); }
+  });
   $('#modalClose')?.addEventListener('click', () => { stopCamera(); closeRoomChannel(); });
   $('#modalBackdrop')?.addEventListener('click', event => { if (event.target.id === 'modalBackdrop') { stopCamera(); closeRoomChannel(); } });
   if (location.pathname === '/scan') openScan();

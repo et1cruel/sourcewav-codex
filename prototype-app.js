@@ -102,7 +102,65 @@
   }
 
   function openComposer() {
-    openModal(`<h2 id="modalTitle">แชร์ให้คอมมูนิตี้</h2><p>เดโม ไอเดีย หรือกำลังหาใครมาร่วมทำอะไรอยู่?</p><label class="modal-field">หัวข้อ (ไม่บังคับ)<input id="postTitle" maxlength="120" placeholder="ตั้งชื่อให้โพสต์ของคุณ" /></label><label class="modal-field">ข้อความ<textarea id="postBody" maxlength="3000" required placeholder="เล่าให้คนในวงการฟัง..."></textarea></label><label class="modal-field">หมวดหมู่<select id="postKind"><option value="music">เพลง / เดโม</option><option value="art">ศิลปะ / ผลงาน</option><option value="collab">หาเพื่อนร่วมงาน</option><option value="talk">พูดคุย</option></select></label><button class="modal-primary" id="publishBtn">โพสต์ลงฟีด</button><p class="local-note">บันทึกโพสต์ลงฐานข้อมูลของเว็บนี้</p>`);
+    openModal(`
+      <div class="composer-heading">
+        <div class="composer-brand-row">
+          <span class="composer-brand-lockup">
+            <span class="composer-brand-mark" aria-hidden="true">
+              <svg viewBox="0 0 40 40" focusable="false"><circle cx="20" cy="20" r="17"/><circle cx="20" cy="20" r="11"/><circle cx="20" cy="20" r="5"/><path d="M17 20h6M20 17v6"/></svg>
+            </span>
+            <span class="composer-brand-name">SOURCE<span>WAV</span></span>
+          </span>
+          <span class="composer-audience">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.3"/><path d="M2.9 10h14.2M10 2.7c2 2 3 4.4 3 7.3s-1 5.3-3 7.3c-2-2-3-4.4-3-7.3s1-5.3 3-7.3Z"/></svg>
+            โพสต์สาธารณะ
+          </span>
+        </div>
+        <div class="composer-heading-copy">
+          <h2 id="modalTitle">แชร์ให้คอมมูนิตี้</h2>
+          <p>มีเพลง ไอเดีย หรือกำลังหาเพื่อนร่วมงานอยู่หรือเปล่า?</p>
+        </div>
+      </div>
+      <div class="composer-fields">
+        <label class="modal-field" for="postTitle">
+          <span class="composer-label-row">หัวข้อ <span class="composer-optional">ไม่บังคับ</span></span>
+          <input id="postTitle" maxlength="120" placeholder="ตั้งชื่อให้โพสต์ของคุณ" />
+        </label>
+        <label class="modal-field" for="postBody">
+          <span class="composer-label-row">ข้อความ <span class="composer-required">จำเป็น</span></span>
+          <textarea id="postBody" maxlength="3000" required aria-describedby="postBodyHint postBodyCount" placeholder="เล่าให้คนในวงการฟัง..."></textarea>
+          <span class="composer-field-meta"><span id="postBodyHint">แชร์ผลงาน เล่าความคิด หรือชวนคนมาร่วมงาน</span><span id="postBodyCount" aria-live="polite">0 / 3,000</span></span>
+        </label>
+        <label class="modal-field" for="postKind">
+          <span class="composer-label-row">หมวดหมู่</span>
+          <select id="postKind">
+            <option value="music">เพลง / เดโม</option>
+            <option value="art">ศิลปะ / ผลงาน</option>
+            <option value="collab">หาเพื่อนร่วมงาน</option>
+            <option value="talk">พูดคุย</option>
+          </select>
+        </label>
+      </div>
+      <div class="composer-footer">
+        <p class="composer-footer-note">
+          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.3"/><path d="M2.9 10h14.2M10 2.7c2 2 3 4.4 3 7.3s-1 5.3-3 7.3c-2-2-3-4.4-3-7.3s1-5.3 3-7.3Z"/></svg>
+          <span>โพสต์นี้จะแสดงในฟีดคอมมูนิตี้</span>
+        </p>
+        <button class="modal-primary" id="publishBtn" type="button" disabled>
+          <span>โพสต์ลงฟีด</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.2 10h12.6M10.2 4.5l5.6 5.5-5.6 5.5"/></svg>
+        </button>
+      </div>
+    `);
+    $('.modal')?.classList.add('composer-modal');
+    const body = $('#postBody');
+    const count = $('#postBodyCount');
+    const publish = $('#publishBtn');
+    const updateComposerState = () => {
+      if (count) count.textContent = `${body.value.length.toLocaleString('th-TH')} / 3,000`;
+      if (publish) publish.disabled = !body.value.trim();
+    };
+    body?.addEventListener('input', updateComposerState);
   }
 
   function openProfileEditor() {

@@ -89,6 +89,7 @@ create table public.audio_tracks (
   artist_name text not null check (char_length(artist_name) between 1 and 80),
   genre text not null default 'อื่นๆ' check (char_length(genre) <= 40),
   storage_key text not null unique,
+  cover_storage_key text,
   mime_type text not null check (mime_type in ('audio/mpeg','audio/wav','audio/flac','audio/ogg','audio/mp4','audio/aac','audio/webm')),
   byte_size bigint not null check (byte_size between 1 and 52428800),
   duration_ms bigint check (duration_ms is null or duration_ms between 1 and 86400000),

@@ -15,37 +15,34 @@
 
     showModal(`
       <div class="drop-center-modal">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
-          <div>
-            <h2 id="modalTitle" style="margin: 0 0 4px;">Follow & Drop Alert</h2>
-            <p style="margin: 0; color: #64748b; font-size: 12px;">ประกาศและรายการอัปเดตจากฐานข้อมูล Sourcewav</p>
+        <div class="drop-center-heading">
+          <div class="drop-center-title">
+            <span class="drop-center-icon" aria-hidden="true">♧</span>
+            <div><h2 id="modalTitle">การแจ้งเตือน</h2><p>ติดตามข่าวเพลง งาน และสถานที่ที่คุณสนใจ</p></div>
           </div>
-          <button id="markAllDropsReadBtn" style="background: none; border: 0; color: #2858ef; font: 600 11px var(--font); cursor: pointer; padding: 4px;">
-            อ่านทั้งหมดแล้ว
-          </button>
+          ${unread ? '<button type="button" id="markAllDropsReadBtn" class="drop-mark-read">อ่านทั้งหมดแล้ว</button>' : ''}
         </div>
 
-        <!-- Filter Tabs -->
-        <div class="drop-tabs">
-          <button class="drop-tab-btn ${activeDropTab === 'all' ? 'active' : ''}" data-drop-tab="all">ทั้งหมด (${state.dropAlerts.length})</button>
-          <button class="drop-tab-btn ${activeDropTab === 'music' ? 'active' : ''}" data-drop-tab="music">🎵 เพลงใหม่</button>
-          <button class="drop-tab-btn ${activeDropTab === 'ticket' ? 'active' : ''}" data-drop-tab="ticket">🎟️ บัตร & งาน</button>
-          <button class="drop-tab-btn ${activeDropTab === 'venue' ? 'active' : ''}" data-drop-tab="venue">📍 สถานที่โปรด</button>
-          <button class="drop-tab-btn ${activeDropTab === 'sponsored' ? 'active' : ''}" data-drop-tab="sponsored">⚡ ได้รับการโปรโมต</button>
+        <div class="drop-tabs" role="group" aria-label="กรองการแจ้งเตือน">
+          <button type="button" class="drop-tab-btn ${activeDropTab === 'all' ? 'active' : ''}" data-drop-tab="all" aria-pressed="${activeDropTab === 'all'}">ทั้งหมด <b>${state.dropAlerts.length}</b></button>
+          <button type="button" class="drop-tab-btn ${activeDropTab === 'music' ? 'active' : ''}" data-drop-tab="music" aria-pressed="${activeDropTab === 'music'}"><span aria-hidden="true">♫</span> เพลงใหม่</button>
+          <button type="button" class="drop-tab-btn ${activeDropTab === 'ticket' ? 'active' : ''}" data-drop-tab="ticket" aria-pressed="${activeDropTab === 'ticket'}"><span aria-hidden="true">▣</span> บัตรและงาน</button>
+          <button type="button" class="drop-tab-btn ${activeDropTab === 'venue' ? 'active' : ''}" data-drop-tab="venue" aria-pressed="${activeDropTab === 'venue'}"><span aria-hidden="true">⌖</span> สถานที่</button>
+          <button type="button" class="drop-tab-btn ${activeDropTab === 'sponsored' ? 'active' : ''}" data-drop-tab="sponsored" aria-pressed="${activeDropTab === 'sponsored'}"><span aria-hidden="true">✦</span> โปรโมต</button>
         </div>
 
-        <div class="drop-feed-list" id="dropFeedList">
+        <div class="drop-feed-list" id="dropFeedList" aria-live="polite" aria-relevant="additions text">
           ${renderDropItemsHTML()}
         </div>
 
         <!-- Drop creation; paid sponsorship is unavailable until payment is configured. -->
         <div class="boost-cta-box">
           <div>
-            <strong>แชร์ข่าวงานหรือเพลงใหม่</strong>
-            <p>บันทึกประกาศลงฐานข้อมูลและแสดงใน Drop Alerts โดยไม่ติดป้ายโฆษณา</p>
+            <strong>มีข่าวใหม่อยากแชร์ไหม?</strong>
+            <p>สร้างประกาศเพลงหรืองานให้คนในคอมมูนิตี้เห็น</p>
           </div>
-          <button class="boost-launch-btn" id="openBoostDropModalBtn">
-            ＋ สร้าง Drop
+          <button type="button" class="boost-launch-btn" id="openBoostDropModalBtn">
+            <span aria-hidden="true">＋</span> สร้างประกาศ
           </button>
         </div>
       </div>
@@ -58,11 +55,13 @@
     const items = state.dropAlerts.filter(a => {
       if (activeDropTab === 'all') return true;
       if (activeDropTab === 'sponsored') return a.isPromoted;
+      if (activeDropTab === 'ticket') return ['ticket', 'event'].includes(a.type);
       return a.type === activeDropTab;
     });
 
     if (!items.length) {
-      return '<p class="platform-empty" style="text-align: center; padding: 30px; color: #94a3b8;">ไม่มีการแจ้งเตือนในหมวดนี้</p>';
+      const isAll = activeDropTab === 'all';
+      return `<div class="drop-empty"><span class="drop-empty-icon" aria-hidden="true">${isAll ? '♧' : '⌕'}</span><h3>${isAll ? 'ยังไม่มีการแจ้งเตือน' : 'ยังไม่มีรายการในหมวดนี้'}</h3><p>${isAll ? 'เมื่อศิลปินหรือสถานที่ที่คุณติดตามมีข่าวใหม่ เราจะแสดงไว้ที่นี่' : 'ลองเลือกหมวดอื่นเพื่อดูข่าวเพิ่มเติม'}</p></div>`;
     }
 
     return items.map(drop => {
@@ -108,7 +107,11 @@
     $$('.drop-tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         activeDropTab = btn.dataset.dropTab;
-        $$('.drop-tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+        $$('.drop-tab-btn').forEach(b => {
+          const active = b === btn;
+          b.classList.toggle('active', active);
+          b.setAttribute('aria-pressed', String(active));
+        });
         const list = $('#dropFeedList');
         if (list) list.innerHTML = renderDropItemsHTML();
         bindDropActionClicks();
@@ -118,10 +121,8 @@
     $('#markAllDropsReadBtn')?.addEventListener('click', () => {
       global.SourcewavFeatureData.markAllDropsRead().then(ok => {
         if (!ok) return;
-        const list = $('#dropFeedList');
-        if (list) list.innerHTML = renderDropItemsHTML();
-        bindDropActionClicks();
         Core.updateNotificationBadge();
+        renderDropAlertsCenter();
         toast('บันทึกสถานะอ่านทั้งหมดลงฐานข้อมูลแล้ว');
       }).catch(error => toast(`บันทึกไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
     });
@@ -170,8 +171,8 @@
 
   function openBoostDropModal() {
     showModal(`
-      <h2 id="modalTitle">สร้าง Drop Alert</h2>
-      <p style="margin-bottom: 16px;">ประกาศนี้จะบันทึกลงฐานข้อมูลและแสดงเป็นโพสต์ทั่วไป การโปรโมตแบบชำระเงินยังไม่เปิดใช้</p>
+      <div class="drop-create-heading"><span class="composer-heading-icon" aria-hidden="true">✦</span><div><h2 id="modalTitle">สร้างประกาศ</h2><p>แชร์ข่าวเพลงหรืองานให้คนในคอมมูนิตี้</p></div></div>
+      <p class="drop-create-note">ประกาศนี้จะแสดงใน Drop Alerts และไม่มีค่าใช้จ่าย</p>
 
       <form id="boostDropForm">
         <label class="modal-field">
@@ -193,7 +194,7 @@
         </label>
         <button type="submit" class="modal-primary" id="submitBoostBtn">บันทึก Drop ลงฐานข้อมูล</button>
       </form>
-    `);
+    `, 'drop-create-modal');
 
     $('#boostDropForm')?.addEventListener('submit', e => {
       e.preventDefault();
@@ -203,8 +204,9 @@
         actionUrl: $('#boostActionUrl').value.trim()
       }).then(drop => {
         if (!drop) return;
-        closeModal();
         renderDropPreview();
+        activeDropTab = 'all';
+        renderDropAlertsCenter();
         toast('บันทึก Drop ลงฐานข้อมูลแล้ว');
       }).catch(error => toast(`บันทึกไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
     });
