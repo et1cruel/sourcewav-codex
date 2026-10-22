@@ -360,6 +360,15 @@
     $('#artistMiniArtist').textContent = currentTrack.artist_profile?.display_name || currentTrack.artist;
     $('#artistMiniTime').textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
     $('#artistMiniSeek').value = audio.duration ? String(Math.round(audio.currentTime / audio.duration * 1000)) : '0';
+    const miniVolume = $('#artistMiniVolume');
+    if (miniVolume) miniVolume.value = String(Math.round(audio.volume * 100));
+    const miniMute = $('[data-artist-mini-mute]', mini);
+    if (miniMute) {
+      miniMute.setAttribute('aria-pressed', String(audio.muted));
+      miniMute.setAttribute('aria-label', audio.muted ? 'เปิดเสียง' : 'ปิดเสียง');
+      miniMute.title = `${audio.muted ? 'เปิดเสียง' : 'ปิดเสียง'} · ${Math.round(audio.volume * 100)}%`;
+      miniMute.classList.toggle('is-muted', audio.muted);
+    }
     const cover = $('#artistMiniCover');
     if (cover.dataset.trackId !== currentTrack.id) {
       cover.innerHTML = currentTrack.cover_url ? `<img src="${escapeHTML(currentTrack.cover_url)}" alt="" />` : '♫';
@@ -397,7 +406,11 @@
       }
     });
     const featuredPlay = $('#artistProfileView .artist-featured-play');
-    if (featuredPlay) featuredPlay.textContent = currentTrack?.id === featuredPlay.dataset.trackPlay && playing ? 'Ⅱ หยุดเพลง' : '▶ เล่นเพลง';
+    if (featuredPlay) {
+      const isFeaturedPlaying = currentTrack?.id === featuredPlay.dataset.trackPlay && playing;
+      featuredPlay.textContent = isFeaturedPlaying ? 'Ⅱ หยุดเพลง' : '▶ เล่นเพลง';
+      featuredPlay.setAttribute('aria-label', `${isFeaturedPlaying ? 'หยุด' : 'เล่น'} ${$('.artist-featured-copy h3', $('#artistProfileView'))?.textContent || 'เพลง'}`);
+    }
     document.querySelectorAll('#artistProfileView [data-artist-wave]').forEach(wave => {
       const isCurrent = wave.dataset.artistWave === currentTrack?.id;
       const played = isCurrent && audio.duration ? Math.floor(audio.currentTime / audio.duration * wave.children.length) : 0;
@@ -739,7 +752,7 @@
         <span class="artist-featured-cover">${latest.cover_url ? `<img src="${escapeHTML(latest.cover_url)}" alt="" />` : '<span aria-hidden="true">♫</span>'}</span>
         <div class="artist-featured-copy"><span>${escapeHTML(profile.display_name || profile.username)}</span><h3>${escapeHTML(latest.title)}</h3><p>${escapeHTML(latest.genre)} · ${formatSize(latest.size_bytes)}</p>
           <div class="artist-profile-wave" data-artist-wave="${escapeHTML(latest.id)}" role="img" aria-label="รูปคลื่นเสียง ${escapeHTML(latest.title)}">${Array.from({ length: 72 }, () => '<i style="--bar:10%"></i>').join('')}</div>
-          <button class="artist-featured-play" type="button" data-track-play="${escapeHTML(latest.id)}" aria-label="เล่น ${escapeHTML(latest.title)}">${currentTrack?.id === latest.id && !audio.paused ? 'Ⅱ หยุดเพลง' : '▶ เล่นเพลง'}</button><button class="track-comment-button artist-track-comment" type="button" data-track-comments="${escapeHTML(latest.id)}" aria-expanded="false">ความคิดเห็นเพลงนี้</button>
+          <div class="artist-featured-actions"><button class="artist-featured-play" type="button" data-track-play="${escapeHTML(latest.id)}" aria-label="เล่น ${escapeHTML(latest.title)}">${currentTrack?.id === latest.id && !audio.paused ? 'Ⅱ หยุดเพลง' : '▶ เล่นเพลง'}</button><button class="track-comment-button artist-track-comment" type="button" data-track-comments="${escapeHTML(latest.id)}" aria-expanded="false">ความคิดเห็นเพลงนี้</button></div>
         </div></div></article>` : '<div class="artist-profile-empty"><span aria-hidden="true">♫</span><h3>ยังไม่มีเพลงที่เผยแพร่</h3><p>เพลงที่เปิดให้ฟังสาธารณะจะแสดงตรงนี้</p></div>';
     const tracksMarkup = profileTracks.map(track => `<article class="track-row${currentTrack?.id === track.id && !audio.paused ? ' is-playing' : ''}" data-track-row="${escapeHTML(track.id)}">
         <button type="button" class="track-row-play" data-track-play="${escapeHTML(track.id)}" aria-label="เล่น ${escapeHTML(track.title)}">${currentTrack?.id === track.id && !audio.paused ? 'Ⅱ' : '▶'}</button>
@@ -765,7 +778,7 @@
           ${playlist.length ? `<section class="artist-profile-side-block"><h2>เพลงที่เพิ่งปล่อย</h2><div class="artist-profile-mini-list">${playlist.map(track => `<button type="button" data-track-play="${escapeHTML(track.id)}"><span>${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="" />` : '♫'}</span><b>${escapeHTML(track.title)}<small>${escapeHTML(track.genre)}</small></b></button>`).join('')}</div></section>` : ''}
         </aside></div>
       <section class="artist-profile-about-panel" data-artist-panel="about" hidden><span class="artist-profile-kicker">ABOUT THE ARTIST</span><h2>${escapeHTML(profile.display_name || profile.username)}</h2><p>${profile.bio ? escapeHTML(profile.bio) : 'ศิลปินคนนี้ยังไม่ได้เพิ่มคำแนะนำตัว'}</p>${location ? `<p class="artist-profile-location">⌖ ${escapeHTML(location)}</p>` : ''}${roles.length ? `<div class="artist-profile-tags">${roles.map(role => `<span>${escapeHTML(role)}</span>`).join('')}</div>` : ''}${safePortfolio ? `<a class="artist-profile-external" href="${escapeHTML(safePortfolio)}" target="_blank" rel="noopener noreferrer">เปิดลิงก์ผลงาน ↗</a>` : ''}</section>
-      <footer class="artist-mini-player" id="artistMiniPlayer" hidden><span class="artist-mini-cover" id="artistMiniCover">♫</span><span class="artist-mini-copy"><b id="artistMiniTitle"></b><small id="artistMiniArtist"></small></span><span class="artist-mini-time" id="artistMiniTime">0:00</span><input id="artistMiniSeek" type="range" min="0" max="1000" value="0" aria-label="ตำแหน่งเพลง" /><button type="button" data-artist-mini-play aria-label="เล่นเพลง">▶</button></footer>
+      <footer class="artist-mini-player" id="artistMiniPlayer" hidden><span class="artist-mini-cover" id="artistMiniCover">♫</span><span class="artist-mini-copy"><b id="artistMiniTitle"></b><small id="artistMiniArtist"></small></span><span class="artist-mini-time" id="artistMiniTime">0:00</span><input id="artistMiniSeek" type="range" min="0" max="1000" value="0" aria-label="ตำแหน่งเพลง" /><div class="artist-mini-volume"><button type="button" data-artist-mini-mute aria-label="ปิดเสียง" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6l-5 4H4Z"/><path d="M16 9a5 5 0 0 1 0 6m2-9a9 9 0 0 1 0 12"/></svg></button><input id="artistMiniVolume" type="range" min="0" max="100" step="1" value="100" aria-label="ปรับระดับเสียงเพลง" title="ลากเพื่อปรับระดับเสียง" /></div><button type="button" data-artist-mini-play aria-label="เล่นเพลง">▶</button></footer>
       <a class="artist-profile-back" href="#music">← กลับไปหน้าฟังเพลง</a>`;
     tracks = [...new Map([...tracks, ...profileTracks].map(track => [track.id, track])).values()];
     if (latest) renderArtistWaveform(latest, requestId);
@@ -805,6 +818,11 @@
     });
     $('[data-artist-mini-play]', view)?.addEventListener('click', () => $('#streamPlay')?.click());
     $('#artistMiniSeek', view)?.addEventListener('input', event => { if (audio.duration) audio.currentTime = Number(event.target.value) / 1000 * audio.duration; });
+    $('[data-artist-mini-mute]', view)?.addEventListener('click', () => { audio.muted = !audio.muted; });
+    $('#artistMiniVolume', view)?.addEventListener('input', event => {
+      audio.volume = Number(event.currentTarget.value) / 100;
+      if (audio.volume > 0 && audio.muted) audio.muted = false;
+    });
     updateArtistMini();
     view.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
@@ -1009,6 +1027,7 @@
       slider.style.setProperty('--stream-volume-level', `${percent}%`);
       slider.setAttribute('aria-valuetext', `${percent}%${audio.muted ? ' ปิดเสียง' : ''}`);
     }
+    updateArtistMini();
   };
   $('#streamMute').addEventListener('click', () => { audio.muted = !audio.muted; });
   $('#streamVolume').addEventListener('input', event => {
