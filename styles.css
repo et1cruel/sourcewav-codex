@@ -1673,17 +1673,17 @@ body.artist-profile-active .layout.artist-profile-active{display:block;width:100
 @media(max-width:390px){.stream-release-copy>small{font-size:8px}.stream-release-copy h4{font-size:11px}.stream-section>.track-list .track-row-copy strong{font-size:12px}.stream-section>.track-list .track-row-copy small{font-size:9px}}
 
 /* Full-screen community room conversation */
-#modalBackdrop:has(.room-chat-page).open{position:fixed;inset:0;z-index:1000;display:flex;align-items:stretch;justify-content:stretch;padding:0;background:#0b121b}
+#modalBackdrop:has(.room-chat-page).open{position:fixed;inset:0;z-index:1000;display:flex;align-items:stretch;justify-content:stretch;overflow:hidden;padding:0;background:#0b121b}
 #modalBackdrop:has(.room-chat-page) .modal{display:block;width:100%;height:100%;max-height:none;padding:0;overflow:hidden;border:0;border-radius:0;color:#eaf1f6;background:#0b121b;box-shadow:none}
 #modalBackdrop:has(.room-chat-page) #modalClose{display:none}
-.room-chat-page{display:grid;grid-template-rows:76px minmax(0,1fr);width:100%;height:100%;height:100dvh;min-height:0;background:#0b121b}
-.room-chat-topbar{display:flex;align-items:center;gap:18px;padding:0 clamp(18px,4vw,58px);border-bottom:1px solid #ffffff14;background:#0e1925}
+.room-chat-page{display:grid;grid-template-rows:92px minmax(0,1fr);width:100%;height:100%;height:100dvh;min-width:0;min-height:0;overflow:hidden;background:#0b121b}
+.room-chat-topbar{display:flex;align-items:center;gap:18px;padding:0 clamp(20px,3.7vw,68px);border-bottom:1px solid #ffffff14;background:#0e1925}
 .room-chat-brand{color:#f4f7fa;text-decoration:none;font-size:18px;font-weight:750;letter-spacing:.15em}
 .room-chat-topbar>span{padding-left:18px;border-left:1px solid #ffffff24;color:#9db1c2;font-size:14px}
 .room-chat-topbar>button{display:flex;align-items:center;gap:12px;min-height:42px;margin-left:auto;padding:0 14px;border:1px solid #ffffff24;border-radius:11px;color:#d8e3ec;background:#132333;font:600 14px var(--font);cursor:pointer}
 .room-chat-topbar>button:hover{border-color:#69cbd0;color:#fff;background:#182d3e}
 .room-chat-topbar>button b{color:#8fa4b6;font-size:20px;font-weight:400}
-.room-chat-layout{display:grid;grid-template-columns:minmax(240px,300px) minmax(0,1fr);min-width:0;min-height:0}
+.room-chat-layout{display:grid;grid-template-columns:minmax(244px,min(19.2vw,354px)) minmax(0,1fr);min-width:0;min-height:0;overflow:hidden}
 .room-directory{display:flex;flex-direction:column;min-height:0;padding:24px 15px;border-right:1px solid #ffffff14;background:#0e1925}
 .room-directory-heading{padding:0 10px 17px;border-bottom:1px solid #ffffff12}
 .room-directory-heading h2{margin:0;color:#eaf1f6;font-size:20px}
@@ -1697,13 +1697,13 @@ body.artist-profile-active .layout.artist-profile-active{display:block;width:100
 .room-directory-empty{padding:10px;color:#91a6b8;font-size:13px}
 .room-create-action{min-height:44px;margin-top:auto;padding:8px 10px;border:1px dashed #466075;border-radius:11px;color:#b5cad8;background:#132333;font:600 13px var(--font);cursor:pointer}
 .room-create-action:hover{border-color:#5ac9ca;color:#fff}
-.room-chat-main{display:grid;grid-template-rows:82px minmax(0,1fr) auto;min-width:0;min-height:0;background:radial-gradient(ellipse at 50% 0,#17304455,transparent 56%),#101c28}
+.room-chat-main{display:grid;grid-template-rows:96px minmax(0,1fr) auto;min-width:0;min-height:0;overflow:hidden;background:radial-gradient(ellipse at 50% 0,#17304455,transparent 56%),#101c28}
 .room-active-heading{display:flex;align-items:center;gap:14px;padding:12px clamp(18px,3.5vw,52px);border-bottom:1px solid #ffffff14;background:#101c28d9}
 .room-active-mark{display:grid;place-items:center;width:42px;height:42px;flex:0 0 42px;border:1px solid #4ec5c044;border-radius:13px;color:#6cddd5;background:#173b46;font-size:24px;font-weight:700}
 .room-active-heading h1{overflow:hidden;margin:0;color:#f0f5f8;font-size:21px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}
 .room-active-heading p{margin:3px 0 0;color:#92a7b8;font-size:13px}
 .room-thread{display:flex;flex-direction:column;align-items:stretch;min-height:0;gap:13px;overflow:auto;padding:clamp(18px,4vh,40px) clamp(18px,5vw,82px);scroll-behavior:smooth;overscroll-behavior:contain}
-.room-thread .local-message{width:min(100%,900px);margin:0 auto;padding:13px 16px;border:1px solid #ffffff13;border-radius:14px;color:#e2ebf1;background:#172635;font-size:15px;line-height:1.65;overflow-wrap:anywhere}
+.room-thread .local-message{width:min(100%,1060px);margin:0 auto;padding:18px 20px;border:1px solid #ffffff13;border-radius:16px;color:#e2ebf1;background:#172635;font-size:15px;line-height:1.65;overflow-wrap:anywhere}
 .room-thread .local-message b{color:#73d5d1;font-size:13px}
 .room-thread .local-message p{margin:5px 0;color:inherit;font-size:15px;white-space:pre-wrap}
 .room-thread .local-message small{display:block;margin-top:7px;color:#94a9b8;font-size:11px}

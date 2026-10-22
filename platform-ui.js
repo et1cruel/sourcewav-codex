@@ -41,11 +41,11 @@
       document.body.classList.add('event-sell-page-active');
       return;
     }
-    const backdrop = $('#modalBackdrop'); backdrop.classList.toggle('tickets-page-open', html.includes('my-tickets-page')); const modalRoot = backdrop.querySelector('.modal'); modalRoot?.classList.toggle('is-ticket-payment', html.includes('manual-payment')); modalRoot?.classList.toggle('is-ticket-purchase', html.includes('ticket-purchase')); $('#modalContent').innerHTML = html; backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden', 'false');
+    const backdrop = $('#modalBackdrop'); backdrop.classList.toggle('tickets-page-open', html.includes('my-tickets-page')); const modalRoot = backdrop.querySelector('.modal'); modalRoot?.classList.toggle('is-ticket-payment', html.includes('manual-payment')); modalRoot?.classList.toggle('is-ticket-purchase', html.includes('ticket-purchase')); $('#modalContent').innerHTML = html; backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden', 'false'); if (html.includes('room-chat-page')) document.body.classList.add('modal-open');
   };
   let eventPosterPreviewUrl = '';
   let eventPurchaseRequest = 0;
-  const closeModal = () => { const backdrop = $('#modalBackdrop'); backdrop.classList.remove('open', 'tickets-page-open'); backdrop.setAttribute('aria-hidden', 'true'); if (eventPosterPreviewUrl) URL.revokeObjectURL(eventPosterPreviewUrl); eventPosterPreviewUrl = ''; document.body.classList.remove('event-sell-page-active'); const page = $('#eventSellPage'); if (page) { page.hidden = true; page.replaceChildren(); } };
+  const closeModal = () => { const backdrop = $('#modalBackdrop'); backdrop.classList.remove('open', 'tickets-page-open'); backdrop.setAttribute('aria-hidden', 'true'); document.body.classList.remove('modal-open'); if (eventPosterPreviewUrl) URL.revokeObjectURL(eventPosterPreviewUrl); eventPosterPreviewUrl = ''; document.body.classList.remove('event-sell-page-active'); const page = $('#eventSellPage'); if (page) { page.hidden = true; page.replaceChildren(); } };
   const closeTicketPurchasePage = () => { eventPurchaseRequest++; document.body.classList.remove('event-purchase-page-active'); const page = $('#eventPurchasePage'); if (page) { page.hidden = true; page.replaceChildren(); } };
   const needUser = async () => { const { data } = await db.auth.getUser(); if (!data.user) { toast('เข้าสู่ระบบก่อนใช้ฟีเจอร์นี้'); $('#profileBtn')?.click(); return null; } return data.user; };
   const call = async (name, body) => {
