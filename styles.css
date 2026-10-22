@@ -2111,6 +2111,54 @@ body.event-sell-page-active .chat-fab{display:none!important}
 .ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-datetime-edit-hour-field:focus,.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-datetime-edit-minute-field:focus,.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-datetime-edit-day-field:focus,.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-datetime-edit-month-field:focus,.ticket-sell-modal .modal-field input[type="datetime-local"]::-webkit-datetime-edit-year-field:focus{color:#fff;background:#7656a8;border-radius:4px;}
 .ticket-sell-modal .modal-field input[type="datetime-local"]:hover{border-color:#9f80ce;background:#15131d;}
 @media(prefers-reduced-motion:reduce){.ticket-sell-modal .modal-field input[type="datetime-local"]{scroll-behavior:auto}}
+.modal.is-ticket-purchase,.modal.is-ticket-payment{color:#f5efff;border:1px solid #f4eaff45;background:radial-gradient(ellipse at 8% 0%,#9764ce35,transparent 38%),radial-gradient(ellipse at 100% 72%,#56c9ce1b,transparent 34%),linear-gradient(145deg,#262231f2,#171722f5 70%);box-shadow:0 28px 80px #09071280,inset 0 1px #ffffff26,inset 0 -2px #08071170;backdrop-filter:blur(24px) saturate(145%);}
+.modal.is-ticket-purchase .modal-close,.modal.is-ticket-payment .modal-close{color:#eee4ff;border:1px solid #ffffff30;background:linear-gradient(145deg,#ffffff20,#b29bd411);box-shadow:0 5px 14px #09071155,inset 0 1px #ffffff35;}
+.modal.is-ticket-purchase .modal-close:hover,.modal.is-ticket-payment .modal-close:hover{color:#fff;border-color:#d5baff;background:#9d75cc35;}
+.ticket-purchase{display:grid;gap:14px;}
+.ticket-purchase .event-sale-poster{height:min(34dvh,270px);margin:0 0 2px;border:1px solid #ffffff48;border-radius:20px;background:linear-gradient(145deg,#ffffff18,#ffffff05);box-shadow:0 12px 28px #08071162,inset 0 1px #ffffff36,inset 0 -2px #0b0a1455;}
+.ticket-purchase .event-sale-poster img{width:100%;height:100%;object-fit:contain;border-radius:18px;}
+.ticket-purchase-heading{padding:2px 0 5px;}
+.ticket-purchase-label{display:inline-flex;align-items:center;margin-bottom:5px;padding:5px 10px;border:1px solid #d2b4ff45;border-radius:999px;color:#e4d0ff;background:#a57bd426;font-size:11px;font-weight:750;box-shadow:inset 0 1px #ffffff1c;}
+.ticket-purchase-heading h2{margin:0;color:#fff;font-size:clamp(22px,4vw,28px);line-height:1.25;letter-spacing:-.25px;}
+.ticket-purchase-heading p{margin:6px 0 0;color:#c3bcd2;font-size:13px;line-height:1.5;}
+.modal.is-ticket-purchase .modal-field{display:grid;gap:7px;margin:0;color:#eee7f8;font-size:13px;font-weight:700;}
+.modal.is-ticket-purchase .modal-field select,.modal.is-ticket-purchase .modal-field input{width:100%;min-height:52px;padding:12px 14px;border:1px solid #e9ddff45;border-radius:15px;color:#faf7ff;background:linear-gradient(145deg,#ffffff19,#ffffff0a);box-shadow:0 6px 14px #0807112e,inset 0 1px #ffffff29,inset 0 -2px #09081040;font:500 14px var(--font);color-scheme:dark;}
+.modal.is-ticket-purchase .modal-field select{cursor:pointer;}
+.modal.is-ticket-purchase .modal-field input{max-width:170px;}
+.modal.is-ticket-purchase .modal-field select:focus-visible,.modal.is-ticket-purchase .modal-field input:focus-visible{outline:3px solid #c9a8ff;outline-offset:2px;border-color:#e4ccff;}
+.modal.is-ticket-purchase .checkout-event{display:grid;gap:13px;margin:0;padding:16px;border:1px solid #ffffff35;border-radius:18px;background:linear-gradient(145deg,#ffffff19,#ffffff08);box-shadow:0 10px 22px #0807113d,inset 0 1px #ffffff22,inset 0 -2px #09081032;}
+.modal.is-ticket-purchase .checkout-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;padding:1px 1px 12px;border-bottom:1px solid #ffffff24;color:#d1c7e0;font-size:13px;}
+.modal.is-ticket-purchase .checkout-row b{color:#fff;font-size:21px;font-variant-numeric:tabular-nums;}
+.modal.is-ticket-purchase .checkout-event>p{margin:0;color:#c9c2d4;font-size:13px;line-height:1.65;}
+.modal.is-ticket-purchase #startManualCheckout{width:100%;min-height:54px;margin:0;border:1px solid #e2d0ff;border-radius:15px;color:#291c3d;background:linear-gradient(145deg,#e5d3ff,#b695ea 65%,#9a80d0);box-shadow:0 6px 0 #705699,0 12px 22px #09071266,inset 0 2px #ffffffb8,inset 0 -2px #765aa55c;font:750 15px var(--font);transition:transform .16s ease,box-shadow .16s ease,filter .16s ease;}
+.modal.is-ticket-purchase #startManualCheckout:hover:not(:disabled){filter:brightness(1.06);transform:translateY(-2px);box-shadow:0 8px 0 #705699,0 16px 25px #09071270,inset 0 2px #ffffffc7;}
+.modal.is-ticket-purchase #startManualCheckout:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 #705699,0 5px 12px #09071255,inset 0 2px #ffffff99;}
+.modal.is-ticket-purchase #startManualCheckout:focus-visible,.modal.is-ticket-payment #submitTicketSlip:focus-visible{outline:3px solid #fff;outline-offset:3px;}
+.modal.is-ticket-purchase #startManualCheckout:disabled{opacity:.62;cursor:not-allowed;}
+.modal.is-ticket-payment .payment-heading{border-color:#ffffff27;}
+.modal.is-ticket-payment .payment-heading h2,.modal.is-ticket-payment .payment-details h3{color:#fff;}
+.modal.is-ticket-payment .payment-heading p,.modal.is-ticket-payment .payment-steps li,.modal.is-ticket-payment .payment-total,.modal.is-ticket-payment .qr-hint{color:#c9c1d6;}
+.modal.is-ticket-payment .payment-eyebrow{color:#a8f0e4;}
+.modal.is-ticket-payment .payment-steps li.is-current{color:#a8f0e4;}
+.modal.is-ticket-payment .payment-steps li b{border-color:#ffffff45;color:#e9e0f7;background:#ffffff0c;}
+.modal.is-ticket-payment .payment-steps li.is-current b{border-color:#9de7dc;color:#182727;background:linear-gradient(145deg,#c8fff4,#86dacf);box-shadow:0 4px 12px #6ddacb44,inset 0 1px #fff;}
+.modal.is-ticket-payment .payment-qr-column,.modal.is-ticket-payment .payment-details{border-color:#ffffff30;background:linear-gradient(145deg,#ffffff17,#ffffff08);box-shadow:0 10px 25px #08071135,inset 0 1px #ffffff23,inset 0 -2px #09081030;}
+.modal.is-ticket-payment .payment-total strong{color:#fff;}
+.modal.is-ticket-payment .manual-payment .real-payment-qr{border-color:#ffffff62;border-radius:18px;background:#fff;box-shadow:0 12px 28px #08071160,inset 0 1px #fff;}
+.modal.is-ticket-payment .payment-details .checkout-row{border-color:#ffffff1f;}
+.modal.is-ticket-payment .payment-details .checkout-row span,.modal.is-ticket-payment .payment-order-ref{color:#c8bfd5!important;}
+.modal.is-ticket-payment .payment-details .checkout-row b{color:#fff;}
+.modal.is-ticket-payment .payment-details .payment-expiry b{color:#ffd19a;}
+.modal.is-ticket-payment .manual-payment #ticketSlipForm{border-color:#ffffff2c;border-radius:17px;background:linear-gradient(145deg,#ffffff15,#ffffff07);box-shadow:inset 0 1px #ffffff1b;}
+.modal.is-ticket-payment .manual-payment #ticketSlipForm .modal-field{color:#f2ebfb;}
+.modal.is-ticket-payment .manual-payment #ticketSlipForm .modal-field input{border-color:#d5bcff60;border-radius:12px;color:#fff;background:#171521;}
+.modal.is-ticket-payment .manual-payment #ticketSlipForm .modal-field small{color:#c8bfd5;}
+.modal.is-ticket-payment .manual-payment .payment-note{border:1px solid #82dacb42;border-radius:13px;color:#d7f5ef;background:#4cb7a41b;}
+.modal.is-ticket-payment .manual-payment .payment-note strong{color:#c4fff2;}
+.modal.is-ticket-payment .manual-payment #submitTicketSlip{border:1px solid #b5fff0;border-radius:14px;color:#12352f;background:linear-gradient(145deg,#c7fff0,#7fd6c5);box-shadow:0 5px 0 #3b8d7c,0 10px 20px #08071155,inset 0 2px #ffffffc7;font-weight:800;}
+.modal.is-ticket-payment .manual-payment #submitTicketSlip:hover{filter:brightness(1.05);transform:translateY(-1px);}
+@media(max-width:620px){.ticket-purchase{gap:13px}.ticket-purchase .event-sale-poster{height:min(30dvh,230px);border-radius:16px}.modal.is-ticket-purchase{padding:20px 16px}.modal.is-ticket-purchase .checkout-event{padding:14px;border-radius:16px}.modal.is-ticket-purchase .modal-field input{max-width:none}.modal.is-ticket-purchase #startManualCheckout{min-height:56px;font-size:16px}}
+@media(prefers-reduced-motion:reduce){.modal.is-ticket-purchase #startManualCheckout,.modal.is-ticket-payment #submitTicketSlip{transition:none}.modal.is-ticket-purchase #startManualCheckout:hover,.modal.is-ticket-purchase #startManualCheckout:active,.modal.is-ticket-payment #submitTicketSlip:hover{transform:none}}
 .map-preview .venue-type,.map-modal .venue-type{border:1px solid #ffffff85;background:#101116db;color:#fff;box-shadow:0 2px 8px #0008}
 .map-preview .venue-type.art,.map-modal .venue-type.art{background:#291a1be8;color:#fff}
 .map-preview .venue-arrow,.map-modal .venue-arrow{color:#fff}
