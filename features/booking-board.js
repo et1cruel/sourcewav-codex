@@ -10,7 +10,22 @@
   --------------------------------------------------------------------------- */
   let activeBookingRole = 'all';
 
+  function renderPeopleSuggestions() {
+    const host = $('#peopleList');
+    if (!host) return;
+    const artists = [...new Map(state.bookingCards
+      .filter(card => card.artistId && card.handle)
+      .map(card => [card.artistId, card])).values()].slice(0, 4);
+    host.innerHTML = artists.length ? artists.map(card => `
+      <div class="person-row" data-username="${esc(card.handle)}">
+        <div class="avatar">${card.avatarUrl ? `<img src="${esc(card.avatarUrl)}" alt="" loading="lazy" />` : esc(card.avatarChar || card.artistName.charAt(0))}</div>
+        <div><strong>${esc(card.artistName)}</strong><small>${esc(card.roleLabel)} · ${esc(card.city)}</small></div>
+        <button class="follow-btn" type="button">ติดตาม</button>
+      </div>`).join('') : '<p class="people-empty">ยังไม่มีศิลปินที่เปิดรับงานจากโปรไฟล์สมาชิกจริง</p>';
+  }
+
   function renderBookingBoard() {
+    renderPeopleSuggestions();
     const host = $('#bookingCardsGrid');
     if (!host) return;
 
@@ -66,6 +81,8 @@
             <p style="font-size: 11px; color: #4b5563; line-height: 1.6; margin: 0 0 10px;">
               ${esc(card.bio)}
             </p>
+
+            ${card.role === 'producer' && card.portfolioAudioUrl ? `<div class="booking-beat-card"><span>♫ ฟังตัวอย่างบีท</span><audio controls preload="none" src="${esc(card.portfolioAudioUrl)}" aria-label="ฟังตัวอย่างบีทของ ${esc(card.artistName)}"></audio></div>` : ''}
 
             ${card.portfolioTitle ? `<div class="booking-portfolio-snippet">
               <strong>ตัวอย่างผลงาน:</strong> ${esc(card.portfolioTitle)}
@@ -153,6 +170,12 @@
           <input id="newArtistPortfolio" placeholder="เช่น ลิงก์ SoundCloud, YouTube, หรือชื่อมิกซ์เทป" />
         </label>
 
+        <section class="booking-beat-picker" id="bookingBeatPicker" hidden aria-labelledby="bookingBeatTitle">
+          <div class="booking-beat-picker-copy"><span aria-hidden="true">♫</span><div><strong id="bookingBeatTitle">อัปโหลดบีทให้ผู้จัดงานฟัง</strong><small>เพิ่มตัวอย่างเสียงลงในการ์ด Producer / Beatmaker · MP3, WAV, FLAC, OGG, M4A · ไม่เกิน 20 MB</small></div></div>
+          <input id="newArtistBeat" type="file" accept="audio/mpeg,audio/wav,audio/x-wav,audio/flac,audio/ogg,audio/mp4,audio/aac,.mp3,.wav,.flac,.ogg,.m4a,.aac" aria-label="เลือกไฟล์บีทตัวอย่าง" />
+          <audio id="newArtistBeatPreview" class="booking-beat-preview" controls preload="metadata" hidden aria-label="ฟังตัวอย่างบีท"></audio>
+        </section>
+
         <label class="modal-field booking-image-picker">ภาพตัวอย่างผลงาน <small>อัปโหลดภาพเพื่อแสดงบนการ์ด Booking · JPG, PNG หรือ WebP · ไม่เกิน 5 MB</small><input id="newArtistPortfolioImage" type="file" accept="image/jpeg,image/png,image/webp" aria-label="เลือกภาพตัวอย่างผลงาน" /><img id="newArtistPortfolioPreview" class="booking-image-preview" alt="ตัวอย่างภาพผลงาน" hidden /></label>
 
         <button type="submit" class="booking-create-submit" id="saveBookingCardBtn"><span>บันทึกการ์ด Booking</span><b aria-hidden="true">↗</b></button>
@@ -162,7 +185,22 @@
 
     const portfolioImageInput = $('#newArtistPortfolioImage');
     const portfolioPreview = $('#newArtistPortfolioPreview');
+    const beatInput = $('#newArtistBeat');
+    const beatPreview = $('#newArtistBeatPreview');
+    const beatPicker = $('#bookingBeatPicker');
+    const roleInput = $('#newArtistRole');
     const rateInput = $('#newArtistRate');
+    roleInput?.addEventListener('change', () => { beatPicker.hidden = roleInput.value !== 'producer'; });
+    beatInput?.addEventListener('change', () => {
+      const file = beatInput.files?.[0];
+      if (!file) { beatPreview.pause(); beatPreview.removeAttribute('src'); beatPreview.hidden = true; return; }
+      const allowed = /\.(mp3|wav|flac|ogg|m4a|aac)$/i.test(file.name);
+      if (!allowed || file.size > 20 * 1024 * 1024) {
+        beatInput.value = ''; beatPreview.pause(); beatPreview.removeAttribute('src'); beatPreview.hidden = true;
+        toast('เลือกไฟล์บีท MP3, WAV, FLAC, OGG, M4A หรือ AAC ที่มีขนาดไม่เกิน 20 MB'); return;
+      }
+      beatPreview.src = URL.createObjectURL(file); beatPreview.hidden = false; beatPreview.load();
+    });
     rateInput?.addEventListener('input', () => { rateInput.value = rateInput.value.replace(/\D/g, ''); });
     portfolioImageInput?.addEventListener('change', () => {
       const file = portfolioImageInput.files?.[0];
@@ -190,6 +228,7 @@
 
       const role = $('#newArtistRole').value;
       const imageFile = portfolioImageInput.files?.[0] || null;
+      const beatFile = role === 'producer' ? beatInput.files?.[0] || null : null;
       const rate = Number(rateInput.value);
       if (!Number.isInteger(rate) || rate < 500) { toast('กรอกราคาเริ่มต้นอย่างน้อย 500 บาท'); rateInput.focus(); return; }
       const newCard = {
@@ -204,11 +243,12 @@
         bio: $('#newArtistBio').value.trim(),
         portfolioTitle: $('#newArtistPortfolio').value.trim(),
         avatarChar: $('#newArtistName').value.trim().charAt(0).toUpperCase(),
-        portfolioImageUrl: state.bookingCards.find(card => card.artistId === global.SourcewavAuthUser?.id && card.role === role)?.portfolioImageUrl || ''
+        portfolioImageUrl: state.bookingCards.find(card => card.artistId === global.SourcewavAuthUser?.id && card.role === role)?.portfolioImageUrl || '',
+        portfolioAudioUrl: state.bookingCards.find(card => card.artistId === global.SourcewavAuthUser?.id && card.role === role)?.portfolioAudioUrl || ''
       };
       const submit = $('#saveBookingCardBtn'); submit.disabled = true; submit.setAttribute('aria-busy', 'true');
       (async () => {
-        let imageKey = '';
+        let imageKey = '', audioKey = '';
         try {
           if (imageFile) {
             const extension = imageFile.type === 'image/jpeg' ? 'jpg' : imageFile.type.split('/')[1];
@@ -218,10 +258,20 @@
             if (error) throw error;
             newCard.portfolioImageUrl = bucket.getPublicUrl(imageKey).data.publicUrl;
           }
+          if (beatFile) {
+            const extension = beatFile.name.split('.').pop().toLowerCase();
+            const audioType = ({ mp3: 'audio/mpeg', wav: 'audio/wav', flac: 'audio/flac', ogg: 'audio/ogg', m4a: 'audio/mp4', aac: 'audio/aac' })[extension];
+            const audioBucket = global.SourcewavSupabase.storage.from('sourcewav-audio');
+            audioKey = `${global.SourcewavAuthUser.id}/booking-beats/${crypto.randomUUID()}.${extension}`;
+            const { error } = await audioBucket.upload(audioKey, beatFile, { contentType: audioType, cacheControl: '3600', upsert: false });
+            if (error) throw error;
+            newCard.portfolioAudioUrl = audioBucket.getPublicUrl(audioKey).data.publicUrl;
+          }
           await global.SourcewavFeatureData.createBookingCard(newCard);
-          renderBookingBoard(); closeModal(); toast('การ์ด Booking พร้อมภาพผลงานถูกเผยแพร่แล้ว');
+          renderBookingBoard(); closeModal(); toast(beatFile ? 'เผยแพร่การ์ดพร้อมตัวอย่างบีทแล้ว' : 'เผยแพร่การ์ด Booking แล้ว');
         } catch (error) {
           if (imageKey) await global.SourcewavSupabase.storage.from('sourcewav-listings').remove([imageKey]).catch(() => {});
+          if (audioKey) await global.SourcewavSupabase.storage.from('sourcewav-audio').remove([audioKey]).catch(() => {});
           toast(`บันทึกไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`);
         } finally { if (submit.isConnected) { submit.disabled = false; submit.removeAttribute('aria-busy'); } }
       })();
