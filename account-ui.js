@@ -131,11 +131,27 @@
       trigger.setAttribute('aria-label', `โปรไฟล์ ${profile.name}`);
     }
     const railAvatar = document.querySelector('.rail-profile .avatar');
+    const railAvatarLink = document.querySelector('.rail-profile-avatar-link');
     const railName = document.querySelector('.rail-profile strong');
     const railMeta = document.querySelector('.rail-profile small');
     const composerAvatar = document.querySelector('.composer .avatar');
     renderAvatar(railAvatar, [...profile.name][0] || 'S');
     renderAvatar(composerAvatar, [...profile.name][0] || 'S');
+    if (railAvatarLink) {
+      const username = String(profile.handle || '').trim();
+      const canOpenArtistProfile = Boolean(window.SourcewavAuthUser && username && username.toLowerCase() !== 'guest');
+      if (canOpenArtistProfile) {
+        railAvatarLink.href = `#artist/${encodeURIComponent(username)}`;
+        railAvatarLink.setAttribute('aria-label', `เปิดโปรไฟล์ศิลปิน ${profile.name}`);
+        railAvatarLink.removeAttribute('aria-disabled');
+        railAvatarLink.removeAttribute('tabindex');
+      } else {
+        railAvatarLink.removeAttribute('href');
+        railAvatarLink.setAttribute('aria-disabled', 'true');
+        railAvatarLink.setAttribute('tabindex', '-1');
+        railAvatarLink.removeAttribute('aria-label');
+      }
+    }
     if (railName) railName.textContent = profile.name;
     if (railMeta) railMeta.textContent = `@${profile.handle} · ${window.SourcewavAuthUser ? profile.city : profile.role}`;
   }
