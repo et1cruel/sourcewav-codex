@@ -1607,6 +1607,13 @@ body.artist-profile-active .layout.artist-profile-active{display:block;width:100
 .stream-section>.stream-library-nav{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:14px;padding:5px;border:1px solid #ffffffd9;border-radius:16px;background:#ffffff73;box-shadow:0 8px 20px #54426e12;backdrop-filter:blur(16px)}.stream-library-nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:48px;border:0;border-radius:11px;background:transparent;color:#81778e;cursor:pointer}.stream-library-nav button>span{font-size:17px;line-height:1}.stream-library-nav button>b{font-size:9px;font-weight:550}.stream-library-nav button.is-active{background:#ffffffb8;color:#7859a0;box-shadow:0 3px 10px #57436c14}.stream-library-nav button.is-active>span{color:#a57bce}.stream-library-nav button:hover{color:#765995}.stream-section .track-empty{border-color:#ffffffc9;background:#ffffff78}.stream-section .track-empty>b{color:#453b54}.stream-section .track-empty>p{color:#82778c}.stream-section .track-empty>button{border-color:#d4c2e7;background:#f9f5ff;color:#70558e}.stream-section .track-empty>span{background:#e9def6;color:#8a6bb1}
 @media(max-width:680px){.stream-section{padding:15px;border-radius:19px}.stream-heading{align-items:flex-start;gap:9px;margin-bottom:12px}.stream-heading h2{font-size:20px}.stream-heading p{font-size:10px}.stream-upload{min-height:36px;padding:0 9px;font-size:9px}.stream-upload span{font-size:15px}.stream-player{grid-template-columns:82px minmax(0,1fr);gap:12px;padding:12px;border-radius:15px}.stream-cover{width:82px;border-radius:10px}.stream-cover span{width:34px;height:34px;font-size:11px}.stream-main h3{margin-top:4px;font-size:18px}.stream-main>p{margin-bottom:5px;font-size:9px}.stream-now{font-size:8px;letter-spacing:.8px}.stream-now span{font-size:8px}.stream-timeline{grid-template-columns:auto minmax(0,1fr) auto;gap:5px;margin:3px 0 5px}.stream-times{font-size:8px}.stream-controls{gap:6px}.stream-play{width:40px;height:40px;font-size:14px}.stream-extra-control.is-secondary{width:29px;height:29px;font-size:9px}.stream-volume{width:28px;height:28px;font-size:12px}.stream-release-grid{gap:7px}.stream-release-card{padding:6px;border-radius:12px}.stream-release-art{border-radius:8px}.stream-release-art i{right:5px;bottom:5px;width:24px;height:24px}.stream-release-copy{padding:6px 2px 0}.stream-release-copy>small{font-size:7px}.stream-release-copy h4{font-size:10px}.stream-release-copy>div{font-size:8px}.stream-like-button{width:22px;height:22px;font-size:13px}.stream-subheading h3{font-size:14px}.stream-section>.track-list-head{font-size:11px}.stream-section>.track-list .track-row{grid-template-columns:30px 38px minmax(0,1fr) auto;gap:6px;min-height:50px;padding:5px}.stream-section>.track-list .track-row-play{width:28px;height:28px}.stream-section>.track-list .track-row-cover{width:36px;height:36px}.stream-section>.track-list .track-row-meta{gap:3px}.stream-section>.track-list .track-genre{display:none}.stream-section>.track-list .track-size{display:none}.stream-section>.stream-library-nav{margin-top:11px}.stream-library-nav button{min-height:42px}}
 @media(max-width:390px){.stream-section{padding:12px}.stream-heading h2{font-size:18px}.stream-player{grid-template-columns:70px minmax(0,1fr);gap:9px;padding:9px}.stream-cover{width:70px}.stream-main h3{font-size:16px}.stream-main>p{font-size:8px}.stream-extra-control.is-secondary{width:26px;height:26px}.stream-play{width:36px;height:36px}.stream-controls{gap:4px}.stream-release-grid{gap:5px}.stream-release-card{padding:5px}.stream-release-copy h4{font-size:9px}}
+.stream-volume-steps{display:flex;align-items:center;gap:3px;padding:3px;border:1px solid #fff9;border-radius:999px;background:#ffffff70;box-shadow:0 4px 12px #604e7618}
+.stream-volume-steps .stream-volume-step{width:27px;height:27px;border:0;background:#ffffff9c;font-size:16px;font-weight:700;box-shadow:none}
+.stream-volume-steps .stream-volume{width:30px;height:30px;border:0;background:#eee7f7;color:#765a9a}
+.stream-volume-steps .stream-volume-step:hover,.stream-volume-steps .stream-volume:hover{transform:translateY(-1px);background:#e9dbfa;color:#68438e}
+.stream-volume-steps button:focus-visible{outline:3px solid #7653b5;outline-offset:2px}
+@media(max-width:680px){.stream-volume-steps{gap:1px;padding:2px}.stream-volume-steps .stream-volume-step{width:24px;height:24px;font-size:14px}.stream-volume-steps .stream-volume{width:26px;height:26px}}
+@media(max-width:390px){.stream-volume-steps .stream-volume-step{width:21px;height:21px;font-size:13px}.stream-volume-steps .stream-volume{width:23px;height:23px}}
 
 /* Artist identity on the new-release cards. */
 .stream-release-artist-row{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:6px}
@@ -1942,9 +1949,23 @@ body :where(button,a,.ticket-filter,.nav-link,.rail-item){-webkit-text-stroke:.1
 .ticket-sell-modal .ticket-sell-footer>#publishEvent b{font-size:17px}
 @media(max-width:680px){.ticket-sell-modal .ticket-sell-footer>#publishEvent{flex:0 0 auto;width:100%;min-width:0;min-height:48px;font-size:14px}}
 @media(prefers-reduced-motion:reduce){.ticket-sell-modal .ticket-sell-footer>#publishEvent{transition:none}}
+.event-poster-upload{display:grid;grid-template-columns:minmax(0,1fr) 112px;align-items:center;gap:16px;margin-top:8px;padding:12px 14px;border:1px solid #30323e;border-radius:13px;background:#141720}
+.event-poster-upload .modal-field{margin:0}
+.event-poster-preview{position:relative;display:grid;place-items:center;width:100%;aspect-ratio:2/3;overflow:hidden;border:1px dashed #645b78;border-radius:9px;color:#aaa4b7;background:linear-gradient(145deg,#282533,#181a22);font-size:11px;text-align:center}
+.event-poster-preview img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.event-poster-preview.has-poster{border-style:solid;border-color:#b998f080}
+.event-sale-poster{display:grid;place-items:center;width:auto;height:min(38dvh,320px);margin:0 auto 16px;overflow:hidden;border:1px solid #d9dfe5;border-radius:13px;background:radial-gradient(ellipse at center,#edf1f6,#e1e8ef)}
+.event-sale-poster img{display:block;max-width:100%;max-height:100%;object-fit:contain}
+.live-event-card .event-poster{isolation:isolate;overflow:hidden}
+.live-event-poster-image{position:absolute;inset:0;z-index:0;width:100%;height:100%;object-fit:cover;filter:brightness(.72) saturate(.88)}
+.live-event-card .event-poster>span,.live-event-card .event-poster>b,.live-event-card .event-poster>small{z-index:1;text-shadow:0 2px 7px #000b}
+@media(max-width:680px){.event-poster-upload{grid-template-columns:minmax(0,1fr) 84px;gap:10px;padding:10px}.event-poster-preview{border-radius:7px}.event-sale-poster{height:min(32dvh,250px)}}
 /* Owner controls for editing a track's display details. */
-.track-edit-button{min-height:30px;padding:0 9px;border:1px solid #c7d2c8;border-radius:8px;color:#35514b;background:#f3f8f3;font:650 10px var(--font);cursor:pointer;white-space:nowrap}
-.track-edit-button:hover,.track-edit-button:focus-visible{border-color:#7caaa0;color:#173f39;background:#e5f2ed;outline:0}
+.track-edit-button{display:grid;place-items:center;width:36px;height:36px;min-height:36px;flex:none;padding:4px;border:1px solid #d5d5ef;border-bottom:3px solid #9284c4;border-radius:11px;background:linear-gradient(145deg,#fff,#f0edff);box-shadow:0 3px 0 #a59acb,0 6px 12px #7165a32b,inset 0 1px 0 #fff;cursor:pointer;transition:transform .14s ease,box-shadow .14s ease,filter .14s ease}
+.track-edit-button img{display:block;width:27px;height:27px;object-fit:contain}
+.track-edit-button:hover{border-color:#bdb2eb;background:linear-gradient(145deg,#fff,#e9e3ff);filter:none;transform:translateY(-2px);box-shadow:0 5px 0 #9284c4,0 9px 15px #7165a344,inset 0 1px 0 #fff}
+.track-edit-button:active{transform:translateY(2px);box-shadow:0 1px 0 #9284c4,0 2px 5px #7165a322,inset 0 1px 2px #756aa533}
+.track-edit-button:focus-visible{outline:3px solid #8877c7;outline-offset:3px}
 .track-edit-modal{display:grid;gap:12px;min-width:min(420px,calc(100vw - 72px));padding:6px 2px 2px}
 .track-edit-modal h2{margin:0 0 2px;color:#263d4c;font-size:23px}
 .track-edit-kicker{color:#598b80;font-size:10px;font-weight:750;letter-spacing:1.3px;text-transform:uppercase}
@@ -1956,4 +1977,4 @@ body :where(button,a,.ticket-filter,.nav-link,.rail-item){-webkit-text-stroke:.1
 .track-edit-cover-preview{display:flex;align-items:center;gap:10px;color:#61717b;font-size:11px}
 .track-edit-cover-preview img{width:54px;height:54px;object-fit:cover;border:1px solid #d8e0df;border-radius:9px}
 .track-edit-submit{min-height:44px;margin-top:2px}
-@media(max-width:600px){.track-edit-modal{min-width:0}.track-edit-modal h2{font-size:20px}.track-edit-button{min-height:28px;padding-inline:7px;font-size:9px}}
+@media(max-width:600px){.track-edit-modal{min-width:0}.track-edit-modal h2{font-size:20px}.track-edit-button{width:33px;height:33px;min-height:33px;padding:3px}.track-edit-button img{width:25px;height:25px}}

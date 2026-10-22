@@ -20,9 +20,11 @@
   const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
   const money = n => `฿${(Number(n || 0) / 100).toLocaleString('th-TH', { maximumFractionDigits: 0 })}`;
   const initials = name => [...String(name || '?')][0] || '?';
+  const safeImageUrl = value => { try { const url = new URL(value || ''); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; } };
   const toast = message => { const node = $('#toast'); if (node) { node.textContent = message; node.classList.add('show'); setTimeout(() => node.classList.remove('show'), 3000); } };
   const modal = html => { const backdrop = $('#modalBackdrop'); backdrop.classList.toggle('tickets-page-open', html.includes('my-tickets-page')); backdrop.querySelector('.modal')?.classList.toggle('is-ticket-payment', html.includes('manual-payment')); $('#modalContent').innerHTML = html; backdrop.classList.add('open'); backdrop.setAttribute('aria-hidden', 'false'); };
-  const closeModal = () => { const backdrop = $('#modalBackdrop'); backdrop.classList.remove('open', 'tickets-page-open'); backdrop.setAttribute('aria-hidden', 'true'); };
+  let eventPosterPreviewUrl = '';
+  const closeModal = () => { const backdrop = $('#modalBackdrop'); backdrop.classList.remove('open', 'tickets-page-open'); backdrop.setAttribute('aria-hidden', 'true'); if (eventPosterPreviewUrl) URL.revokeObjectURL(eventPosterPreviewUrl); eventPosterPreviewUrl = ''; };
   const needUser = async () => { const { data } = await db.auth.getUser(); if (!data.user) { toast('เข้าสู่ระบบก่อนใช้ฟีเจอร์นี้'); $('#profileBtn')?.click(); return null; } return data.user; };
   const call = async (name, body) => {
     const { data, error } = await db.functions.invoke(name, { body });
@@ -239,13 +241,15 @@
       const available = saleTiers.reduce((sum, tier) => sum + tier.quantity_total - tier.quantity_sold - tier.quantity_reserved, 0);
       const startingPrice = saleTiers.length ? Math.min(...saleTiers.map(tier => Number(tier.price_minor))) : null;
       const availability = saleTiers.length ? `เหลือ ${available.toLocaleString('th-TH')} ใบ` : 'ยังไม่มีบัตรเปิดขาย';
-      return `<article class="event-card live-event-card"><div class="event-poster poster-one"><span>${esc(date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }))}</span><b>${esc(event.category === 'music' ? 'LIVE' : event.category.toUpperCase())}</b><small>SOURCEWAV</small></div><div class="event-info"><div class="event-date"><b>${esc(date.toLocaleDateString('th-TH', { day: '2-digit' }))}</b><span>${esc(date.toLocaleDateString('th-TH', { month: 'short' }))} · ${esc(date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }))}</span></div><h3>${esc(event.title)}</h3><p>${esc(event.venue_name || 'สถานที่แจ้งภายหลัง')}${event.venue_address ? ` · ${esc(event.venue_address)}` : ''}</p><div class="event-bottom"><div class="event-ticket-price"><strong>${startingPrice === null ? 'บัตรยังไม่เปิดขาย' : `เริ่ม ${money(startingPrice)}`}</strong><small>${availability}</small></div><button class="buy-btn" data-buy-event="${esc(event.id)}" ${saleTiers.length ? '' : 'disabled'}>${saleTiers.length ? 'เลือกบัตร' : 'ปิดขาย'}</button></div></div></article>`;
+      const poster = safeImageUrl(event.cover_url);
+      return `<article class="event-card live-event-card"><div class="event-poster poster-one">${poster ? `<img class="live-event-poster-image" src="${esc(poster)}" alt="โปสเตอร์ ${esc(event.title)}" loading="lazy" />` : ''}<span>${esc(date.toLocaleDateString('th-TH', { day: '2-digit', month: 'short' }))}</span><b>${esc(event.category === 'music' ? 'LIVE' : event.category.toUpperCase())}</b><small>SOURCEWAV</small></div><div class="event-info"><div class="event-date"><b>${esc(date.toLocaleDateString('th-TH', { day: '2-digit' }))}</b><span>${esc(date.toLocaleDateString('th-TH', { month: 'short' }))} · ${esc(date.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }))}</span></div><h3>${esc(event.title)}</h3><p>${esc(event.venue_name || 'สถานที่แจ้งภายหลัง')}${event.venue_address ? ` · ${esc(event.venue_address)}` : ''}</p><div class="event-bottom"><div class="event-ticket-price"><strong>${startingPrice === null ? 'บัตรยังไม่เปิดขาย' : `เริ่ม ${money(startingPrice)}`}</strong><small>${availability}</small></div><button class="buy-btn" data-buy-event="${esc(event.id)}" ${saleTiers.length ? '' : 'disabled'}>${saleTiers.length ? 'เลือกบัตร' : 'ปิดขาย'}</button></div></div></article>`;
     }).join('') || '<p class="platform-empty">ยังไม่มีอีเวนต์เปิดขาย งานที่ผู้จัดสร้างจะปรากฏที่นี่</p>';
+    root.querySelectorAll('.live-event-poster-image').forEach(image => image.addEventListener('error', () => image.remove(), { once: true }));
   }
 
   async function ticketPicker(eventId) {
     const user = await needUser(); if (!user) return;
-    const { data: event, error } = await db.from('events').select('id,title,starts_at,venue_name,venue_address,ticket_types(id,name,price_minor,quantity_total,quantity_sold,quantity_reserved,sales_start,sales_end),event_payment_methods(qr_storage_key,bank_name,beneficiary_name,account_last4)').eq('id', eventId).single();
+    const { data: event, error } = await db.from('events').select('id,title,cover_url,starts_at,venue_name,venue_address,ticket_types(id,name,price_minor,quantity_total,quantity_sold,quantity_reserved,sales_start,sales_end),event_payment_methods(qr_storage_key,bank_name,beneficiary_name,account_last4)').eq('id', eventId).single();
     if (error) return toast('เปิดรายละเอียดงานไม่ได้');
     const tiers = (event.ticket_types || []).filter(t => t.quantity_total > t.quantity_sold + t.quantity_reserved && (!t.sales_start || new Date(t.sales_start) <= new Date()) && (!t.sales_end || new Date(t.sales_end) >= new Date()));
     if (!tiers.length) return toast('บัตรหมดหรือยังไม่เปิดขาย');
@@ -253,7 +257,8 @@
     const checkoutAction = method
       ? '<p>ชำระตรงเข้าบัญชีผู้จัด ระบบใช้ SlipOK ตรวจผู้รับ ยอดเงิน และสลิปซ้ำ ก่อนออกบัตร</p><button class="modal-primary" id="startManualCheckout">ดู QR และชำระเงิน</button>'
       : '<p>งานนี้ยังไม่ได้ตั้งค่าบัญชีรับเงิน SlipOK จึงยังเปิดขายบัตรไม่ได้</p><button class="modal-primary" disabled>ยังไม่พร้อมรับชำระ</button>';
-    modal(`<h2 id="modalTitle">เลือกบัตร · ${esc(event.title)}</h2><p>${esc(event.venue_name || '')} · ${esc(new Date(event.starts_at).toLocaleString('th-TH'))}</p><label class="modal-field">ประเภทบัตร<select id="ticketTier">${tiers.map(t => `<option value="${esc(t.id)}" data-price="${t.price_minor}" data-left="${t.quantity_total - t.quantity_sold - t.quantity_reserved}">${esc(t.name)} · ${money(t.price_minor)} · เหลือ ${t.quantity_total - t.quantity_sold - t.quantity_reserved} ใบ</option>`).join('')}</select></label><label class="modal-field">จำนวน<input id="ticketQuantity" type="number" min="1" max="10" value="1" /></label><div class="checkout-event"><div class="checkout-row"><span>ยอดรวม</span><b id="ticketTotal">${money(tiers[0].price_minor)}</b></div>${checkoutAction}</div>`);
+    const poster = safeImageUrl(event.cover_url);
+    modal(`${poster ? `<div class="event-sale-poster"><img src="${esc(poster)}" alt="โปสเตอร์งาน ${esc(event.title)}" /></div>` : ''}<h2 id="modalTitle">เลือกบัตร · ${esc(event.title)}</h2><p>${esc(event.venue_name || '')} · ${esc(new Date(event.starts_at).toLocaleString('th-TH'))}</p><label class="modal-field">ประเภทบัตร<select id="ticketTier">${tiers.map(t => `<option value="${esc(t.id)}" data-price="${t.price_minor}" data-left="${t.quantity_total - t.quantity_sold - t.quantity_reserved}">${esc(t.name)} · ${money(t.price_minor)} · เหลือ ${t.quantity_total - t.quantity_sold - t.quantity_reserved} ใบ</option>`).join('')}</select></label><label class="modal-field">จำนวน<input id="ticketQuantity" type="number" min="1" max="10" value="1" /></label><div class="checkout-event"><div class="checkout-row"><span>ยอดรวม</span><b id="ticketTotal">${money(tiers[0].price_minor)}</b></div>${checkoutAction}</div>`);
     const updateTotal = () => { const selected = $('#ticketTier')?.selectedOptions[0]; const qty = Math.max(1, Math.min(10, Number($('#ticketQuantity')?.value || 1), Number(selected?.dataset.left || 1))); if ($('#ticketQuantity')) $('#ticketQuantity').value = qty; if ($('#ticketTotal')) $('#ticketTotal').textContent = money(Number(selected?.dataset.price) * qty); };
     $('#ticketTier').addEventListener('change', updateTotal); $('#ticketQuantity').addEventListener('input', updateTotal);
   }
@@ -514,6 +519,7 @@
           <label class="modal-field">วันและเวลาจบ<input id="newEventEnds" type="datetime-local" required /></label>
         </div>
         <label class="modal-field">ที่อยู่สถานที่<input id="newEventAddress" maxlength="400" required placeholder="ที่อยู่สำหรับผู้เข้าร่วมงาน" /></label>
+        <div class="event-poster-upload"><label class="modal-field">โปสเตอร์งาน<input id="newEventPoster" type="file" accept="image/jpeg,image/png,image/webp" /><small>แนวตั้ง 2:3 แนะนำ 1200 × 1800 px · JPG, PNG หรือ WebP · ไม่เกิน 5 MB</small></label><div class="event-poster-preview" id="eventPosterPreview"><img id="eventPosterPreviewImage" alt="ตัวอย่างโปสเตอร์งาน" hidden /><span id="eventPosterPreviewLabel">ตัวอย่าง 2:3</span></div></div>
         <label class="modal-field">รายละเอียดงาน<textarea id="newEventDescription" maxlength="5000" placeholder="ไลน์อัป กำหนดการ หรือข้อมูลที่อยากให้ผู้ชมทราบ"></textarea><small>ไม่เกิน 5,000 ตัวอักษร</small></label>
       </section>
       <section class="ticket-sell-section ticket-sell-inventory">
@@ -539,6 +545,25 @@
       </section>
       <footer class="ticket-sell-footer"><span>ตรวจข้อมูลและบัญชีรับเงินก่อนเผยแพร่</span><button class="modal-primary" id="publishEvent" type="button"><span>เผยแพร่งานและเปิดขายบัตร</span><b aria-hidden="true">↗</b></button></footer>
     </div>`);
+    $('#newEventPoster')?.addEventListener('change', event => {
+      const file = event.currentTarget.files?.[0];
+      const image = $('#eventPosterPreviewImage');
+      const label = $('#eventPosterPreviewLabel');
+      if (eventPosterPreviewUrl) URL.revokeObjectURL(eventPosterPreviewUrl);
+      eventPosterPreviewUrl = '';
+      image.hidden = true;
+      image.removeAttribute('src');
+      $('#eventPosterPreview').classList.toggle('has-poster', Boolean(file));
+      if (!file) { label.hidden = false; label.textContent = 'ตัวอย่าง 2:3'; return; }
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+        label.hidden = false; label.textContent = file.size > 5 * 1024 * 1024 ? 'ไฟล์ใหญ่เกิน 5 MB' : 'รองรับ JPG, PNG หรือ WebP';
+        return;
+      }
+      eventPosterPreviewUrl = URL.createObjectURL(file);
+      image.src = eventPosterPreviewUrl;
+      image.hidden = false;
+      label.hidden = true;
+    });
   }
   async function publishEvent() {
     const value = id => $(`#${id}`).value;
@@ -557,6 +582,7 @@
     const slipokApiKeyInput = $('#newSlipOkApiKey');
     const slipokApiKey = slipokApiKeyInput.value.trim();
     const qrFile = $('#newPaymentQr')?.files?.[0];
+    const posterFile = $('#newEventPoster')?.files?.[0] || null;
     const invalid = (id, message) => { $(`#${id}`)?.focus(); toast(message); };
     if (title.length < 4) return invalid('newEventTitle', 'ใส่ชื่องานอย่างน้อย 4 ตัวอักษร');
     if (!Number.isFinite(+startsAt) || startsAt <= new Date()) return invalid('newEventStarts', 'เลือกวันเริ่มงานในอนาคต');
@@ -568,17 +594,24 @@
     if (!/^\d{1,20}$/.test(slipokBranchId)) return invalid('newSlipOkBranch', 'กรอก SlipOK Branch ID เป็นตัวเลข');
     if (slipokApiKey.length < 8 || slipokApiKey.length > 512) return invalid('newSlipOkApiKey', 'กรอก SlipOK API Key ของบัญชีผู้รับ');
     if (!qrFile || !['image/jpeg', 'image/png', 'image/webp'].includes(qrFile.type) || qrFile.size > 5 * 1024 * 1024) return invalid('newPaymentQr', 'อัปโหลด QR Code เป็น JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
+    if (posterFile && (!['image/jpeg', 'image/png', 'image/webp'].includes(posterFile.type) || posterFile.size > 5 * 1024 * 1024)) return invalid('newEventPoster', 'โปสเตอร์ต้องเป็น JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
     button.disabled = true; button.textContent = 'กำลังเผยแพร่…';
     const user = await needUser(); if (!user) { button.disabled = false; button.textContent = 'เผยแพร่งานและเปิดขายบัตร'; return; }
     const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[qrFile.type];
     const paymentQrKey = `${user.id}/${crypto.randomUUID()}.${extension}`;
+    const posterExtension = posterFile ? { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[posterFile.type] : '';
+    const posterStorageKey = posterFile ? `${user.id}/posters/${crypto.randomUUID()}.${posterExtension}` : null;
     try {
+      if (posterFile && posterStorageKey) {
+        const { error: posterUploadError } = await db.storage.from('sourcewav-event-payment-qr').upload(posterStorageKey, posterFile, { contentType: posterFile.type, cacheControl: '3600', upsert: false });
+        if (posterUploadError) throw new Error('อัปโหลดโปสเตอร์งานไม่สำเร็จ: ' + posterUploadError.message);
+      }
       const { error: uploadError } = await db.storage.from('sourcewav-event-payment-qr').upload(paymentQrKey, qrFile, { contentType: qrFile.type, cacheControl: '3600', upsert: false });
       if (uploadError) throw new Error('อัปโหลด QR รับเงินไม่สำเร็จ: ' + uploadError.message);
-      await call('create-event', { title, category: value('newEventCategory'), startsAt: value('newEventStarts'), endsAt: value('newEventEnds'), venueName: venue, venueAddress: address, description: value('newEventDescription'), tierName: value('newTierName'), priceBaht: price, quantity, paymentQrKey, bankName, beneficiaryName, accountLast4, slipokBranchId, slipokApiKey });
+      await call('create-event', { title, category: value('newEventCategory'), startsAt: value('newEventStarts'), endsAt: value('newEventEnds'), venueName: venue, venueAddress: address, description: value('newEventDescription'), tierName: value('newTierName'), priceBaht: price, quantity, paymentQrKey, posterStorageKey, bankName, beneficiaryName, accountLast4, slipokBranchId, slipokApiKey });
       slipokApiKeyInput.value = '';
       closeModal(); await loadEvents(); toast('สร้างอีเวนต์และ Tier บัตรแล้ว');
-    } catch (error) { slipokApiKeyInput.value = ''; await db.storage.from('sourcewav-event-payment-qr').remove([paymentQrKey]); button.disabled = false; button.textContent = 'เผยแพร่งานและเปิดขายบัตร'; toast(error.message); }
+    } catch (error) { slipokApiKeyInput.value = ''; await db.storage.from('sourcewav-event-payment-qr').remove([paymentQrKey]); if (posterStorageKey) await db.storage.from('sourcewav-event-payment-qr').remove([posterStorageKey]); button.disabled = false; button.textContent = 'เผยแพร่งานและเปิดขายบัตร'; toast(error.message); }
   }
 
   async function loadChatList() {

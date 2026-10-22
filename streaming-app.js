@@ -36,19 +36,28 @@
     if (timeline) controls.before(timeline);
     const play = $('#streamPlay');
     const mute = $('#streamMute');
+    const volumeSteps = document.createElement('span');
+    volumeSteps.className = 'stream-volume-steps';
+    volumeSteps.setAttribute('role', 'group');
+    volumeSteps.setAttribute('aria-label', 'ปรับระดับเสียง');
     const actionButton = (action, glyph, label, className = '') => {
       const button = document.createElement('button');
       button.type = 'button'; button.className = `stream-extra-control ${className}`.trim();
       button.dataset.streamAction = action; button.setAttribute('aria-label', label); button.title = label; button.textContent = glyph;
       return button;
     };
+    volumeSteps.replaceChildren(
+      actionButton('volume-down', '−', 'ลดเสียง', 'is-secondary stream-volume-step'),
+      mute,
+      actionButton('volume-up', '+', 'เพิ่มเสียง', 'is-secondary stream-volume-step')
+    );
     controls.replaceChildren(
       actionButton('shuffle', '⤨', 'สลับเพลง', 'is-secondary'),
       actionButton('previous', '|◀', 'เพลงก่อนหน้า', 'is-secondary'),
       play,
       actionButton('next', '▶|', 'เพลงถัดไป', 'is-secondary'),
       actionButton('like-current', '♡', 'ถูกใจเพลง', 'is-secondary stream-current-like'),
-      mute
+      volumeSteps
     );
     const releases = document.createElement('section');
     releases.className = 'stream-releases'; releases.id = 'streamReleases';
@@ -165,7 +174,7 @@
       <button type="button" class="track-row-play" data-track-play="${escapeHTML(track.id)}" aria-label="${currentTrack?.id === track.id && !audio.paused ? 'หยุด' : 'เล่น'} ${escapeHTML(track.title)}">${currentTrack?.id === track.id && !audio.paused ? 'Ⅱ' : '▶'}</button>
       <span class="track-row-cover" aria-hidden="true">${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="" loading="lazy" />` : '♫'}</span>
       <div class="track-row-copy"><strong>${escapeHTML(track.title)}</strong><small>${track.artist_profile?.username ? `<a class="track-artist-link" href="#artist/${encodeURIComponent(track.artist_profile.username)}" data-artist-profile="${escapeHTML(track.artist_profile.username)}">${escapeHTML(track.artist_profile.display_name || track.artist)}</a>` : escapeHTML(track.artist)}</small></div>
-      <div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span><span class="track-size">${formatSize(track.size_bytes)}</span>${track.owner_id === currentUserId ? `<button type="button" class="track-edit-button" data-track-edit="${escapeHTML(track.id)}" aria-label="แก้ไขชื่อเพลงและรูปปก ${escapeHTML(track.title)}">แก้ไข</button>` : ''}<button type="button" class="stream-like-button${likedTrackIds.has(track.id) ? ' is-liked' : ''}" data-track-like="${escapeHTML(track.id)}" aria-label="${likedTrackIds.has(track.id) ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} ${escapeHTML(track.title)}">${likedTrackIds.has(track.id) ? '♥' : '♡'}</button></div>
+      <div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span><span class="track-size">${formatSize(track.size_bytes)}</span>${track.owner_id === currentUserId ? `<button type="button" class="track-edit-button" data-track-edit="${escapeHTML(track.id)}" aria-label="แก้ไขชื่อเพลงและรูปปก ${escapeHTML(track.title)}" title="แก้ไขชื่อเพลงและรูปปก"><img src="assets/edit-pencil-glass.png" alt="" aria-hidden="true" /></button>` : ''}<button type="button" class="stream-like-button${likedTrackIds.has(track.id) ? ' is-liked' : ''}" data-track-like="${escapeHTML(track.id)}" aria-label="${likedTrackIds.has(track.id) ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} ${escapeHTML(track.title)}">${likedTrackIds.has(track.id) ? '♥' : '♡'}</button></div>
     </article>`).join('');
   }
 
@@ -518,7 +527,7 @@
     const tracksMarkup = profileTracks.map(track => `<article class="track-row${currentTrack?.id === track.id && !audio.paused ? ' is-playing' : ''}" data-track-row="${escapeHTML(track.id)}">
         <button type="button" class="track-row-play" data-track-play="${escapeHTML(track.id)}" aria-label="เล่น ${escapeHTML(track.title)}">${currentTrack?.id === track.id && !audio.paused ? 'Ⅱ' : '▶'}</button>
         <span class="track-row-cover" aria-hidden="true">${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="" loading="lazy" />` : '♫'}</span>
-        <div class="track-row-copy"><strong>${escapeHTML(track.title)}</strong><small>${escapeHTML(track.genre)} · ${new Date(track.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</small></div><div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span>${track.owner_id === currentUserId ? `<button type="button" class="track-edit-button" data-track-edit="${escapeHTML(track.id)}" aria-label="แก้ไขชื่อเพลงและรูปปก ${escapeHTML(track.title)}">แก้ไข</button>` : ''}</div>
+        <div class="track-row-copy"><strong>${escapeHTML(track.title)}</strong><small>${escapeHTML(track.genre)} · ${new Date(track.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</small></div><div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span>${track.owner_id === currentUserId ? `<button type="button" class="track-edit-button" data-track-edit="${escapeHTML(track.id)}" aria-label="แก้ไขชื่อเพลงและรูปปก ${escapeHTML(track.title)}" title="แก้ไขชื่อเพลงและรูปปก"><img src="assets/edit-pencil-glass.png" alt="" aria-hidden="true" /></button>` : ''}</div>
       </article>`).join('');
     const genres = [...new Set(profileTracks.map(track => track.genre).filter(Boolean))].slice(0, 6);
     view.innerHTML = `<header class="artist-profile-hero"><div class="artist-profile-cover-art" aria-hidden="true"></div><div class="artist-profile-hero-shade"></div><div class="artist-profile-identity">
@@ -614,6 +623,11 @@
     if (action) {
       event.preventDefault(); event.stopImmediatePropagation();
       if (action.dataset.streamAction === 'shuffle') { shuffleMode = !shuffleMode; updateRoomTrackInfo(); }
+      else if (action.dataset.streamAction === 'volume-down' || action.dataset.streamAction === 'volume-up') {
+        const delta = action.dataset.streamAction === 'volume-up' ? 0.1 : -0.1;
+        audio.volume = Math.max(0, Math.min(1, Math.round((audio.volume + delta) * 10) / 10));
+        if (delta > 0) audio.muted = false;
+      }
       else if (action.dataset.streamAction === 'previous') playTrackStep(-1, false);
       else if (action.dataset.streamAction === 'next' || action.dataset.streamAction === 'radio') {
         if (action.dataset.streamAction === 'radio') musicTab = 'radio';
@@ -716,7 +730,17 @@
     else audio.pause();
   });
   $('#streamSeek').addEventListener('input', event => { if (audio.duration) audio.currentTime = Number(event.target.value) / 1000 * audio.duration; });
-  $('#streamMute').addEventListener('click', () => { audio.muted = !audio.muted; $('#streamMute').textContent = audio.muted ? '×' : '◖'; $('#streamMute').setAttribute('aria-label', audio.muted ? 'เปิดเสียง' : 'ปิดเสียง'); });
+  const updateVolumeControls = () => {
+    const mute = $('#streamMute');
+    mute.textContent = audio.muted ? '×' : '◖';
+    mute.setAttribute('aria-label', audio.muted ? 'เปิดเสียง' : 'ปิดเสียง');
+    mute.title = `${audio.muted ? 'เปิดเสียง' : 'ปิดเสียง'} · ${Math.round(audio.volume * 100)}%`;
+    $('[data-stream-action="volume-down"]')?.setAttribute('aria-label', `ลดเสียง · ${Math.round(audio.volume * 100)}%`);
+    $('[data-stream-action="volume-up"]')?.setAttribute('aria-label', `เพิ่มเสียง · ${Math.round(audio.volume * 100)}%`);
+  };
+  $('#streamMute').addEventListener('click', () => { audio.muted = !audio.muted; });
+  audio.addEventListener('volumechange', updateVolumeControls);
+  updateVolumeControls();
   ['play', 'pause', 'timeupdate', 'loadedmetadata', 'durationchange', 'ended'].forEach(name => audio.addEventListener(name, updatePlayer));
   audio.addEventListener('ended', () => { if (shuffleMode && tracks.length > 1) playTrackStep(1, true); });
   audio.addEventListener('error', () => { if (currentTrack) toast('ไม่สามารถเล่นไฟล์เสียงนี้ได้'); });
