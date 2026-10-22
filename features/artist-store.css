@@ -333,3 +333,59 @@
 .artist-store-section :is(.product-chat-btn,.product-demo-btn):focus-visible{outline:3px solid #a4f2ff;outline-offset:3px}
 @media(max-width:600px){.artist-store-modal #modalContent{padding:23px 17px 18px}.store-create-heading{align-items:flex-start;gap:10px;margin-right:38px}.store-create-mark{width:40px;height:40px;border-radius:12px;font-size:20px}.store-create-heading h2{font-size:21px}.store-create-heading p{font-size:11px}.store-product-fields{grid-template-columns:1fr;gap:0}.store-field-wide{grid-column:auto}.store-product-form .modal-field{font-size:11px}.store-beat-upload{padding:12px}.store-product-form .modal-field>input,.store-product-form .modal-field>select,.store-product-form .modal-field>textarea{font-size:16px}}
 
+/* Soft glass form system shared with the supplied Booking and Store references. */
+.modal-backdrop:has(.artist-store-modal),.modal-backdrop:has(.booking-create-modal){background-color:#dce9f2d9;background-image:radial-gradient(ellipse at 3% 8%,#b68affaa 0 5%,transparent 17%),radial-gradient(ellipse at 96% 11%,#47e0d4a6 0 5%,transparent 16%),radial-gradient(ellipse at 8% 83%,#56b9ff8c 0 5%,transparent 17%),radial-gradient(ellipse at 93% 89%,#ffe4839c 0 5%,transparent 17%),repeating-linear-gradient(45deg,#7396aa12 0 1px,transparent 1px 9px),repeating-linear-gradient(135deg,#7396aa0c 0 1px,transparent 1px 9px);backdrop-filter:blur(8px)}
+.modal.artist-store-modal,.modal.booking-create-modal{width:min(760px,calc(100vw - 32px));max-width:min(760px,calc(100vw - 32px));max-height:min(90dvh,920px);padding:0;overflow:hidden;border:1px solid #ffffffd9;border-radius:26px;background:linear-gradient(145deg,#ffffffed,#f7fbfff0 65%,#edf9f9ed);color:#18253f;box-shadow:0 32px 90px #3d54702e,0 8px 20px #3d547018,inset 0 1px #fff}
+.modal.artist-store-modal::after,.modal.booking-create-modal::after{border-color:#fff9}
+.modal.artist-store-modal .modal-close,.modal.booking-create-modal .modal-close{z-index:3;top:15px;right:16px;width:42px;height:42px;border:1px solid #91add766;border-radius:50%;background:#ffffffc9;color:#587ca8;font-size:24px;box-shadow:0 5px 14px #465f7d1a}
+.modal.artist-store-modal .modal-close:hover,.modal.booking-create-modal .modal-close:hover{border-color:#8d72e7;background:#f2efff;color:#5447a0}
+.artist-store-modal #modalContent,.booking-create-modal #modalContent{max-height:min(90dvh,920px);overflow-y:auto;padding:30px 34px 29px;scrollbar-color:#a9b8df #edf1f7}
+.store-create-heading,.booking-create-heading{align-items:flex-start;margin:0 48px 24px 0}
+.store-create-mark,.booking-create-mark{width:48px;height:48px;border:1px solid #cbc5f1;border-radius:16px;background:linear-gradient(145deg,#f4f0ff,#e7faff);color:#7963ce;box-shadow:0 7px 18px #705bcc20,inset 0 1px #fff}
+.store-form-eyebrow,.booking-form-eyebrow{color:#7581a0;font:700 10px var(--display);letter-spacing:1.5px}
+.store-create-heading h2,.booking-create-heading h2{margin:4px 0 7px;color:#15213a;font-size:clamp(25px,3.2vw,32px);line-height:1.3;letter-spacing:-.45px}
+.store-create-heading p,.booking-create-heading p{margin:0;color:#52637d;font-size:13px;line-height:1.7}
+.store-product-form .modal-field,.booking-create-form .modal-field{color:#283956;font-size:13px;font-weight:700}
+.store-product-form .modal-field>input,.store-product-form .modal-field>select,.store-product-form .modal-field>textarea,.booking-create-form .modal-field>input:not([type=file]),.booking-create-form .modal-field>select,.booking-create-form .modal-field>textarea{min-height:52px;border:1px solid #d3deed;border-radius:14px;background:linear-gradient(145deg,#ffffffed,#f4f8fdeb);color:#1e2d47;font:500 14px var(--font);box-shadow:0 5px 15px #38516e0b,inset 0 1px #fff;transition:border-color .18s,box-shadow .18s,transform .18s}
+.store-product-form .modal-field>textarea,.booking-create-form .modal-field>textarea{min-height:104px}
+.store-product-form .modal-field>input::placeholder,.store-product-form .modal-field>textarea::placeholder,.booking-create-form .modal-field>input::placeholder,.booking-create-form .modal-field>textarea::placeholder{color:#8290a4}
+.store-product-form .modal-field>input:focus,.store-product-form .modal-field>select:focus,.store-product-form .modal-field>textarea:focus,.booking-create-form .modal-field>input:focus,.booking-create-form .modal-field>select:focus,.booking-create-form .modal-field>textarea:focus{border-color:#9482e1;background:#fff;box-shadow:0 0 0 4px #8a76df20,0 8px 20px #4b5c7912}
+.store-product-form .modal-field small,.booking-create-form .modal-field small{color:#6c7b93;font-size:11px;line-height:1.55}
+.store-beat-upload,.store-create-note{border-color:#dce4f0;background:linear-gradient(135deg,#f5f3ff,#effafb);box-shadow:inset 0 1px #fff,0 7px 18px #40557310}
+.store-beat-upload-copy strong,.store-create-note p{color:#283956}
+.store-beat-upload-copy small,.store-beat-upload>p{color:#63738d}
+.store-beat-icon{background:linear-gradient(145deg,#ebe6ff,#e2faf8);color:#7562c5}
+.store-product-form .store-audio-pick{border-color:#9ca8d67d;background:#ffffffa8;color:#344461}
+.store-audio-pick input{color:#53647e}
+.store-audio-pick input::file-selector-button{border-color:#c9cce9;background:#f2efff;color:#554b9c}
+.store-publish-btn,.booking-create-submit{display:flex;width:100%;min-height:54px;align-items:center;justify-content:center;gap:10px;border:0;border-radius:999px;background:linear-gradient(105deg,#9562df 0%,#6c9be9 52%,#39c8bd 100%);color:#fff;font:750 15px var(--font);box-shadow:0 9px 22px #6856bd33,inset 0 1px #ffffff80;cursor:pointer;transition:transform .18s,box-shadow .18s,filter .18s}
+.store-publish-btn:hover,.booking-create-submit:hover{transform:translateY(-2px);box-shadow:0 13px 26px #6856bd42,inset 0 1px #ffffffa8;filter:saturate(1.08)}
+.store-publish-btn:disabled,.booking-create-submit:disabled{opacity:.65;cursor:wait;transform:none}
+.store-image-field{display:block;min-width:0;margin:0 0 15px;color:#283956;font-size:13px;font-weight:700}
+.store-image-label{display:block;margin-bottom:7px}
+.store-image-pick,.booking-image-picker{position:relative;display:flex;min-height:76px;align-items:center;gap:12px;padding:13px 15px;border:1px dashed #9ca9d2;border-radius:15px;background:linear-gradient(120deg,#f8f5ff,#f2fbfc);color:#344461;cursor:pointer;transition:border-color .18s,box-shadow .18s,background .18s}
+.store-image-pick:hover,.booking-image-picker:hover{border-color:#7d70cf;box-shadow:0 0 0 3px #8875df17}
+.store-image-pick:focus-within{outline:3px solid #6c79da;outline-offset:3px}
+.store-image-pick-mark{display:grid;width:42px;height:42px;flex:none;place-items:center;border-radius:13px;background:linear-gradient(145deg,#e9e2ff,#dff7f5);color:#7462c7;font-size:24px}
+.store-image-pick b,.store-image-pick small{display:block}
+.store-image-pick b{font-size:13px}
+.store-image-pick small{margin-top:3px;color:#6d7c94;font-size:11px;font-weight:500}
+.store-image-pick input,.booking-image-picker input[type=file]{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%)}
+.store-image-preview-wrap{position:relative;margin-top:10px;overflow:hidden;border:1px solid #d7deea;border-radius:15px;background:#edf2f8}
+.store-image-preview-wrap[hidden],.booking-image-preview[hidden]{display:none!important}
+.store-image-preview-wrap img{display:block;width:100%;max-height:230px;object-fit:cover}
+.store-image-preview-wrap button{position:absolute;right:10px;bottom:10px;min-height:38px;padding:0 14px;border:1px solid #fff;border-radius:999px;background:#16243bd9;color:#fff;font:600 12px var(--font);cursor:pointer}
+.booking-create-heading{display:flex;gap:14px}
+.booking-create-mark{display:grid;flex:none;place-items:center;font-size:23px}
+.booking-create-form .modal-field{display:block;min-width:0;margin:0 0 15px}
+.booking-create-form input:not([type=file]),.booking-create-form select,.booking-create-form textarea{display:block;width:100%;margin-top:7px;padding:12px 14px}
+.booking-create-form>div[style*="grid-template-columns"]{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:0 14px!important}
+.booking-image-picker{display:block;min-height:auto;font-size:13px}
+.booking-image-picker small{display:block;margin:4px 0 9px;font-weight:500}
+.booking-image-picker input[type=file]{position:static;width:100%;height:auto;overflow:visible;clip:auto;clip-path:none;white-space:normal;margin-top:7px}
+.booking-image-picker input[type=file]::file-selector-button{min-height:40px;margin-right:10px;padding:0 14px;border:1px solid #c9cce9;border-radius:999px;background:#f2efff;color:#554b9c;font:650 12px var(--font);cursor:pointer}
+.booking-image-preview{display:block;width:100%;max-height:230px;margin-top:12px;border:1px solid #d7deea;border-radius:14px;object-fit:cover}
+.booking-create-form .modal-field>small{display:block;margin-top:5px;font-weight:500}
+.booking-create-modal .booking-create-form :is(input,select,textarea,button):focus-visible,.artist-store-modal .store-product-form :is(input,select,textarea,button):focus-visible{outline:3px solid #6c79da;outline-offset:3px}
+@media(max-width:600px){.artist-store-modal #modalContent,.booking-create-modal #modalContent{padding:23px 17px 18px}.store-create-heading,.booking-create-heading{gap:10px;margin-right:38px}.store-create-mark,.booking-create-mark{width:40px;height:40px;border-radius:13px;font-size:20px}.store-create-heading h2,.booking-create-heading h2{font-size:22px}.store-create-heading p,.booking-create-heading p{font-size:12px}.store-product-fields{grid-template-columns:1fr;gap:0}.store-field-wide{grid-column:auto}.store-product-form .modal-field,.booking-create-form .modal-field,.store-image-field{font-size:12px}.store-product-form .modal-field>input,.store-product-form .modal-field>select,.store-product-form .modal-field>textarea,.booking-create-form .modal-field>input:not([type=file]),.booking-create-form .modal-field>select,.booking-create-form .modal-field>textarea{min-height:50px;font-size:16px}.booking-create-form>div[style*="grid-template-columns"]{grid-template-columns:1fr!important;gap:0!important}}
+

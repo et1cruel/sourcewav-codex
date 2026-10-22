@@ -34,6 +34,7 @@
 
       return `
         <article class="booking-card" data-card-id="${esc(card.id)}">
+          ${card.portfolioImageUrl ? `<img class="booking-portfolio-image" src="${esc(card.portfolioImageUrl)}" alt="ผลงานของ ${esc(card.artistName)}" loading="lazy" />` : ''}
           <div>
             <div class="booking-card-top">
               <div class="booking-avatar">${esc(card.avatarChar || card.artistName.charAt(0))}</div>
@@ -66,9 +67,9 @@
               ${esc(card.bio)}
             </p>
 
-            <div class="booking-portfolio-snippet">
+            ${card.portfolioTitle ? `<div class="booking-portfolio-snippet">
               <strong>ตัวอย่างผลงาน:</strong> ${esc(card.portfolioTitle)}
-            </div>
+            </div>` : ''}
           </div>
 
           <div class="booking-card-foot">
@@ -96,10 +97,10 @@
     const defaultName = profile.displayName || profile.name || '';
 
     showModal(`
-      <h2 id="modalTitle">ลงทะเบียนรับงาน / สร้างการ์ด Booking</h2>
-      <p>เพิ่มโปรไฟล์ของคุณบน Booking Board เพื่อรับงาน DJ, แรป, ทำบีท ถ่ายและตัดต่อวิดีโอ สักลาย หรืองานโปรดักชัน</p>
+      <section class="booking-create-view">
+      <header class="booking-create-heading"><span class="booking-create-mark" aria-hidden="true">✦</span><div><span class="booking-form-eyebrow">SOURCEWAV · BOOKING BOARD</span><h2 id="modalTitle">ลงทะเบียนรับงาน / สร้างการ์ด Booking</h2><p>เพิ่มโปรไฟล์ให้ผู้จัดงานค้นพบและติดต่อจ้างงานคุณได้ง่ายขึ้น</p></div></header>
 
-      <form id="joinBookingForm">
+      <form id="joinBookingForm" class="booking-create-form">
         <label class="modal-field">
           ชื่อที่ใช้รับงาน
           <input id="newArtistName" required value="${esc(defaultName)}" />
@@ -152,12 +153,28 @@
           <input id="newArtistPortfolio" placeholder="เช่น ลิงก์ SoundCloud, YouTube, หรือชื่อมิกซ์เทป" />
         </label>
 
-        <button type="submit" class="modal-primary" id="saveBookingCardBtn">บันทึกและขึ้นแสดงบน Booking Board</button>
+        <label class="modal-field booking-image-picker">ภาพตัวอย่างผลงาน <small>อัปโหลดภาพเพื่อแสดงบนการ์ด Booking · JPG, PNG หรือ WebP · ไม่เกิน 5 MB</small><input id="newArtistPortfolioImage" type="file" accept="image/jpeg,image/png,image/webp" aria-label="เลือกภาพตัวอย่างผลงาน" /><img id="newArtistPortfolioPreview" class="booking-image-preview" alt="ตัวอย่างภาพผลงาน" hidden /></label>
+
+        <button type="submit" class="booking-create-submit" id="saveBookingCardBtn"><span>บันทึกการ์ด Booking</span><b aria-hidden="true">↗</b></button>
       </form>
-    `);
+      </section>
+    `, 'booking-create-modal');
+
+    const portfolioImageInput = $('#newArtistPortfolioImage');
+    const portfolioPreview = $('#newArtistPortfolioPreview');
+    portfolioImageInput?.addEventListener('change', () => {
+      const file = portfolioImageInput.files?.[0];
+      if (!file) { portfolioPreview.hidden = true; portfolioPreview.removeAttribute('src'); return; }
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+        portfolioImageInput.value = ''; portfolioPreview.hidden = true;
+        toast('เลือกรูป JPG, PNG หรือ WebP ที่มีขนาดไม่เกิน 5 MB'); return;
+      }
+      portfolioPreview.src = URL.createObjectURL(file); portfolioPreview.hidden = false;
+    });
 
     $('#joinBookingForm')?.addEventListener('submit', e => {
       e.preventDefault();
+      if (!global.SourcewavAuthUser) { toast('เข้าสู่ระบบก่อนสร้างการ์ด Booking'); $('#profileBtn')?.click(); return; }
       const roleMap = {
         dj: 'DJ / เปิดเพลง',
         rapper: 'Rapper / MC',
@@ -170,6 +187,7 @@
       };
 
       const role = $('#newArtistRole').value;
+      const imageFile = portfolioImageInput.files?.[0] || null;
       const newCard = {
         artistName: $('#newArtistName').value.trim(),
         role: role,
@@ -181,14 +199,28 @@
         city: $('#newArtistCity').value.trim(),
         bio: $('#newArtistBio').value.trim(),
         portfolioTitle: $('#newArtistPortfolio').value.trim(),
-        avatarChar: $('#newArtistName').value.trim().charAt(0).toUpperCase()
+        avatarChar: $('#newArtistName').value.trim().charAt(0).toUpperCase(),
+        portfolioImageUrl: state.bookingCards.find(card => card.artistId === global.SourcewavAuthUser?.id && card.role === role)?.portfolioImageUrl || ''
       };
-
-      global.SourcewavFeatureData.createBookingCard(newCard).then(() => {
-        renderBookingBoard();
-        closeModal();
-        toast('บันทึกการ์ดลงฐานข้อมูลและแสดงบน Booking Board แล้ว');
-      }).catch(error => toast(`บันทึกไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
+      const submit = $('#saveBookingCardBtn'); submit.disabled = true; submit.setAttribute('aria-busy', 'true');
+      (async () => {
+        let imageKey = '';
+        try {
+          if (imageFile) {
+            const extension = imageFile.type === 'image/jpeg' ? 'jpg' : imageFile.type.split('/')[1];
+            const bucket = global.SourcewavSupabase.storage.from('sourcewav-listings');
+            imageKey = `${global.SourcewavAuthUser.id}/booking-images/${crypto.randomUUID()}.${extension}`;
+            const { error } = await bucket.upload(imageKey, imageFile, { contentType: imageFile.type, cacheControl: '3600', upsert: false });
+            if (error) throw error;
+            newCard.portfolioImageUrl = bucket.getPublicUrl(imageKey).data.publicUrl;
+          }
+          await global.SourcewavFeatureData.createBookingCard(newCard);
+          renderBookingBoard(); closeModal(); toast('การ์ด Booking พร้อมภาพผลงานถูกเผยแพร่แล้ว');
+        } catch (error) {
+          if (imageKey) await global.SourcewavSupabase.storage.from('sourcewav-listings').remove([imageKey]).catch(() => {});
+          toast(`บันทึกไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`);
+        } finally { if (submit.isConnected) { submit.disabled = false; submit.removeAttribute('aria-busy'); } }
+      })();
     });
   }
 

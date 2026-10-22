@@ -33,6 +33,7 @@
     rate: Number(row.rate_minor) / 100, rateUnit: row.rate_unit,
     availability: row.availability_note, availableStatus: row.is_immediate ? 'ready' : 'busy',
     city: row.city, bio: row.bio, portfolioTitle: row.portfolio_sample,
+    portfolioImageUrl: row.portfolio_image_url || '',
     isPro: Boolean(row.is_pro), gigsCompleted: Number(row.gigs_completed || 0),
     avatarChar: row.stage_name?.charAt(0) || 'S'
   });
@@ -260,7 +261,7 @@
       rate_minor: Math.round(Number(input.rate) * 100), rate_unit: input.rateUnit,
       city: input.city, availability_note: input.availability,
       is_immediate: input.availableStatus === 'ready', bio: input.bio,
-      portfolio_sample: input.portfolioTitle
+      portfolio_sample: input.portfolioTitle, portfolio_image_url: input.portfolioImageUrl || ''
     };
     const existing = checked(await db.from('booking_cards').select('id').eq('artist_id', owner.id).eq('role', input.role).maybeSingle(), 'check existing booking card');
     const result = existing
@@ -268,7 +269,8 @@
         stage_name: payload.stage_name, role_label: payload.role_label,
         rate_minor: payload.rate_minor, rate_unit: payload.rate_unit, city: payload.city,
         availability_note: payload.availability_note, is_immediate: payload.is_immediate,
-        bio: payload.bio, portfolio_sample: payload.portfolio_sample
+        bio: payload.bio, portfolio_sample: payload.portfolio_sample,
+        portfolio_image_url: payload.portfolio_image_url
       }).eq('id', existing.id).select('*').single()
       : await db.from('booking_cards').insert(payload).select('*').single();
     const row = checked(result, 'save booking card');

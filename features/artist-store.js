@@ -85,7 +85,7 @@
             <label class="modal-field">ประเภทสินค้า<select id="prodType"><option value="digital" selected>ดิจิทัล</option><option value="physical">สินค้าจริง · จัดส่ง</option></select></label>
             <label class="modal-field">ราคาขาย (บาท)<input id="prodPrice" type="number" min="50" step="10" value="650" required /></label>
             <label class="modal-field store-stock-field" id="prodStockField" hidden>จำนวนสต็อก<input id="prodStock" type="number" min="0" step="1" placeholder="ระบุจำนวนชิ้น" /></label>
-            <label class="modal-field store-field-wide">ลิงก์ภาพปกสินค้า <input id="prodImage" type="url" placeholder="https://..." /><small>ใส่ URL รูปปกของผลงานเพื่อให้แสดงบนการ์ดสินค้า</small></label>
+            <div class="modal-field store-field-wide store-image-field"><span class="store-image-label">ภาพสินค้า / ปกผลงาน</span><label class="store-image-pick" for="prodImageFile"><span class="store-image-pick-mark" aria-hidden="true">＋</span><span><b>เลือกภาพจากอุปกรณ์</b><small>JPG, PNG หรือ WebP · ไม่เกิน 5 MB</small></span><input id="prodImageFile" type="file" accept="image/jpeg,image/png,image/webp" aria-label="อัปโหลดภาพสินค้า" /></label><div class="store-image-preview-wrap" id="prodImagePreviewWrap" hidden><img id="prodImagePreview" alt="ตัวอย่างภาพสินค้า" /><button type="button" id="removeProdImage" aria-label="นำภาพสินค้าออก">ลบภาพ</button></div></div>
             <label class="modal-field store-field-wide">คำอธิบายและสิทธิ์การใช้งาน<textarea id="prodDesc" rows="3" required maxlength="2000" placeholder="แนวเพลง รายละเอียดไฟล์ วิธีใช้งาน หรือสิทธิ์การนำไปใช้..."></textarea></label>
             <section class="store-beat-upload store-field-wide" id="beatPreviewField" aria-labelledby="beatPreviewTitle">
               <div class="store-beat-upload-copy"><span class="store-beat-icon" aria-hidden="true">♫</span><div><strong id="beatPreviewTitle">เพิ่มเสียงพรีวิวบีท</strong><small>ให้ผู้ฟังกดลองฟังก่อนตัดสินใจ · ไม่บังคับ</small></div></div>
@@ -106,6 +106,19 @@
     const stockInput = $('#prodStock');
     const beatFileInput = $('#prodBeatPreview');
     const beatPlayer = $('#prodBeatPreviewPlayer');
+    const imageFileInput = $('#prodImageFile');
+    const imagePreview = $('#prodImagePreview');
+    const imagePreviewWrap = $('#prodImagePreviewWrap');
+    imageFileInput.addEventListener('change', () => {
+      const file = imageFileInput.files?.[0];
+      if (!file) { imagePreviewWrap.hidden = true; imagePreview.removeAttribute('src'); return; }
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+        imageFileInput.value = ''; imagePreviewWrap.hidden = true;
+        toast('เลือกรูป JPG, PNG หรือ WebP ที่มีขนาดไม่เกิน 5 MB'); return;
+      }
+      imagePreview.src = URL.createObjectURL(file); imagePreviewWrap.hidden = false;
+    });
+    $('#removeProdImage').addEventListener('click', () => { imageFileInput.value = ''; imagePreviewWrap.hidden = true; imagePreview.removeAttribute('src'); });
     const syncConditionalFields = () => {
       const isPhysical = typeSelect.value === 'physical';
       stockField.hidden = !isPhysical;
@@ -145,13 +158,14 @@
       }
 
       const previewFile = category === 'beats' ? beatFileInput.files?.[0] : null;
+      const imageFile = imageFileInput.files?.[0] || null;
       const newProduct = {
         title: $('#prodTitle').value.trim(),
         category: category,
         type: type,
         price: price,
         stock: type === 'digital' ? null : Number(stockInput),
-        imageUrl: $('#prodImage').value.trim(),
+        imageUrl: '',
         description: $('#prodDesc').value.trim(),
         previewFile
       };
@@ -160,7 +174,16 @@
       submitButton.setAttribute('aria-busy', 'true');
       const persistProduct = async () => {
         let previewKey = '';
+        let imageKey = '';
         try {
+          if (imageFile) {
+            const extension = imageFile.type === 'image/jpeg' ? 'jpg' : imageFile.type.split('/')[1];
+            const bucket = global.SourcewavSupabase.storage.from('sourcewav-listings');
+            imageKey = `${global.SourcewavAuthUser.id}/store-images/${crypto.randomUUID()}.${extension}`;
+            const { error } = await bucket.upload(imageKey, imageFile, { contentType: imageFile.type, cacheControl: '3600', upsert: false });
+            if (error) throw error;
+            newProduct.imageUrl = bucket.getPublicUrl(imageKey).data.publicUrl;
+          }
           if (previewFile) {
             const extension = previewFile.name.split('.').pop().toLowerCase();
             const bucket = global.SourcewavSupabase.storage.from('sourcewav-audio');
@@ -170,12 +193,13 @@
             newProduct.previewAudioUrl = bucket.getPublicUrl(previewKey).data.publicUrl;
           }
           const product = await global.SourcewavFeatureData.createProduct(newProduct);
-          if (!product) { if (previewKey) await global.SourcewavSupabase.storage.from('sourcewav-audio').remove([previewKey]); return; }
+          if (!product) { if (previewKey) await global.SourcewavSupabase.storage.from('sourcewav-audio').remove([previewKey]); if (imageKey) await global.SourcewavSupabase.storage.from('sourcewav-listings').remove([imageKey]); return; }
           renderArtistStore();
           closeModal();
           toast(previewFile ? 'เปิดขายสินค้าและเผยแพร่เสียงพรีวิวแล้ว' : 'บันทึกสินค้าในฐานข้อมูลและเปิดขายแล้ว');
         } catch (error) {
           if (previewKey) await global.SourcewavSupabase.storage.from('sourcewav-audio').remove([previewKey]).catch(() => {});
+          if (imageKey) await global.SourcewavSupabase.storage.from('sourcewav-listings').remove([imageKey]).catch(() => {});
           toast(`บันทึกสินค้าไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`);
         } finally {
           if (submitButton.isConnected) { submitButton.disabled = false; submitButton.removeAttribute('aria-busy'); }
