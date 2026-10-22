@@ -109,34 +109,7 @@
       </section>
     </section>
     <aside class="right-column">
-      <!-- 6. FOLLOW & DROP ALERT — ติดตามศิลปินและแจ้งงานใหม่ -->
-      <section class="drop-alerts-preview" id="drops">
-        <div class="right-heading">
-          <div>
-            <span class="section-kicker">FOLLOW & DROP ALERT</span>
-            <h2>ติดตาม & งานใหม่</h2>
-          </div>
-          <button class="text-action" id="openDropCenterBtn" type="button">ดูทั้งหมด ↗</button>
-        </div>
-        <p style="font-size: 11px; color: #64748b; margin: 4px 0 10px; line-height: 1.5;">
-          ติดตามศิลปินหรือสถานที่ แล้วได้รับแจ้งเมื่อมีเพลงใหม่ งานใหม่ หรือบัตรรอบใหม่
-        </p>
-        <div class="drop-preview-list" id="dropPreviewList" aria-live="polite"></div>
-      </section>
-
-      <!-- 7. EVENT COMMAND CENTER — หลังบ้านผู้จัดงาน -->
-      <section class="right-block command-preview" id="command-center">
-        <div class="right-heading">
-          <div>
-            <span class="section-kicker">EVENT COMMAND CENTER</span>
-            <h2>หลังบ้านผู้จัดงาน</h2>
-          </div>
-        </div>
-        <div id="commandPreviewBody" aria-live="polite"></div>
-        <button class="command-open-btn" id="commandCenterBtn" type="button">เปิด Command Center ↗</button>
-      </section>
-
-
+      <!-- 6. SOURCEWAV TICKETS · LIVE EVENTS -->
       <section class="right-block" id="events"><div class="right-heading"><div><span class="section-kicker">SOURCEWAV TICKETS · LIVE EVENTS</span><h2>ซื้อบัตรอีเวนต์</h2></div><button class="text-action" id="createEventBtn" type="button">＋ ขายบัตรงาน</button></div>
       <div class="ticket-hub" aria-label="ศูนย์รวมบัตรอีเวนต์">
         <div class="ticket-hub-copy"><span class="ticket-hub-kicker">MUSIC · ART · COMMUNITY</span><h3>เจอกันหน้าเวที</h3><p>เลือกบัตรจากงานที่กำลังเปิดขาย หรือสร้างอีเวนต์พร้อมตั้งราคาและจำนวนบัตร</p><div class="ticket-hub-tags"><span>สำหรับคนไปงาน</span><span>สำหรับผู้จัดงาน</span></div></div>
@@ -160,6 +133,34 @@
         <div class="venue-list" id="venueList" aria-label="รายชื่อสถานที่บนแผนที่"></div>
         <p class="map-source">ข้อมูลสถานที่จากแหล่งสาธารณะและลิงก์บัญชีของสถานที่ · ยังไม่แสดงอีเวนต์ที่ไม่มีแหล่งยืนยัน</p>
       </div></section>
+      <!-- 7. EVENT COMMAND CENTER — หลังบ้านผู้จัดงาน -->
+      <section class="right-block command-preview" id="command-center">
+        <div class="right-heading">
+          <div>
+            <span class="section-kicker">EVENT COMMAND CENTER</span>
+            <h2>หลังบ้านผู้จัดงาน</h2>
+          </div>
+        </div>
+        <div id="commandPreviewBody" aria-live="polite"></div>
+        <button class="command-open-btn" id="commandCenterBtn" type="button">เปิด Command Center ↗</button>
+      </section>
+
+
+      <!-- 8. FOLLOW & DROP ALERT — ติดตามศิลปินและแจ้งงานใหม่ -->
+      <section class="drop-alerts-preview" id="drops">
+        <div class="right-heading">
+          <div>
+            <span class="section-kicker">FOLLOW & DROP ALERT</span>
+            <h2>ติดตาม & งานใหม่</h2>
+          </div>
+          <button class="text-action" id="openDropCenterBtn" type="button">ดูทั้งหมด ↗</button>
+        </div>
+        <p style="font-size: 11px; color: #64748b; margin: 4px 0 10px; line-height: 1.5;">
+          ติดตามศิลปินหรือสถานที่ แล้วได้รับแจ้งเมื่อมีเพลงใหม่ งานใหม่ หรือบัตรรอบใหม่
+        </p>
+        <div class="drop-preview-list" id="dropPreviewList" aria-live="polite"></div>
+      </section>
+
       <section class="right-block" id="market"><div class="right-heading"><div><span class="section-kicker">ซื้อ ขาย แลกเปลี่ยน</span><h2>ตลาดงานศิลปะ</h2></div><button class="market-create-btn" id="createListingBtn" type="button">＋ ลงผลงาน</button></div><div class="market-grid"><div id="userListings" class="user-listings"></div></div><p class="demo-note">ลงประกาศผลงานและทักผู้ขายเพื่อคุยรายละเอียดการซื้อขาย</p></section>
       <section class="right-block people-block" id="people"><div class="right-heading"><div><span class="section-kicker">คนทำของน่าสนใจ</span><h2>เจอคนใหม่ๆ</h2></div></div><div class="people-list" id="peopleList"><p class="people-empty">กำลังค้นหาศิลปินจากโปรไฟล์จริง…</p></div></section></aside>
     <section id="artistProfileView" class="artist-profile-view" hidden aria-live="polite"></section>
