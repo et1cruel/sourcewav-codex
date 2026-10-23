@@ -145,10 +145,13 @@
         </label>
       </div>
       <div class="composer-footer">
-        <p class="composer-footer-note">
-          <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.3"/><path d="M2.9 10h14.2M10 2.7c2 2 3 4.4 3 7.3s-1 5.3-3 7.3c-2-2-3-4.4-3-7.3s1-5.3 3-7.3Z"/></svg>
-          <span>โพสต์นี้จะแสดงในฟีดคอมมูนิตี้</span>
-        </p>
+        <div class="composer-footer-row">
+          <p class="composer-footer-note">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.3"/><path d="M2.9 10h14.2M10 2.7c2 2 3 4.4 3 7.3s-1 5.3-3 7.3c-2-2-3-4.4-3-7.3s1-5.3 3-7.3Z"/></svg>
+            <span>โพสต์นี้จะแสดงในฟีดคอมมูนิตี้</span>
+          </p>
+          <button class="emoji-toggle" type="button" data-emoji-toggle data-emoji-target="postBody" aria-label="แทรกอีโมจิ" aria-expanded="false" aria-haspopup="dialog" aria-controls="emojiPicker"><span aria-hidden="true">🙂</span></button>
+        </div>
         <button class="modal-primary" id="publishBtn" type="button" disabled>
           <span>โพสต์ลงฟีด</span>
           <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.2 10h12.6M10.2 4.5l5.6 5.5-5.6 5.5"/></svg>

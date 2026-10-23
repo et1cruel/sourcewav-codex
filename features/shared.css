@@ -163,6 +163,8 @@
 .composer-field-meta{display:flex;justify-content:space-between;gap:12px;margin-top:7px;color:#607387;font-size:13px;font-weight:450}
 .composer-field-meta #postBodyCount{flex:none;color:#556e84;font-variant-numeric:tabular-nums}
 .composer-footer{display:flex;flex-direction:column;gap:9px;margin-top:15px;padding-top:12px;border-top:1px solid #e7e2eb}
+.composer-footer-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.composer-footer-row .composer-footer-note{flex:1;min-width:0}
 .composer-footer-note{display:flex;align-items:center;gap:8px;margin:0;color:#586d82;font-size:14px}
 .composer-footer-note svg{color:#40877e}
 .composer-modal .modal-primary{display:flex;min-height:50px;align-items:center;justify-content:center;gap:10px;margin:0;border:1px solid #c72caf;border-radius:11px;background:linear-gradient(105deg,#d632bd,#b423a9);color:#fff;font-size:16px;font-weight:650;box-shadow:0 7px 16px #b423a92a;transition:background-color .16s,box-shadow .16s,transform .16s}

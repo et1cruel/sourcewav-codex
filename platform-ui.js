@@ -1047,7 +1047,7 @@
     panel.className = 'post-comments-inline';
     panel.dataset.postCommentsPanel = postId;
     panel.setAttribute('aria-label', `ความคิดเห็นของ ${postTitle}`);
-    panel.innerHTML = `<div class="post-comments-inline-head"><div><span>SOURCEWAV · COMMUNITY</span><h3>ความคิดเห็น</h3><p>${esc(postTitle)}</p></div><button type="button" data-post-comments-close aria-label="ปิดความคิดเห็น">ปิด ×</button></div><div class="post-comments-inline-list" aria-live="polite"></div><form class="post-comments-inline-form" data-post-id="${esc(postId)}"><label for="postCommentBody-${esc(postId)}">เขียนความคิดเห็น</label><textarea id="postCommentBody-${esc(postId)}" name="body" maxlength="2000" required placeholder="แสดงความคิดเห็นอย่างสร้างสรรค์…"></textarea><div class="post-comments-inline-actions"><small>ไม่เกิน 2,000 ตัวอักษร</small><button type="submit">ส่งความคิดเห็น <span aria-hidden="true">↗</span></button></div></form>`;
+    panel.innerHTML = `<div class="post-comments-inline-head"><div><span>SOURCEWAV · COMMUNITY</span><h3>ความคิดเห็น</h3><p>${esc(postTitle)}</p></div><button type="button" data-post-comments-close aria-label="ปิดความคิดเห็น">ปิด ×</button></div><div class="post-comments-inline-list" aria-live="polite"></div><form class="post-comments-inline-form" data-post-id="${esc(postId)}"><label for="postCommentBody-${esc(postId)}">เขียนความคิดเห็น</label><textarea id="postCommentBody-${esc(postId)}" name="body" maxlength="2000" required placeholder="แสดงความคิดเห็นอย่างสร้างสรรค์…"></textarea><div class="post-comments-inline-actions"><div class="post-comments-inline-tools"><button class="emoji-toggle" type="button" data-emoji-toggle data-emoji-target="postCommentBody-${esc(postId)}" aria-label="แทรกอีโมจิ" aria-expanded="false" aria-haspopup="dialog" aria-controls="emojiPicker"><span aria-hidden="true">🙂</span></button><small>ไม่เกิน 2,000 ตัวอักษร</small></div><button type="submit">ส่งความคิดเห็น <span aria-hidden="true">↗</span></button></div></form>`;
     card.append(panel);
     activePostComments = { postId, panel, trigger };
     trigger.setAttribute('aria-expanded', 'true');
@@ -1177,6 +1177,170 @@
     if (event.target?.id !== 'ticketSlipForm') return;
     event.stopImmediatePropagation();
     submitTicketSlip(event);
+  }, true);
+
+  /* Desktop emoji picker: shared by the post composer and inline feed comments. */
+  const emojiGroups = [
+    {
+      label: 'หน้ายิ้ม',
+      emojis: ['😀','😄','😆','😂','🤣','🙂','😉','😊','😇','🥰','😍','🤩','😘','😋','😜','🤪','🤓','😎','🥳','😏','😢','😭','😤','😡','🤯','😱','😨','🥺','😴','🤔','🤭','🤫','🙄','😬','🥴','🤢','😷','🤠','😈','🤡','💩','👻','💀','👽','🤖']
+    },
+    {
+      label: 'มือและท่าทาง',
+      emojis: ['👋','🤚','🖐️','✋','🖖','👌','🤏','✌️','🤞','🤟','🤘','🤙','👈','👉','👆','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🫶']
+    },
+    {
+      label: 'หัวใจ',
+      emojis: ['❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','💯']
+    },
+    {
+      label: 'ดนตรีและงานสร้าง',
+      emojis: ['🎵','🎶','🎤','🎧','🎸','🥁','🎹','🎷','🎺','🪕','🎻','🎼','🎬','📀','💿','📻','🔊','🔥','✨','⚡']
+    },
+    {
+      label: 'ปาร์ตี้และอื่น ๆ',
+      emojis: ['🎉','🎊','🎁','🏆','🥇','🌟','⭐','💫','💥','🚀','🌈','☀️','🌙','🍀','🌸','🌹','🍕','🍜','☕','🍻','🥂','🪦','🚬','🕯️','🧿','🎃','👑','💎','🔮']
+    }
+  ];
+
+  let emojiPicker = null;
+  let emojiPickerToggle = null;
+  let emojiPickerTarget = null;
+
+  function buildEmojiPicker() {
+    if (emojiPicker?.isConnected) return emojiPicker;
+    const picker = document.createElement('div');
+    picker.className = 'emoji-picker-popover';
+    picker.id = 'emojiPicker';
+    picker.setAttribute('role', 'dialog');
+    picker.setAttribute('aria-label', 'เลือกอีโมจิ');
+    picker.hidden = true;
+    picker.innerHTML = `<div class="emoji-picker-head"><strong>อีโมจิ</strong><button type="button" class="emoji-picker-close" data-emoji-close aria-label="ปิดตัวเลือกอีโมจิ">×</button></div><div class="emoji-picker-scroll">${emojiGroups.map((group, index) => `<div class="emoji-picker-group" role="group" aria-labelledby="emojiGroup${index}"><p class="emoji-picker-label" id="emojiGroup${index}">${group.label}</p><div class="emoji-picker-grid">${group.emojis.map(emoji => `<button type="button" data-emoji="${emoji}" aria-label="แทรกอีโมจิ ${emoji}">${emoji}</button>`).join('')}</div></div>`).join('')}</div>`;
+    document.body.append(picker);
+    emojiPicker = picker;
+    return picker;
+  }
+
+  function resolveEmojiTarget(toggle) {
+    const explicitId = toggle?.dataset?.emojiTarget;
+    if (explicitId) {
+      const explicit = document.getElementById(explicitId);
+      if (explicit) return explicit;
+    }
+    return toggle?.closest('form')?.querySelector('textarea, input[type="text"]') || null;
+  }
+
+  function bodyZoom() {
+    const value = Number.parseFloat(getComputedStyle(document.body).zoom);
+    return Number.isFinite(value) && value > 0 ? value : 1;
+  }
+
+  function positionEmojiPicker() {
+    if (!emojiPicker || emojiPicker.hidden || !emojiPickerToggle) return;
+    const rect = emojiPickerToggle.getBoundingClientRect();
+    if (rect.bottom < 0 || rect.top > window.innerHeight) { closeEmojiPicker(); return; }
+    const zoom = bodyZoom();
+    const width = Math.min(352, (window.innerWidth - 24) / zoom);
+    emojiPicker.style.width = `${width}px`;
+    emojiPicker.style.maxHeight = `${Math.max(180, Math.min(430, (window.innerHeight - 24) / zoom))}px`;
+    const visualWidth = emojiPicker.offsetWidth * zoom;
+    const visualHeight = emojiPicker.offsetHeight * zoom;
+    let visualLeft = rect.left;
+    if (visualLeft + visualWidth > window.innerWidth - 12) visualLeft = rect.right - visualWidth;
+    visualLeft = Math.max(12, visualLeft);
+    let visualTop = rect.top - visualHeight - 10;
+    if (visualTop < 12) {
+      const clampedAbove = 12;
+      if (clampedAbove + visualHeight <= rect.top - 4) {
+        visualTop = clampedAbove;
+      } else {
+        const below = rect.bottom + 10;
+        visualTop = below + visualHeight <= window.innerHeight - 12
+          ? below
+          : Math.max(12, window.innerHeight - visualHeight - 12);
+      }
+    }
+    emojiPicker.style.left = `${visualLeft / zoom}px`;
+    emojiPicker.style.top = `${visualTop / zoom}px`;
+  }
+
+  function openEmojiPicker(toggle) {
+    const target = resolveEmojiTarget(toggle);
+    if (!target) return;
+    const picker = buildEmojiPicker();
+    emojiPickerToggle = toggle;
+    emojiPickerTarget = target;
+    document.querySelectorAll('[data-emoji-toggle]').forEach(button => button.setAttribute('aria-expanded', String(button === toggle)));
+    picker.hidden = false;
+    positionEmojiPicker();
+    const scroller = picker.querySelector('.emoji-picker-scroll');
+    if (scroller) scroller.scrollTop = 0;
+    picker.querySelector('[data-emoji]')?.focus({ preventScroll: true });
+  }
+
+  function closeEmojiPicker({ restoreFocus = false } = {}) {
+    if (!emojiPicker || emojiPicker.hidden) return;
+    emojiPicker.hidden = true;
+    emojiPickerToggle?.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) emojiPickerToggle?.focus({ preventScroll: true });
+    emojiPickerToggle = null;
+    emojiPickerTarget = null;
+  }
+
+  function insertEmoji(emoji) {
+    const target = emojiPickerTarget;
+    if (!target || !document.contains(target)) { closeEmojiPicker(); return; }
+    const start = target.selectionStart ?? target.value.length;
+    const end = target.selectionEnd ?? start;
+    const maxLength = Number(target.getAttribute('maxlength')) || Infinity;
+    if (target.value.length - (end - start) + emoji.length > maxLength) { toast('ข้อความเต็มแล้ว'); return; }
+    target.setRangeText(emoji, start, end, 'end');
+    target.dispatchEvent(new Event('input', { bubbles: true }));
+    target.focus({ preventScroll: true });
+    target.setSelectionRange(start + emoji.length, start + emoji.length);
+  }
+
+  document.addEventListener('click', event => {
+    const toggle = event.target.closest('[data-emoji-toggle]');
+    if (toggle) {
+      event.preventDefault();
+      if (!emojiPicker?.hidden && emojiPickerToggle === toggle) closeEmojiPicker({ restoreFocus: true });
+      else openEmojiPicker(toggle);
+      return;
+    }
+    const selected = event.target.closest('[data-emoji]');
+    if (selected && emojiPicker?.contains(selected)) { event.preventDefault(); insertEmoji(selected.dataset.emoji); return; }
+    if (event.target.closest('[data-emoji-close]')) { event.preventDefault(); closeEmojiPicker({ restoreFocus: true }); return; }
+    if (emojiPicker && !emojiPicker.hidden && !emojiPicker.contains(event.target)) closeEmojiPicker();
+  });
+
+  document.addEventListener('keydown', event => {
+    if (!emojiPicker || emojiPicker.hidden) return;
+    if (event.key === 'Escape') {
+      event.preventDefault(); event.stopPropagation();
+      closeEmojiPicker({ restoreFocus: true });
+      return;
+    }
+    const current = document.activeElement;
+    if (!emojiPicker.contains(current)) return;
+    const buttons = [...emojiPicker.querySelectorAll('[data-emoji]')];
+    const index = buttons.indexOf(current);
+    if (index < 0) return;
+    let next = null;
+    if (event.key === 'ArrowRight') next = index + 1;
+    else if (event.key === 'ArrowLeft') next = index - 1;
+    else if (event.key === 'ArrowDown') next = index + 8;
+    else if (event.key === 'ArrowUp') next = index - 8;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = buttons.length - 1;
+    if (next === null) return;
+    event.preventDefault();
+    buttons[Math.max(0, Math.min(buttons.length - 1, next))]?.focus({ preventScroll: true });
+  }, true);
+
+  window.addEventListener('resize', () => { if (emojiPicker && !emojiPicker.hidden) closeEmojiPicker(); });
+  window.addEventListener('scroll', event => {
+    if (emojiPicker && !emojiPicker.hidden && !emojiPicker.contains(event.target)) closeEmojiPicker();
   }, true);
 
   document.addEventListener('click', async event => {
