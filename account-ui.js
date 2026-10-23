@@ -441,14 +441,14 @@
       let uploadedAvatarKey = '';
       if (avatarFile instanceof File && avatarFile.size) {
         if (!window.SourcewavAuthUser || !window.SourcewavSupabase) return toast('เข้าสู่ระบบก่อนเพื่ออัปโหลดรูปโปรไฟล์');
-        if (!['image/jpeg', 'image/png', 'image/webp'].includes(avatarFile.type) || avatarFile.size > 5 * 1024 * 1024) return toast('เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(avatarFile.type) || avatarFile.size > 10 * 1024 * 1024) return toast('เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 10 MB');
         const extension = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' })[avatarFile.type];
         uploadedAvatarKey = `${window.SourcewavAuthUser.id}/${crypto.randomUUID()}.${extension}`;
-        const { error: uploadError } = await window.SourcewavSupabase.storage.from('sourcewav-avatars').upload(uploadedAvatarKey, avatarFile, {
-          contentType: avatarFile.type, cacheControl: '3600', upsert: false
-        });
-        if (uploadError) return toast('อัปโหลดรูปไม่สำเร็จ: ' + uploadError.message);
-        profile.avatarUrl = window.SourcewavSupabase.storage.from('sourcewav-avatars').getPublicUrl(uploadedAvatarKey).data.publicUrl;
+        try {
+          profile.avatarUrl = (await window.SourcewavS3.upload('image', uploadedAvatarKey, avatarFile)).publicUrl;
+        } catch (uploadError) {
+          return toast('อัปโหลดรูปไม่สำเร็จ: ' + uploadError.message);
+        }
       }
       if (avatarFile instanceof File && avatarFile.size && !(window.SourcewavAuthUser && window.SourcewavSupabase)) {
         profile.avatarUrl = await swCompressAvatar(avatarFile);
@@ -463,7 +463,7 @@
           avatar_url: profile.avatarUrl || null
         }).eq('user_id', window.SourcewavAuthUser.id);
         if (error) {
-          if (uploadedAvatarKey) await window.SourcewavSupabase.storage.from('sourcewav-avatars').remove([uploadedAvatarKey]);
+          if (uploadedAvatarKey) await window.SourcewavS3.remove([uploadedAvatarKey]).catch(() => {});
           toast(error.code === '23505' ? 'ชื่อผู้ใช้นี้ถูกใช้แล้ว' : 'บันทึกโปรไฟล์ไม่สำเร็จ');
           return;
         }
@@ -480,9 +480,9 @@
     if (!(input instanceof HTMLInputElement) || input.id !== 'profileAvatarFile') return;
     const file = input.files?.[0];
     if (!file) return;
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024) {
       input.value = '';
-      toast('เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
+      toast('เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 10 MB');
       return;
     }
     const preview = document.querySelector('#profileAvatarPreview');

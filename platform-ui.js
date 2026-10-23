@@ -1,5 +1,9 @@
 /* Live community, marketplace, event checkout, tickets, and door-scanning UI. */
 (() => {
+  const CLICK_SOUND = 'assets/sounds/click.wav';
+  const uiClickSound = (() => { try { const audio = new Audio(CLICK_SOUND); audio.preload = 'auto'; audio.volume = .3; return audio; } catch { return null; } })();
+  const playUiClick = () => { if (!uiClickSound) return; try { uiClickSound.currentTime = 0; uiClickSound.play().catch(() => {}); } catch (_) {} };
+  document.addEventListener('click', event => { if (event.target?.closest?.('.main-nav .nav-link, .left-rail .rail-item')) playUiClick(); });
   const db = window.SourcewavSupabase;
   if (!db) {
     document.querySelector('#myTicketsBtn')?.addEventListener('click', () => {
@@ -21,6 +25,9 @@
   const money = n => `฿${(Number(n || 0) / 100).toLocaleString('th-TH', { maximumFractionDigits: 0 })}`;
   const initials = name => [...String(name || '?')][0] || '?';
   const safeImageUrl = value => { try { const url = new URL(value || ''); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; } };
+  const LIKE_HEART = { idle: 'assets/like-chrome-heart.svg', liked: 'assets/like-heart-red.svg' };
+  const setLikeHeart = (btn, liked) => { const heart = btn?.querySelector('.like-heart'); if (heart) heart.src = liked ? LIKE_HEART.liked : LIKE_HEART.idle; };
+  try { const preloadLikedHeart = new Image(); preloadLikedHeart.src = LIKE_HEART.liked; } catch (_) {}
   const parseSlipOkBranchId = value => {
     const input = String(value || '').trim();
     if (/^\d{1,20}$/.test(input)) return input;
@@ -127,7 +134,7 @@
     if (error) throw error;
     return (data || []).map(m => {
       const imageUrl = m.image_storage_key
-        ? db.storage.from('sourcewav-room-images').getPublicUrl(m.image_storage_key).data.publicUrl
+        ? window.SourcewavS3.publicUrl(m.image_storage_key)
         : '';
       return `<article class="local-message"><b>${esc(m.profiles?.display_name || 'สมาชิก')}</b>${m.body ? `<p>${esc(m.body).replace(/\n/g, '<br>')}</p>` : ''}${imageUrl ? `<img class="room-message-image" src="${esc(imageUrl)}" alt="รูปที่ส่งในห้องคุย" loading="lazy" />` : ''}<small>${esc(new Date(m.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }))}</small></article>`;
     }).join('');
@@ -166,7 +173,7 @@
       listedRooms.unshift(`<button type="button" class="room-directory-item is-active" data-room-switch="${esc(roomId)}" data-room-name="${esc(roomName)}"><i class="room-dot lime" aria-hidden="true"></i><span>${esc(roomName)}</span></button>`);
     }
     const roomButtons = listedRooms.join('');
-    modal(`<main class="room-chat-page" aria-labelledby="roomHeading"><button type="button" class="room-chat-back-fab" id="roomBack" aria-label="กลับจากห้องแชท">← <span>กลับ</span></button><header class="room-chat-topbar"><a href="#feed" class="room-chat-brand" aria-label="Sourcewav หน้าแรก"><img class="room-chat-logo" src="assets/sourcewav-logo.svg" alt="SOURCEWAV BKK" /></a><span id="modalTitle">ห้องพูดคุย</span><button type="button" id="roomClose" aria-label="ปิดห้องพูดคุย">กลับหน้าเว็บ <b aria-hidden="true">×</b></button></header><div class="room-chat-layout"><aside class="room-directory"><div class="room-directory-heading"><h2>ห้องคุย</h2><p>เลือกห้องแล้วคุยกับคอมมูนิตี้</p></div><nav aria-label="รายการห้องพูดคุย">${roomButtons || '<p class="room-directory-empty">ยังไม่มีห้องคุย</p>'}</nav><button type="button" class="room-create-action" id="roomCreateShortcut">＋ สร้างห้องคุย</button></aside><section class="room-chat-main" aria-labelledby="roomHeading"><header class="room-active-heading"><span class="room-active-mark" aria-hidden="true">#</span><div><h1 id="roomHeading">${esc(roomName)}</h1><p>พื้นที่แลกเปลี่ยนไอเดียและพูดคุยกับสมาชิก</p></div></header><div class="room-thread" id="roomThread" aria-live="polite">${messages || '<p class="room-thread-empty">ยังไม่มีข้อความในห้องนี้ เริ่มบทสนทนาได้เลย</p>'}</div><form id="roomMessageForm" class="room-compose"><label class="room-compose-message" for="roomMessage">ข้อความ<textarea id="roomMessage" maxlength="2000" placeholder="เขียนข้อความถึงห้องนี้…"></textarea></label><div class="room-compose-actions"><label class="room-image-pick" for="roomImage"><span aria-hidden="true">＋</span> แนบรูป<input id="roomImage" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG หรือ WebP · สูงสุด 5 MB</small></label><button class="room-send-button" type="submit"><span>ส่งข้อความ</span><b aria-hidden="true">↗</b></button></div></form></section></div></main>`);
+    modal(`<main class="room-chat-page" aria-labelledby="roomHeading"><button type="button" class="room-chat-back-fab" id="roomBack" aria-label="กลับจากห้องแชท">← <span>กลับ</span></button><header class="room-chat-topbar"><a href="#feed" class="room-chat-brand" aria-label="Sourcewav หน้าแรก"><img class="room-chat-logo" src="assets/sourcewav-logo.svg" alt="SOURCEWAV BKK" /></a><span id="modalTitle">ห้องพูดคุย</span><button type="button" id="roomClose" aria-label="ปิดห้องพูดคุย">กลับหน้าเว็บ <b aria-hidden="true">×</b></button></header><div class="room-chat-layout"><aside class="room-directory"><div class="room-directory-heading"><h2>ห้องคุย</h2><p>เลือกห้องแล้วคุยกับคอมมูนิตี้</p></div><nav aria-label="รายการห้องพูดคุย">${roomButtons || '<p class="room-directory-empty">ยังไม่มีห้องคุย</p>'}</nav><button type="button" class="room-create-action" id="roomCreateShortcut">＋ สร้างห้องคุย</button></aside><section class="room-chat-main" aria-labelledby="roomHeading"><header class="room-active-heading"><span class="room-active-mark" aria-hidden="true">#</span><div><h1 id="roomHeading">${esc(roomName)}</h1><p>พื้นที่แลกเปลี่ยนไอเดียและพูดคุยกับสมาชิก</p></div></header><div class="room-thread" id="roomThread" aria-live="polite">${messages || '<p class="room-thread-empty">ยังไม่มีข้อความในห้องนี้ เริ่มบทสนทนาได้เลย</p>'}</div><form id="roomMessageForm" class="room-compose"><label class="room-compose-message" for="roomMessage">ข้อความ<textarea id="roomMessage" maxlength="2000" placeholder="เขียนข้อความถึงห้องนี้…"></textarea></label><div class="room-compose-actions"><label class="room-image-pick" for="roomImage"><span aria-hidden="true">＋</span> แนบรูป<input id="roomImage" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG หรือ WebP · สูงสุด 10 MB</small></label><button class="room-send-button" type="submit"><span>ส่งข้อความ</span><b aria-hidden="true">↗</b></button></div></form></section></div></main>`);
     const initialThread = $('#roomThread'); if (initialThread) initialThread.scrollTop = initialThread.scrollHeight;
     $('.room-chat-brand').onclick = async event => { event.preventDefault(); closeModal(); await closeRoomChannel(); location.hash = 'feed'; };
     $('#roomClose').onclick = async () => { closeModal(); await closeRoomChannel(); };
@@ -179,7 +186,7 @@
       const imageFile = $('#roomImage').files?.[0];
       if (!body && !imageFile) return toast('พิมพ์ข้อความหรือเลือกรูปก่อนส่ง');
       if (body.length > 2000) return toast('ข้อความยาวได้ไม่เกิน 2,000 ตัวอักษร');
-      if (imageFile && (!['image/jpeg', 'image/png', 'image/webp'].includes(imageFile.type) || imageFile.size > 5 * 1024 * 1024)) return toast('เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
+      if (imageFile && (!['image/jpeg', 'image/png', 'image/webp'].includes(imageFile.type) || imageFile.size > 10 * 1024 * 1024)) return toast('เลือกรูป JPG, PNG หรือ WebP ขนาดไม่เกิน 10 MB');
       const submit = event.submitter || event.currentTarget.querySelector('[type="submit"]');
       submit.disabled = true;
       let imageStorageKey = null;
@@ -187,10 +194,7 @@
         if (imageFile) {
           const extension = ({ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' })[imageFile.type];
           imageStorageKey = `${user.id}/${roomId}/${crypto.randomUUID()}.${extension}`;
-          const { error: uploadError } = await db.storage.from('sourcewav-room-images').upload(imageStorageKey, imageFile, {
-            contentType: imageFile.type, cacheControl: '3600', upsert: false
-          });
-          if (uploadError) throw uploadError;
+          await window.SourcewavS3.upload('image', imageStorageKey, imageFile);
         }
         const { error } = await db.from('community_room_messages').insert({ room_id: roomId, author_id: user.id, body, image_storage_key: imageStorageKey });
         if (error) throw error;
@@ -198,7 +202,7 @@
         $('#roomMessage').value = '';
         $('#roomImage').value = '';
       } catch (error) {
-        if (imageStorageKey) await db.storage.from('sourcewav-room-images').remove([imageStorageKey]);
+        if (imageStorageKey) await window.SourcewavS3.remove([imageStorageKey]).catch(() => {});
         toast('ส่งข้อความไม่ได้: ' + error.message);
       } finally {
         if (submit?.isConnected) submit.disabled = false;
@@ -229,7 +233,7 @@
     const date = new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(post.created_at));
     const saved = savedSet?.has(post.id);
     const avatarUrl = (() => { try { const url = new URL(author.avatar_url || ''); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; } })();
-    return `<article class="post-card live-post-card" data-live-post="${esc(post.id)}" data-kind="${esc(post.kind)}"><div class="post-top"><div class="avatar avatar-purple live-post-avatar">${esc(initials(author.display_name || author.username))}${avatarUrl ? `<img src="${esc(avatarUrl)}" alt="" loading="lazy" />` : ''}</div><div class="post-author"><strong>${esc(author.display_name || author.username || 'ศิลปิน')}</strong><small>${esc(kind)} · ${esc(date)}</small></div></div>${post.title ? `<h3 class="live-post-title">${esc(post.title)}</h3>` : ''}<p class="post-copy">${esc(post.body).replace(/\n/g, '<br>')}</p><div class="post-actions"><button class="live-like-btn ${liked ? 'liked' : ''}" data-live-like="${esc(post.id)}" aria-pressed="${Boolean(liked)}" aria-label="${liked ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} โพสต์นี้"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.9c0 5.1-8.8 10-8.8 10S3.2 14 3.2 8.9a4.4 4.4 0 0 1 8.8-.1 4.4 4.4 0 0 1 8.8.1Z"/></svg><span>ถูกใจ</span><b>${likes.length}</b></button><button data-live-comment="${esc(post.id)}" aria-expanded="false" aria-label="แสดงความคิดเห็น"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg><span>ความคิดเห็น</span><b>${comments}</b></button><button data-live-share="${esc(post.id)}" aria-label="แชร์โพสต์"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg><span>แชร์</span></button><button class="${saved ? 'liked' : ''}" data-live-save="${esc(post.id)}" aria-pressed="${Boolean(saved)}" aria-label="${saved ? 'นำโพสต์ออกจากรายการที่บันทึก' : 'บันทึกโพสต์'}"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h12v16l-6-4-6 4v-16Z"/></svg><span>${saved ? 'บันทึกแล้ว' : 'เก็บไว้'}</span></button></div></article>`;
+    return `<article class="post-card live-post-card" data-live-post="${esc(post.id)}" data-kind="${esc(post.kind)}"><div class="post-top"><div class="avatar avatar-purple live-post-avatar">${esc(initials(author.display_name || author.username))}${avatarUrl ? `<img src="${esc(avatarUrl)}" alt="" loading="lazy" />` : ''}</div><div class="post-author"><strong>${esc(author.display_name || author.username || 'ศิลปิน')}</strong><small>${esc(kind)} · ${esc(date)}</small></div></div>${post.title ? `<h3 class="live-post-title">${esc(post.title)}</h3>` : ''}<p class="post-copy">${esc(post.body).replace(/\n/g, '<br>')}</p><div class="post-actions"><button class="live-like-btn ${liked ? 'liked' : ''}" data-live-like="${esc(post.id)}" aria-pressed="${Boolean(liked)}" aria-label="${liked ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} โพสต์นี้"><img class="like-heart" src="${liked ? LIKE_HEART.liked : LIKE_HEART.idle}" width="24" height="24" alt="" aria-hidden="true" draggable="false" /><span>ถูกใจ</span><b>${likes.length}</b></button><button data-live-comment="${esc(post.id)}" aria-expanded="false" aria-label="แสดงความคิดเห็น"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg><span>ความคิดเห็น</span><b>${comments}</b></button><button data-live-share="${esc(post.id)}" aria-label="แชร์โพสต์"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg><span>แชร์</span></button><button class="${saved ? 'liked' : ''}" data-live-save="${esc(post.id)}" aria-pressed="${Boolean(saved)}" aria-label="${saved ? 'นำโพสต์ออกจากรายการที่บันทึก' : 'บันทึกโพสต์'}"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h12v16l-6-4-6 4v-16Z"/></svg><span>${saved ? 'บันทึกแล้ว' : 'เก็บไว้'}</span></button></div></article>`;
   }
 
   async function loadFeed() {
@@ -264,7 +268,7 @@
     const root = $('#userListings'); if (!root) return;
     const { data, error } = await db.from('listings').select('id,seller_id,title,description,category,price_minor,currency,delivery_type,profiles!listings_seller_id_fkey(display_name,username),listing_media(storage_key,alt_text,position)').eq('status', 'published').is('deleted_at', null).order('created_at', { ascending: false }).limit(30);
     if (error) { root.innerHTML = `<p class="platform-empty">โหลดตลาดไม่ได้: ${esc(error.message)}</p>`; return; }
-    root.innerHTML = (data || []).map(item => { const media = (item.listing_media || []).sort((a,b) => a.position-b.position)[0]; const image = media ? db.storage.from('sourcewav-listings').getPublicUrl(media.storage_key).data.publicUrl : ''; return `<article class="live-listing">${image ? `<img class="listing-art-image" src="${esc(image)}" alt="${esc(media.alt_text || item.title)}" loading="lazy" />` : `<div class="listing-art-mark">${esc(initials(item.title))}</div>`}<div class="listing-copy"><strong>${esc(item.title)}</strong><small>${esc(item.profiles?.display_name || 'ศิลปิน')} · ${esc(item.category)}</small><p>${esc(item.description || '')}</p><b>${item.price_minor === null ? 'สอบถามราคา' : money(item.price_minor)}</b></div><button data-contact-seller="${esc(item.seller_id)}" data-seller-name="${esc(item.profiles?.display_name || item.profiles?.username || 'ผู้ขาย')}">ทักผู้ขาย</button></article>`; }).join('') || '<p class="platform-empty">ยังไม่มีผลงานในตลาด ลงงานแรกของคุณได้เลย</p>';
+    root.innerHTML = (data || []).map(item => { const media = (item.listing_media || []).sort((a,b) => a.position-b.position)[0]; const image = media ? window.SourcewavS3.publicUrl(media.storage_key) : ''; return `<article class="live-listing">${image ? `<img class="listing-art-image" src="${esc(image)}" alt="${esc(media.alt_text || item.title)}" loading="lazy" />` : `<div class="listing-art-mark">${esc(initials(item.title))}</div>`}<div class="listing-copy"><strong>${esc(item.title)}</strong><small>${esc(item.profiles?.display_name || 'ศิลปิน')} · ${esc(item.category)}</small><p>${esc(item.description || '')}</p><b>${item.price_minor === null ? 'สอบถามราคา' : money(item.price_minor)}</b></div><button data-contact-seller="${esc(item.seller_id)}" data-seller-name="${esc(item.profiles?.display_name || item.profiles?.username || 'ผู้ขาย')}">ทักผู้ขาย</button></article>`; }).join('') || '<p class="platform-empty">ยังไม่มีผลงานในตลาด ลงงานแรกของคุณได้เลย</p>';
   }
 
   async function loadEvents() {
@@ -414,7 +418,7 @@
     const initialSeconds = Math.max(0, Math.ceil((until - Date.now()) / 1000));
     const initialCountdown = `${Math.floor(initialSeconds / 60)}:${String(initialSeconds % 60).padStart(2, '0')}`;
     const eventDate = checkout.startsAt ? new Date(checkout.startsAt).toLocaleString('th-TH', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) : 'ยังไม่ระบุวัน';
-    modal(`<div class="manual-payment"><header class="payment-heading"><span class="payment-eyebrow">SOURCEWAV TICKETS</span><h2 id="modalTitle">ชำระเงินเพื่อรับบัตร</h2><p>${esc(checkout.eventTitle)} · ${esc(checkout.tierName)} × ${checkout.quantity}</p><p class="payment-event-meta">${esc(eventDate)} · ${esc(checkout.venueName || 'ยังไม่ระบุสถานที่')}${checkout.venueAddress ? ` · ${esc(checkout.venueAddress)}` : ''}</p></header><ol class="payment-steps" aria-label="ขั้นตอนชำระเงิน"><li class="is-current"><b>1</b><span>สแกน QR</span></li><li><b>2</b><span>แนบสลิป</span></li><li><b>3</b><span>รับบัตร</span></li></ol><div class="payment-layout"><section class="payment-qr-column" aria-label="QR สำหรับชำระเงิน"><div class="payment-total"><span>ยอดที่ต้องโอน</span><strong>${money(checkout.totalMinor)}<small> บาท</small></strong></div><div class="real-payment-qr"><img src="${esc(checkout.paymentQrUrl)}" alt="QR รับชำระเงินของผู้จัดงาน ${esc(checkout.eventTitle)}" /></div><p class="qr-hint">สแกนด้วยแอปธนาคาร แล้วตรวจชื่อผู้รับก่อนยืนยัน</p></section><section class="payment-details"><h3>ข้อมูลผู้รับเงิน</h3><div class="checkout-row"><span>ธนาคาร</span><b>${esc(checkout.bankName)}</b></div><div class="checkout-row"><span>ชื่อบัญชี</span><b>${esc(checkout.beneficiaryName)}</b></div>${checkout.accountLast4 ? `<div class="checkout-row"><span>เลขบัญชีลงท้าย</span><b>•••• ${esc(checkout.accountLast4)}</b></div>` : ''}<div class="checkout-row payment-expiry"><span>เวลาจองคงเหลือ</span><b><time data-payment-countdown datetime="${esc(checkout.expiresAt)}">${initialCountdown}</time></b></div><p class="payment-order-ref">รายการ #SW-${esc(checkout.orderId.replace(/-/g, '').slice(-8).toUpperCase())}</p></section></div>${checkout.latestSubmission?.status === 'rejected' ? '<p class="order-retry-note">สลิปครั้งก่อนตรวจไม่ผ่าน คุณส่งสลิปต้นฉบับใหม่ได้โดยไม่ต้องสร้างคำสั่งซื้อใหม่</p>' : ''}<p class="order-payee-note">ยอดชำระเข้าบัญชีผู้จัดโดยตรง โปรดตรวจชื่อผู้รับในแอปธนาคารก่อนยืนยัน</p><form id="ticketSlipForm" data-order-id="${esc(checkout.orderId)}"><label class="modal-field">ส่งสลิปตัวจริง<input id="ticketSlipFile" type="file" accept="image/jpeg,image/png,image/webp,image/jfif" required /><small>ไฟล์ JPG, PNG, JFIF หรือ WebP ขนาดไม่เกิน 5 MB · ตรวจได้สูงสุด 5 ครั้งต่อรายการ</small></label><button class="modal-primary" id="submitTicketSlip" type="submit">ตรวจสลิปและออกบัตร</button></form><div id="ticketSlipResult" role="status" aria-live="polite"></div></div>`);
+    modal(`<div class="manual-payment"><header class="payment-heading"><span class="payment-eyebrow">SOURCEWAV TICKETS</span><h2 id="modalTitle">ชำระเงินเพื่อรับบัตร</h2><p>${esc(checkout.eventTitle)} · ${esc(checkout.tierName)} × ${checkout.quantity}</p><p class="payment-event-meta">${esc(eventDate)} · ${esc(checkout.venueName || 'ยังไม่ระบุสถานที่')}${checkout.venueAddress ? ` · ${esc(checkout.venueAddress)}` : ''}</p></header><ol class="payment-steps" aria-label="ขั้นตอนชำระเงิน"><li class="is-current"><b>1</b><span>สแกน QR</span></li><li><b>2</b><span>แนบสลิป</span></li><li><b>3</b><span>รับบัตร</span></li></ol><div class="payment-layout"><section class="payment-qr-column" aria-label="QR สำหรับชำระเงิน"><div class="payment-total"><span>ยอดที่ต้องโอน</span><strong>${money(checkout.totalMinor)}<small> บาท</small></strong></div><div class="real-payment-qr"><img src="${esc(checkout.paymentQrUrl)}" alt="QR รับชำระเงินของผู้จัดงาน ${esc(checkout.eventTitle)}" /></div><p class="qr-hint">สแกนด้วยแอปธนาคาร แล้วตรวจชื่อผู้รับก่อนยืนยัน</p></section><section class="payment-details"><h3>ข้อมูลผู้รับเงิน</h3><div class="checkout-row"><span>ธนาคาร</span><b>${esc(checkout.bankName)}</b></div><div class="checkout-row"><span>ชื่อบัญชี</span><b>${esc(checkout.beneficiaryName)}</b></div>${checkout.accountLast4 ? `<div class="checkout-row"><span>เลขบัญชีลงท้าย</span><b>•••• ${esc(checkout.accountLast4)}</b></div>` : ''}<div class="checkout-row payment-expiry"><span>เวลาจองคงเหลือ</span><b><time data-payment-countdown datetime="${esc(checkout.expiresAt)}">${initialCountdown}</time></b></div><p class="payment-order-ref">รายการ #SW-${esc(checkout.orderId.replace(/-/g, '').slice(-8).toUpperCase())}</p></section></div>${checkout.latestSubmission?.status === 'rejected' ? '<p class="order-retry-note">สลิปครั้งก่อนตรวจไม่ผ่าน คุณส่งสลิปต้นฉบับใหม่ได้โดยไม่ต้องสร้างคำสั่งซื้อใหม่</p>' : ''}<p class="order-payee-note">ยอดชำระเข้าบัญชีผู้จัดโดยตรง โปรดตรวจชื่อผู้รับในแอปธนาคารก่อนยืนยัน</p><form id="ticketSlipForm" data-order-id="${esc(checkout.orderId)}"><label class="modal-field">ส่งสลิปตัวจริง<input id="ticketSlipFile" type="file" accept="image/jpeg,image/png,image/webp,image/jfif" required /><small>ไฟล์ JPG, PNG, JFIF หรือ WebP ขนาดไม่เกิน 10 MB · ตรวจได้สูงสุด 5 ครั้งต่อรายการ</small></label><button class="modal-primary" id="submitTicketSlip" type="submit">ตรวจสลิปและออกบัตร</button></form><div id="ticketSlipResult" role="status" aria-live="polite"></div></div>`);
     const followUp = verificationFollowUp(checkout);
     if (followUp) {
       const orderRef = `SW-${checkout.orderId.replace(/-/g, '').slice(-8).toUpperCase()}`;
@@ -462,7 +466,7 @@
     const result = $('#ticketSlipResult');
     if (!orderId || !file) return toast('เลือกไฟล์สลิปก่อนส่งตรวจ');
     const extensions = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/jfif': 'jfif' };
-    if (!extensions[file.type] || file.size > 5 * 1024 * 1024) return toast('เลือกรูป JPG, PNG, JFIF หรือ WebP ไม่เกิน 5 MB');
+    if (!extensions[file.type] || file.size > 10 * 1024 * 1024) return toast('เลือกรูป JPG, PNG, JFIF หรือ WebP ไม่เกิน 10 MB');
     const user = await needUser(); if (!user) return;
     button.disabled = true; button.textContent = 'กำลังตรวจสลิป…';
     button.dataset.exhausted = 'false';
@@ -594,7 +598,7 @@
       <p class="order-retry-note">QR นี้หมดเวลาจองแล้ว อย่าโอนซ้ำ หากคุณโอนก่อนหมดเวลา ระบบจะตรวจเวลาธุรกรรมจาก SlipOK; ถ้าโอนหลังหมดเวลา รายการจะส่งให้ผู้จัดตรวจยอดและจำนวนบัตรก่อน</p>
       ${followUp ? `<p class="order-retry-note" role="status">${esc(followUp)}</p>${contact}` : ''}
       <div class="payment-details"><div class="checkout-row"><span>ยอดคำสั่งซื้อ</span><b>${esc(money(order.totalMinor))}</b></div>${order.organizerName ? `<div class="checkout-row"><span>ผู้จัดงาน</span><b>${esc(order.organizerName)}</b></div>` : ''}<div class="checkout-row"><span>ธนาคารผู้รับ</span><b>${esc(order.bankName || '—')}</b></div><div class="checkout-row"><span>ชื่อบัญชีรับเงิน</span><b>${esc(order.recipientName || '—')}</b></div>${order.accountLast4 ? `<div class="checkout-row"><span>เลขบัญชีลงท้าย</span><b>•••• ${esc(order.accountLast4)}</b></div>` : ''}<div class="checkout-row"><span>หมดเวลาจอง</span><b>${esc(new Date(order.expiresAt).toLocaleString('th-TH'))}</b></div></div>
-      <form id="ticketSlipForm" data-order-id="${esc(order.orderId)}"><label class="modal-field">แนบสลิปต้นฉบับที่ใช้โอน<input id="ticketSlipFile" type="file" accept="image/jpeg,image/png,image/webp,image/jfif" ${waitForOrganizer ? 'disabled' : ''} required /><small>JPG, PNG, JFIF หรือ WebP ไม่เกิน 5 MB · ส่งได้ไม่เกิน 5 ครั้งต่อคำสั่งซื้อ</small></label><button class="modal-primary" id="submitTicketSlip" type="submit" ${waitForOrganizer ? 'disabled' : ''}>${waitForOrganizer ? 'รอผู้จัดตรวจสอบ' : 'ตรวจสอบเวลาโอนและส่งให้ผู้จัดหากจำเป็น'}</button></form>${order.eventStatus === 'published' ? '<button class="modal-secondary" id="startNewTicketOrder" type="button">หากยังไม่ได้โอน · เลือกบัตรใหม่</button>' : ''}<div id="ticketSlipResult" role="status" aria-live="polite"></div>
+      <form id="ticketSlipForm" data-order-id="${esc(order.orderId)}"><label class="modal-field">แนบสลิปต้นฉบับที่ใช้โอน<input id="ticketSlipFile" type="file" accept="image/jpeg,image/png,image/webp,image/jfif" ${waitForOrganizer ? 'disabled' : ''} required /><small>JPG, PNG, JFIF หรือ WebP ไม่เกิน 10 MB · ส่งได้ไม่เกิน 5 ครั้งต่อคำสั่งซื้อ</small></label><button class="modal-primary" id="submitTicketSlip" type="submit" ${waitForOrganizer ? 'disabled' : ''}>${waitForOrganizer ? 'รอผู้จัดตรวจสอบ' : 'ตรวจสอบเวลาโอนและส่งให้ผู้จัดหากจำเป็น'}</button></form>${order.eventStatus === 'published' ? '<button class="modal-secondary" id="startNewTicketOrder" type="button">หากยังไม่ได้โอน · เลือกบัตรใหม่</button>' : ''}<div id="ticketSlipResult" role="status" aria-live="polite"></div>
     </section>`);
     $('#startNewTicketOrder')?.addEventListener('click', () => { closeModal(); openTicketPurchase(order.eventId); });
   }
@@ -828,7 +832,7 @@
           <label class="modal-field">วันและเวลาจบ<input id="newEventEnds" type="datetime-local" step="60" required /><small>เลือกเวลาจบหลังเวลาเริ่มงาน</small></label>
         </div>
         <label class="modal-field">ที่อยู่สถานที่<input id="newEventAddress" maxlength="400" required placeholder="ที่อยู่สำหรับผู้เข้าร่วมงาน" /></label>
-        <div class="event-poster-upload"><label class="modal-field">โปสเตอร์งาน (สูงสุด 4 รูป)<input id="newEventPoster" type="file" accept="image/jpeg,image/png,image/webp" multiple /><small>เลือกได้ไม่เกิน 4 รูป · แนวตั้ง 2:3 แนะนำ 1200 × 1800 px · JPG, PNG หรือ WebP · รูปละไม่เกิน 5 MB</small><span id="eventPosterSelectionCount" class="event-poster-selection-count" aria-live="polite">ยังไม่ได้เลือกรูป</span></label><div class="event-poster-preview-grid" id="eventPosterPreviewGrid" aria-label="ตัวอย่างโปสเตอร์"><div class="event-poster-preview"><span>รูปที่ 1</span></div><div class="event-poster-preview"><span>รูปที่ 2</span></div><div class="event-poster-preview"><span>รูปที่ 3</span></div><div class="event-poster-preview"><span>รูปที่ 4</span></div></div></div>
+        <div class="event-poster-upload"><label class="modal-field">โปสเตอร์งาน (สูงสุด 4 รูป)<input id="newEventPoster" type="file" accept="image/jpeg,image/png,image/webp" multiple /><small>เลือกได้ไม่เกิน 4 รูป · แนวตั้ง 2:3 แนะนำ 1200 × 1800 px · JPG, PNG หรือ WebP · รูปละไม่เกิน 10 MB</small><span id="eventPosterSelectionCount" class="event-poster-selection-count" aria-live="polite">ยังไม่ได้เลือกรูป</span></label><div class="event-poster-preview-grid" id="eventPosterPreviewGrid" aria-label="ตัวอย่างโปสเตอร์"><div class="event-poster-preview"><span>รูปที่ 1</span></div><div class="event-poster-preview"><span>รูปที่ 2</span></div><div class="event-poster-preview"><span>รูปที่ 3</span></div><div class="event-poster-preview"><span>รูปที่ 4</span></div></div></div>
         <label class="modal-field">รายละเอียดงาน<textarea id="newEventDescription" maxlength="5000" placeholder="ไลน์อัป กำหนดการ หรือข้อมูลที่อยากให้ผู้ชมทราบ"></textarea><small>ไม่เกิน 5,000 ตัวอักษร</small></label>
         <label class="modal-field">เงื่อนไขการยกเลิกและคืนเงิน<textarea id="newEventRefundPolicy" maxlength="2000" minlength="10" required placeholder="อธิบายกรณีที่คืนเงินได้ วิธีติดต่อผู้จัด และระยะเวลาดำเนินการ"></textarea><small>ผู้ซื้อจะเห็นข้อความนี้ก่อนชำระเงิน และจะถูกบันทึกไว้กับคำสั่งซื้อ</small></label>
       </section>
@@ -847,7 +851,7 @@
           <label class="modal-field">ธนาคาร / PromptPay<input id="newPaymentBank" maxlength="80" required placeholder="เช่น กสิกรไทย / PromptPay" /></label>
           <label class="modal-field">ชื่อบัญชีผู้รับเงิน<input id="newPaymentBeneficiary" maxlength="120" required placeholder="ชื่อที่ตรงกับบัญชีธนาคาร" /></label>
           <label class="modal-field">เลขบัญชี 4 ตัวท้าย<input id="newPaymentLast4" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="ไม่บังคับ" /></label>
-          <label class="modal-field ticket-qr-upload">QR Code รับเงิน<input id="newPaymentQr" type="file" accept="image/jpeg,image/png,image/webp" required /><small>JPG, PNG หรือ WebP · ไม่เกิน 5 MB</small></label>
+          <label class="modal-field ticket-qr-upload">QR Code รับเงิน<input id="newPaymentQr" type="file" accept="image/jpeg,image/png,image/webp" required /><small>JPG, PNG หรือ WebP · ไม่เกิน 10 MB</small></label>
           <label class="modal-field">SlipOK Branch ID<input id="newSlipOkBranch" maxlength="200" inputmode="text" autocomplete="off" required placeholder="เลข Branch ID หรือวาง URL จาก SlipOK" /><small>วาง URL รูปแบบ https://api.slipok.com/api/line/apikey/… ได้ ระบบจะดึงเลข Branch ID ให้อัตโนมัติ</small></label>
           <label class="modal-field">SlipOK API Key<input id="newSlipOkApiKey" type="password" maxlength="512" autocomplete="new-password" required placeholder="API Key ของ Branch นี้" /></label>
         </div>
@@ -880,8 +884,8 @@
         slot.classList.toggle('has-poster', Boolean(chosen[index]));
         if (!chosen[index]) { const label = document.createElement('span'); label.textContent = `รูปที่ ${index + 1}`; slot.append(label); return; }
         const file = chosen[index];
-        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
-          const label = document.createElement('span'); label.textContent = file.size > 5 * 1024 * 1024 ? 'ไฟล์เกิน 5 MB' : 'รองรับ JPG, PNG, WebP'; slot.append(label); return;
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024) {
+          const label = document.createElement('span'); label.textContent = file.size > 10 * 1024 * 1024 ? 'ไฟล์เกิน 10 MB' : 'รองรับ JPG, PNG, WebP'; slot.append(label); return;
         }
         const url = URL.createObjectURL(file); eventPosterPreviewUrls.push(url);
         const image = document.createElement('img'); image.src = url; image.alt = `ตัวอย่างโปสเตอร์รูปที่ ${index + 1}`; slot.append(image);
@@ -919,9 +923,9 @@
     if (!bankName || !beneficiaryName || (accountLast4 && !/^\d{4}$/.test(accountLast4))) return invalid('newPaymentBank', 'กรอกธนาคารและชื่อบัญชี และเลขท้าย 4 หลักถ้าต้องการแสดง');
     if (!slipokBranchId) return invalid('newSlipOkBranch', 'กรอก Branch ID เป็นตัวเลข หรือวาง URL API Key จาก api.slipok.com');
     if (slipokApiKey.length < 8 || slipokApiKey.length > 512) return invalid('newSlipOkApiKey', 'กรอก SlipOK API Key ของบัญชีผู้รับ');
-    if (!qrFile || !['image/jpeg', 'image/png', 'image/webp'].includes(qrFile.type) || qrFile.size > 5 * 1024 * 1024) return invalid('newPaymentQr', 'อัปโหลด QR Code เป็น JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
+    if (!qrFile || !['image/jpeg', 'image/png', 'image/webp'].includes(qrFile.type) || qrFile.size > 10 * 1024 * 1024) return invalid('newPaymentQr', 'อัปโหลด QR Code เป็น JPG, PNG หรือ WebP ขนาดไม่เกิน 10 MB');
     if (posterFiles.length > 4) return invalid('newEventPoster', 'เลือกโปสเตอร์ได้ไม่เกิน 4 รูป');
-    if (posterFiles.some(file => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024)) return invalid('newEventPoster', 'โปสเตอร์ทุกไฟล์ต้องเป็น JPG, PNG หรือ WebP ขนาดไม่เกิน 5 MB');
+    if (posterFiles.some(file => !['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024)) return invalid('newEventPoster', 'โปสเตอร์ทุกไฟล์ต้องเป็น JPG, PNG หรือ WebP ขนาดไม่เกิน 10 MB');
     button.disabled = true; button.textContent = 'กำลังเผยแพร่…';
     const user = await needUser(); if (!user) { button.disabled = false; button.textContent = 'เผยแพร่งานและเปิดขายบัตร'; return; }
     const extension = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[qrFile.type];
@@ -929,15 +933,15 @@
     const posterStorageKeys = posterFiles.map(file => `${user.id}/posters/${crypto.randomUUID()}.${{ 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }[file.type]}`);
     try {
       for (const [index, posterFile] of posterFiles.entries()) {
-        const { error: posterUploadError } = await db.storage.from('sourcewav-event-payment-qr').upload(posterStorageKeys[index], posterFile, { contentType: posterFile.type, cacheControl: '3600', upsert: false });
-        if (posterUploadError) throw new Error('อัปโหลดโปสเตอร์งานไม่สำเร็จ: ' + posterUploadError.message);
+        await window.SourcewavS3.upload('image', posterStorageKeys[index], posterFile)
+          .catch(posterUploadError => { throw new Error('อัปโหลดโปสเตอร์งานไม่สำเร็จ: ' + posterUploadError.message); });
       }
-      const { error: uploadError } = await db.storage.from('sourcewav-event-payment-qr').upload(paymentQrKey, qrFile, { contentType: qrFile.type, cacheControl: '3600', upsert: false });
-      if (uploadError) throw new Error('อัปโหลด QR รับเงินไม่สำเร็จ: ' + uploadError.message);
+      await window.SourcewavS3.upload('image', paymentQrKey, qrFile)
+        .catch(uploadError => { throw new Error('อัปโหลด QR รับเงินไม่สำเร็จ: ' + uploadError.message); });
       await call('create-event', { title, category: value('newEventCategory'), startsAt: value('newEventStarts'), endsAt: value('newEventEnds'), venueName: venue, venueAddress: address, description: value('newEventDescription'), refundPolicy, tierName: value('newTierName'), priceBaht: price, quantity, paymentQrKey, posterStorageKeys, bankName, beneficiaryName, accountLast4, slipokBranchId, slipokApiKey });
       slipokApiKeyInput.value = '';
       location.hash = '#events'; closeModal(); await loadEvents(); toast('สร้างอีเวนต์และ Tier บัตรแล้ว');
-    } catch (error) { slipokApiKeyInput.value = ''; await db.storage.from('sourcewav-event-payment-qr').remove([paymentQrKey, ...posterStorageKeys]); button.disabled = false; button.textContent = 'เผยแพร่งานและเปิดขายบัตร'; toast(error.message); }
+    } catch (error) { slipokApiKeyInput.value = ''; await window.SourcewavS3.remove([paymentQrKey, ...posterStorageKeys]).catch(() => {}); button.disabled = false; button.textContent = 'เผยแพร่งานและเปิดขายบัตร'; toast(error.message); }
   }
 
   async function loadChatList() {
@@ -991,23 +995,27 @@
     const title = $('#listingTitle')?.value.trim(), priceText = $('#listingPrice')?.value;
     if (!title) return toast('ใส่ชื่อผลงานก่อนบันทึก');
     const imageFile = $('#listingImage')?.files?.[0];
-    if (imageFile && (!['image/jpeg','image/png','image/webp'].includes(imageFile.type) || imageFile.size > 5 * 1024 * 1024)) return toast('ภาพต้องเป็น JPG, PNG หรือ WebP และขนาดไม่เกิน 5 MB');
+    if (imageFile && (!['image/jpeg','image/png','image/webp'].includes(imageFile.type) || imageFile.size > 10 * 1024 * 1024)) return toast('ภาพต้องเป็น JPG, PNG หรือ WebP และขนาดไม่เกิน 10 MB');
     const map = { 'ภาพพิมพ์': 'print', 'ดิจิทัลอาร์ต': 'digital', 'รับ commission': 'commission', 'แลกเปลี่ยน': 'trade' };
     const { data: listing, error } = await db.from('listings').insert({ seller_id: user.id, title, category: map[$('#listingCategory').value] || 'artwork', description: $('#listingDescription').value.trim(), price_minor: priceText ? Math.round(Number(priceText) * 100) : null, delivery_type: map[$('#listingCategory').value] === 'trade' ? 'exchange' : 'digital', status: 'published' }).select('id').single();
     if (error) return toast('ลงผลงานไม่ได้: ' + error.message);
     if (imageFile) {
       const ext = imageFile.type === 'image/jpeg' ? 'jpg' : imageFile.type.split('/')[1];
       const storageKey = `${user.id}/${listing.id}/${crypto.randomUUID()}.${ext}`;
-      const { error: uploadError } = await db.storage.from('sourcewav-listings').upload(storageKey, imageFile, { contentType: imageFile.type, cacheControl: '3600', upsert: false });
-      if (uploadError) { await db.from('listings').delete().eq('id', listing.id); return toast('อัปโหลดภาพไม่ได้: ' + uploadError.message); }
+      try {
+        await window.SourcewavS3.upload('image', storageKey, imageFile);
+      } catch (uploadError) {
+        await db.from('listings').delete().eq('id', listing.id);
+        return toast('อัปโหลดภาพไม่ได้: ' + uploadError.message);
+      }
       const { error: mediaError } = await db.from('listing_media').insert({ listing_id: listing.id, storage_key: storageKey, alt_text: title, position: 0 });
-      if (mediaError) { await db.storage.from('sourcewav-listings').remove([storageKey]); await db.from('listings').delete().eq('id', listing.id); return toast('เชื่อมภาพกับผลงานไม่ได้: ' + mediaError.message); }
+      if (mediaError) { await window.SourcewavS3.remove([storageKey]).catch(() => {}); await db.from('listings').delete().eq('id', listing.id); return toast('เชื่อมภาพกับผลงานไม่ได้: ' + mediaError.message); }
     }
     closeModal(); await loadListings(); toast('ลงผลงานในตลาดแล้ว');
   }
 
   function openCreateListing() {
-    modal(`<h2 id="modalTitle">ลงผลงานในตลาด</h2><p>ประกาศงานพร้อมราคาและข้อมูลติดต่อ</p><label class="modal-field">ชื่อผลงาน<input id="listingTitle" maxlength="180" required placeholder="เช่น ปกซิงเกิล / ภาพพิมพ์" /></label><label class="modal-field">ประเภท<select id="listingCategory"><option>ภาพพิมพ์</option><option>ดิจิทัลอาร์ต</option><option>รับ commission</option><option>แลกเปลี่ยน</option></select></label><label class="modal-field">ภาพผลงาน<input id="listingImage" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG หรือ WebP · ไม่เกิน 5 MB</small></label><label class="modal-field">รายละเอียด<textarea id="listingDescription" maxlength="5000" placeholder="ขนาด สไตล์ เงื่อนไข หรือสิ่งที่อยากแลก"></textarea></label><label class="modal-field">ราคา (บาท)<input id="listingPrice" type="number" min="0" max="10000000" step="1" placeholder="เว้นว่างถ้าสอบถามราคา" /></label><button class="modal-primary" id="listingPublishBtn">ลงผลงาน</button>`);
+    modal(`<h2 id="modalTitle">ลงผลงานในตลาด</h2><p>ประกาศงานพร้อมราคาและข้อมูลติดต่อ</p><label class="modal-field">ชื่อผลงาน<input id="listingTitle" maxlength="180" required placeholder="เช่น ปกซิงเกิล / ภาพพิมพ์" /></label><label class="modal-field">ประเภท<select id="listingCategory"><option>ภาพพิมพ์</option><option>ดิจิทัลอาร์ต</option><option>รับ commission</option><option>แลกเปลี่ยน</option></select></label><label class="modal-field">ภาพผลงาน<input id="listingImage" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG หรือ WebP · ไม่เกิน 10 MB</small></label><label class="modal-field">รายละเอียด<textarea id="listingDescription" maxlength="5000" placeholder="ขนาด สไตล์ เงื่อนไข หรือสิ่งที่อยากแลก"></textarea></label><label class="modal-field">ราคา (บาท)<input id="listingPrice" type="number" min="0" max="10000000" step="1" placeholder="เว้นว่างถ้าสอบถามราคา" /></label><button class="modal-primary" id="listingPublishBtn">ลงผลงาน</button>`);
   }
 
   let activePostComments = null;
@@ -1100,10 +1108,12 @@
       target.setAttribute('aria-pressed', String(liked));
       target.setAttribute('aria-label', `${liked ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} โพสต์นี้`);
       target.classList.toggle('liked', liked);
+      setLikeHeart(target, liked);
+      if (liked) playUiClick();
       if (count) count.textContent = Math.max(0, oldCount + (liked ? 1 : -1));
       target.classList.remove('is-bouncing'); void target.offsetWidth; if (liked) target.classList.add('is-bouncing');
       const result = wasLiked ? await db.from('reactions').delete().eq('post_id', id).eq('user_id', user.id) : await db.from('reactions').upsert({ post_id: id, user_id: user.id, reaction: 'like' }, { onConflict: 'post_id,user_id' });
-      if (result.error) { target.setAttribute('aria-pressed', String(wasLiked)); target.setAttribute('aria-label', `${wasLiked ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} โพสต์นี้`); target.classList.toggle('liked', wasLiked); if (count) count.textContent = oldCount; toast(result.error.message); }
+      if (result.error) { target.setAttribute('aria-pressed', String(wasLiked)); target.setAttribute('aria-label', `${wasLiked ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} โพสต์นี้`); target.classList.toggle('liked', wasLiked); setLikeHeart(target, wasLiked); if (count) count.textContent = oldCount; toast(result.error.message); }
       else window.setTimeout(() => { if (document.contains(target)) loadFeed(); }, 480);
       return;
     }

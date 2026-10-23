@@ -33,13 +33,29 @@ Deno.serve(async (request) => {
     if (!/^[0-9a-f]{64}$/i.test(encryptionKey)) return json({ error: 'ระบบยังไม่ได้ตั้งค่ากุญแจเข้ารหัสข้อมูล SlipOK ฝั่งเซิร์ฟเวอร์' }, 503);
     const encryptedSlipOkApiKey = await encryptSlipOkApiKey(slipokApiKey);
     const db = serviceClient();
-    const { data: qrFile, error: qrError } = await db.storage.from('sourcewav-event-payment-qr').download(paymentQrKey);
-    if (qrError || !qrFile || qrFile.size > 5 * 1024 * 1024 || !['image/jpeg','image/png','image/webp'].includes(qrFile.type)) return json({ error: 'ไม่พบ QR รับเงินที่อัปโหลด หรือไฟล์ไม่ถูกต้อง' }, 400);
+    const s3PublicUrl = Deno.env.get('MEDIA_PUBLIC_URL') || '';
+    if (!s3PublicUrl) return json({ error: 'ระบบอัปโหลดรูปยังไม่พร้อมใช้งาน' }, 503);
+    const imageAssetReady = async (key: string) => {
+      try {
+        const response = await fetch(`${s3PublicUrl}/${key}`);
+        if (!response.ok) return false;
+        const contentType = (response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(contentType)) return false;
+        if (Number(response.headers.get('content-length') || 0) > 10 * 1024 * 1024) {
+          await response.body?.cancel();
+          return false;
+        }
+        const buffer = await response.arrayBuffer();
+        return buffer.byteLength > 0 && buffer.byteLength <= 10 * 1024 * 1024;
+      } catch {
+        return false;
+      }
+    };
+    if (!(await imageAssetReady(paymentQrKey))) return json({ error: 'ไม่พบ QR รับเงินที่อัปโหลด หรือไฟล์ไม่ถูกต้อง' }, 400);
     const posterUrls: string[] = [];
     for (const posterStorageKey of posterStorageKeys) {
-      const { data: posterFile, error: posterError } = await db.storage.from('sourcewav-event-payment-qr').download(posterStorageKey);
-      if (posterError || !posterFile || posterFile.size > 5 * 1024 * 1024 || !['image/jpeg','image/png','image/webp'].includes(posterFile.type)) return json({ error: 'ไม่พบโปสเตอร์งานที่อัปโหลด หรือไฟล์ไม่ถูกต้อง' }, 400);
-      posterUrls.push(db.storage.from('sourcewav-event-payment-qr').getPublicUrl(posterStorageKey).data.publicUrl);
+      if (!(await imageAssetReady(posterStorageKey))) return json({ error: 'ไม่พบโปสเตอร์งานที่อัปโหลด หรือไฟล์ไม่ถูกต้อง' }, 400);
+      posterUrls.push(`${s3PublicUrl}/${posterStorageKey}`);
     }
     const { data: roles, error: rolesError } = await db.from('user_roles')
       .select('role').eq('user_id', user.id).in('role', ['organizer', 'admin']);

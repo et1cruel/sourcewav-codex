@@ -3,7 +3,7 @@ import { decryptSlipOkApiKey } from '../_shared/slipok-crypto.ts';
 import { issueSlipOkSubmission } from '../_shared/ticket-issuance.ts';
 import { attemptStatusForHttp, detectSlipImage, evaluateSlipOk } from '../_shared/slipok-validation.mjs';
 
-const maxSlipBytes = 5 * 1024 * 1024;
+const maxSlipBytes = 10 * 1024 * 1024;
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (request.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
@@ -50,7 +50,7 @@ Deno.serve(async (request) => {
     }
 
     const { data: slip, error: downloadError } = await db.storage.from('sourcewav-ticket-slips').download(storageKey);
-    if (downloadError || !slip || slip.size < 1 || slip.size > maxSlipBytes) return json({ error: 'อ่านไฟล์สลิปไม่ได้ หรือไฟล์มีขนาดเกิน 5 MB' }, 400);
+    if (downloadError || !slip || slip.size < 1 || slip.size > maxSlipBytes) return json({ error: 'อ่านไฟล์สลิปไม่ได้ หรือไฟล์มีขนาดเกิน 10 MB' }, 400);
     const bytes = new Uint8Array(await slip.arrayBuffer());
     const image = detectSlipImage(bytes, slip.type);
     if (!image) return json({ error: 'ไฟล์ไม่ใช่รูป JPG, PNG หรือ WebP ที่ถูกต้อง' }, 400);

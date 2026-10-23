@@ -12,6 +12,7 @@ Deno.serve(async (request) => {
     const orderId = String(body?.orderId || url.searchParams.get('orderId') || '');
     if (orderId && !uuid.test(orderId)) return json({ error: 'เลขคำสั่งซื้อไม่ถูกต้อง' }, 400);
     const db = serviceClient();
+    const s3PublicUrl = Deno.env.get('MEDIA_PUBLIC_URL') || '';
     let query = db.from('orders').select(
       'id,event_id,status,currency,total_minor,expires_at,created_at,event_title_snapshot,event_starts_at_snapshot,event_ends_at_snapshot,event_venue_name_snapshot,event_venue_address_snapshot,organizer_id_snapshot,organizer_name_snapshot,refund_policy_snapshot,payment_qr_storage_key_snapshot,payment_bank_name_snapshot,payment_beneficiary_name_snapshot,payment_account_last4_snapshot,events!inner(title,starts_at,ends_at,venue_name,venue_address,status,cover_url),order_items!inner(quantity,unit_price_minor,ticket_types!inner(name)),payments!inner(status,provider),ticket_payment_submissions(id,slipok_status,slipok_message,slipok_amount_minor,transfer_timestamp,submitted_at,ticket_payment_reviews(decision,note,reviewer_role,created_at))'
     ).eq('buyer_id', user.id).eq('payments.provider', 'manual_slipok').order('created_at', { ascending: false }).limit(orderId ? 1 : 50);
@@ -30,8 +31,8 @@ Deno.serve(async (request) => {
         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0] || null;
       const now = Date.now();
       const expired = row.expires_at && new Date(row.expires_at).getTime() <= now;
-      const paymentQrUrl = row.status === 'awaiting_payment' && !expired && row.payment_qr_storage_key_snapshot
-        ? db.storage.from('sourcewav-event-payment-qr').getPublicUrl(row.payment_qr_storage_key_snapshot).data.publicUrl
+      const paymentQrUrl = s3PublicUrl && row.status === 'awaiting_payment' && !expired && row.payment_qr_storage_key_snapshot
+        ? `${s3PublicUrl}/${row.payment_qr_storage_key_snapshot}`
         : null;
       return {
         orderId: row.id, eventId: row.event_id, status: expired && row.status === 'awaiting_payment' ? 'expired' : row.status,

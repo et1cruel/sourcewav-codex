@@ -22,3 +22,8 @@ supabase/.temp/
 # Local design iteration screenshots and scratch files.
 baseline-*.png
 mask-snippet.txt
+local-*.png
+mobile-*.png
+prod-*.png
+vibin-*.png
+emoji-*.png

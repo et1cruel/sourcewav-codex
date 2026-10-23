@@ -177,7 +177,7 @@
           <audio id="newArtistBeatPreview" class="booking-beat-preview" controls preload="metadata" hidden aria-label="ฟังตัวอย่างบีท"></audio>
         </section>
 
-        <label class="modal-field booking-image-picker">ภาพตัวอย่างผลงาน <small>อัปโหลดภาพเพื่อแสดงบนการ์ด Booking · JPG, PNG หรือ WebP · ไม่เกิน 5 MB</small><input id="newArtistPortfolioImage" type="file" accept="image/jpeg,image/png,image/webp" aria-label="เลือกภาพตัวอย่างผลงาน" /><img id="newArtistPortfolioPreview" class="booking-image-preview" alt="ตัวอย่างภาพผลงาน" hidden /></label>
+        <label class="modal-field booking-image-picker">ภาพตัวอย่างผลงาน <small>อัปโหลดภาพเพื่อแสดงบนการ์ด Booking · JPG, PNG หรือ WebP · ไม่เกิน 10 MB</small><input id="newArtistPortfolioImage" type="file" accept="image/jpeg,image/png,image/webp" aria-label="เลือกภาพตัวอย่างผลงาน" /><img id="newArtistPortfolioPreview" class="booking-image-preview" alt="ตัวอย่างภาพผลงาน" hidden /></label>
 
         <button type="submit" class="booking-create-submit" id="saveBookingCardBtn"><span>บันทึกการ์ด Booking</span><b aria-hidden="true">↗</b></button>
       </form>
@@ -206,9 +206,9 @@
     portfolioImageInput?.addEventListener('change', () => {
       const file = portfolioImageInput.files?.[0];
       if (!file) { portfolioPreview.hidden = true; portfolioPreview.removeAttribute('src'); return; }
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024) {
         portfolioImageInput.value = ''; portfolioPreview.hidden = true;
-        toast('เลือกรูป JPG, PNG หรือ WebP ที่มีขนาดไม่เกิน 5 MB'); return;
+        toast('เลือกรูป JPG, PNG หรือ WebP ที่มีขนาดไม่เกิน 10 MB'); return;
       }
       portfolioPreview.src = URL.createObjectURL(file); portfolioPreview.hidden = false;
     });
@@ -254,26 +254,22 @@
         try {
           if (imageFile) {
             const extension = imageFile.type === 'image/jpeg' ? 'jpg' : imageFile.type.split('/')[1];
-            const bucket = global.SourcewavSupabase.storage.from('sourcewav-listings');
             imageKey = `${global.SourcewavAuthUser.id}/booking-images/${crypto.randomUUID()}.${extension}`;
-            const { error } = await bucket.upload(imageKey, imageFile, { contentType: imageFile.type, cacheControl: '3600', upsert: false });
-            if (error) throw error;
-            newCard.portfolioImageUrl = bucket.getPublicUrl(imageKey).data.publicUrl;
+            const uploadedImage = await window.SourcewavS3.upload('image', imageKey, imageFile);
+            newCard.portfolioImageUrl = uploadedImage.publicUrl;
           }
           if (beatFile) {
             const extension = beatFile.name.split('.').pop().toLowerCase();
             const audioType = ({ mp3: 'audio/mpeg', wav: 'audio/wav', flac: 'audio/flac', ogg: 'audio/ogg', m4a: 'audio/mp4', aac: 'audio/aac' })[extension];
-            const audioBucket = global.SourcewavSupabase.storage.from('sourcewav-audio');
             audioKey = `${global.SourcewavAuthUser.id}/booking-beats/${crypto.randomUUID()}.${extension}`;
-            const { error } = await audioBucket.upload(audioKey, beatFile, { contentType: audioType, cacheControl: '3600', upsert: false });
-            if (error) throw error;
-            newCard.portfolioAudioUrl = audioBucket.getPublicUrl(audioKey).data.publicUrl;
+            const uploadedBeat = await window.SourcewavS3.upload('audio', audioKey, beatFile, audioType);
+            newCard.portfolioAudioUrl = uploadedBeat.publicUrl;
           }
           await global.SourcewavFeatureData.createBookingCard(newCard);
           renderBookingBoard(); closeModal(); toast(beatFile ? 'เผยแพร่การ์ดพร้อมตัวอย่างบีทแล้ว' : 'เผยแพร่การ์ด Booking แล้ว');
         } catch (error) {
-          if (imageKey) await global.SourcewavSupabase.storage.from('sourcewav-listings').remove([imageKey]).catch(() => {});
-          if (audioKey) await global.SourcewavSupabase.storage.from('sourcewav-audio').remove([audioKey]).catch(() => {});
+          if (imageKey) await window.SourcewavS3.remove([imageKey]).catch(() => {});
+          if (audioKey) await window.SourcewavS3.remove([audioKey]).catch(() => {});
           toast(`บันทึกไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`);
         } finally { if (submit.isConnected) { submit.disabled = false; submit.removeAttribute('aria-busy'); } }
       })();

@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.admin-retry-ticket-verification]
 verify_jwt = false
+
+[functions.s3-sign]
+verify_jwt = false

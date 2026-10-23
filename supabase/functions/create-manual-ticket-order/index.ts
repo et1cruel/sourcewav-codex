@@ -23,14 +23,15 @@ Deno.serve(async (request) => {
     if (stateError || current?.buyer_id !== user.id || current.status !== 'awaiting_payment' || new Date(current.expires_at) <= new Date()) {
       return json({ error: 'รายการนี้หมดอายุแล้ว กรุณาเริ่มใหม่' }, 409);
     }
-    const { data: qr, error: qrError } = db.storage.from('sourcewav-event-payment-qr').getPublicUrl(order.qr_storage_key);
-    if (!qr?.publicUrl || qrError) return json({ error: 'โหลด QR รับเงินของผู้จัดไม่ได้' }, 500);
+    const s3PublicUrl = Deno.env.get('MEDIA_PUBLIC_URL') || '';
+    if (!s3PublicUrl || !order.qr_storage_key) return json({ error: 'โหลด QR รับเงินของผู้จัดไม่ได้' }, 500);
+    const paymentQrUrl = `${s3PublicUrl}/${order.qr_storage_key}`;
     return json({
       orderId: order.order_id, eventId: order.event_id, eventTitle: order.event_title,
       startsAt: order.event_starts_at, endsAt: order.event_ends_at,
       venueName: order.venue_name || '', venueAddress: order.venue_address || '',
       tierName: order.tier_name, quantity: order.quantity, totalMinor: Number(order.total_minor),
-      expiresAt: order.expires_at, paymentQrUrl: qr.publicUrl, bankName: order.bank_name,
+      expiresAt: order.expires_at, paymentQrUrl, bankName: order.bank_name,
       organizerName: order.organizer_name || '', beneficiaryName: order.beneficiary_name, accountLast4: order.account_last4,
       refundPolicy: order.refund_policy || 'ยังไม่ได้ระบุเงื่อนไขโดยละเอียด กรุณาติดต่อผู้จัดงานก่อนชำระเงิน',
     });

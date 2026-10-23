@@ -3,7 +3,7 @@ import { decryptSlipOkApiKey } from '../_shared/slipok-crypto.ts';
 import { issueSlipOkSubmission } from '../_shared/ticket-issuance.ts';
 import { attemptStatusForHttp, detectSlipImage, evaluateSlipOk } from '../_shared/slipok-validation.mjs';
 
-const maxSlipBytes = 5 * 1024 * 1024;
+const maxSlipBytes = 10 * 1024 * 1024;
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
