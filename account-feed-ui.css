@@ -1390,8 +1390,8 @@
 .modal.account-modal:has(.profile-editor) .profile-editor .editor-avatar-stage{width:106px;height:106px}
 .modal.account-modal:has(.profile-editor) .profile-editor .editor-avatar{width:82px;height:82px;font-size:32px}
 .modal.account-modal:has(.profile-editor) .profile-editor .account-field{margin-bottom:8px;font-size:11px}
-.modal.account-modal:has(.profile-editor) .profile-editor .account-field input,.modal.account-modal:has(.profile-editor) .profile-editor .account-field select{min-height:38px;padding:7px 10px;font-size:11px}
-.modal.account-modal:has(.profile-editor) .profile-editor .account-field textarea{min-height:58px;padding:8px 10px;font-size:11px}
+.modal.account-modal:has(.profile-editor) .profile-editor .account-field input,.modal.account-modal:has(.profile-editor) .profile-editor .account-field select{min-height:44px;padding:9px 12px;font-size:14px}
+.modal.account-modal:has(.profile-editor) .profile-editor .account-field textarea{min-height:66px;padding:9px 12px;font-size:14px}
 .modal.account-modal:has(.profile-editor) .profile-editor .account-field>span:first-child{margin-bottom:4px}
 .modal.account-modal:has(.profile-editor) .profile-editor .editor-actions{margin-top:8px}
 .modal.account-modal:has(.profile-editor) .profile-editor .editor-actions .auth-submit,.modal.account-modal:has(.profile-editor) .profile-editor .editor-cancel{min-height:40px}
