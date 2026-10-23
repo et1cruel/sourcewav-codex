@@ -46,10 +46,10 @@
           <div>
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="badge-pro">ผู้จัดงาน</span>
-              <span style="background:#e8f4ff;color:#1c5a83;font-size:10px;font-weight:700;padding:3px 8px;border-radius:999px;">${esc(eventStatus)}</span>
+              <span style="background:#e8f4ff;color:#1c5a83;font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;">${esc(eventStatus)}</span>
             </div>
-            <h2 id="modalTitle" style="margin:6px 0 2px;font-size:22px;">${esc(data.eventTitle)}</h2>
-            <p style="margin:0;color:#64748b;font-size:12px;">ยอดขายและเช็กอินนับจากธุรกรรมที่ยืนยันแล้ว · รายจ่ายและทีมงานบันทึกในฐานข้อมูล</p>
+            <h2 id="modalTitle" style="margin:6px 0 2px;font-size:25px;">${esc(data.eventTitle)}</h2>
+            <p style="margin:0;color:#64748b;font-size:14px;">ยอดขายและเช็กอินนับจากธุรกรรมที่ยืนยันแล้ว · รายจ่ายและทีมงานบันทึกในฐานข้อมูล</p>
           </div>
           <div class="command-event-selector">
             <select id="commandEventSelect" aria-label="เลือกอีเวนต์">
@@ -82,7 +82,7 @@
           </div>
           <div class="kpi-card">
             <div class="kpi-label"><span>🚪 เช็กอิน</span><small>${checkinRate}% ของบัตรที่ขายแล้ว</small></div>
-            <div class="kpi-value">${Number(data.checkedInCount) || 0} <span style="font-size:13px;font-weight:500;color:#64748b;">/ ${Number(data.ticketsSold) || 0} ใบ</span></div>
+            <div class="kpi-value">${Number(data.checkedInCount) || 0} <span style="font-size:15px;font-weight:500;color:#64748b;">/ ${Number(data.ticketsSold) || 0} ใบ</span></div>
             <div class="checkin-progress-bar"><div style="width:${checkinRate}%;"></div></div>
           </div>
           <div class="kpi-card expense">
@@ -104,10 +104,10 @@
               <table class="expense-table"><thead><tr><th>หมวดหมู่</th><th>รายการ</th><th style="text-align:right;">จำนวนเงิน</th><th style="text-align:center;">สถานะ</th></tr></thead>
                 <tbody>${expenses.length ? expenses.map(item => `
                   <tr>
-                    <td><span style="font-size:10px;font-weight:700;color:#475569;background:#e2e8f0;padding:2px 6px;border-radius:4px;">${esc(item.category)}</span></td>
+                    <td><span style="font-size:12px;font-weight:700;color:#475569;background:#e2e8f0;padding:2px 6px;border-radius:4px;">${esc(item.category)}</span></td>
                     <td>${esc(item.title)}</td><td style="text-align:right;font-weight:700;">${money(item.amount)}</td>
                     <td style="text-align:center;">
-                      <span style="font-size:10px;color:${item.paid ? '#166534' : '#92400e'};background:${item.paid ? '#dcfce7' : '#fef3c7'};padding:2px 6px;border-radius:999px;">${item.paid ? 'จ่ายแล้ว' : 'ยังไม่จ่าย'}</span>
+                      <span style="font-size:12px;color:${item.paid ? '#166534' : '#92400e'};background:${item.paid ? '#dcfce7' : '#fef3c7'};padding:2px 6px;border-radius:999px;">${item.paid ? 'จ่ายแล้ว' : 'ยังไม่จ่าย'}</span>
                       <button type="button" class="command-mini-btn" data-expense-paid="${esc(item.id)}" data-next-paid="${!item.paid}" style="display:block;margin:5px auto 0;padding:3px 7px;">${item.paid ? 'เปลี่ยนเป็นยังไม่จ่าย' : 'บันทึกว่าจ่ายแล้ว'}</button>
                     </td>
                   </tr>`).join('') : '<tr><td colspan="4" style="text-align:center;color:#64748b;padding:16px;">ยังไม่มีรายการค่าใช้จ่าย</td></tr>'}
@@ -137,7 +137,7 @@
             <div class="summary-stat-cell"><span>อัตราเช็กอิน</span><b>${checkinRate}% (${Number(data.checkedInCount) || 0} คน)</b></div>
             <div class="summary-stat-cell"><span>คงเหลือโดยประมาณ</span><b style="color:${net >= 0 ? '#15803d' : '#b91c1c'};">${money(net)} (Margin ${margin}%)</b></div>
           </div>
-          <p style="font-size:12px;color:#475569;margin:0;line-height:1.6;background:#f8fafc;padding:10px 14px;border-radius:8px;"><b>บันทึก:</b> ${esc(data.postEventSummary?.notes || 'ยังไม่มีบันทึกสรุปผล')}</p>
+          <p style="font-size:14px;color:#475569;margin:0;line-height:1.6;background:#f8fafc;padding:10px 14px;border-radius:8px;"><b>บันทึก:</b> ${esc(data.postEventSummary?.notes || 'ยังไม่มีบันทึกสรุปผล')}</p>
           <small style="display:block;margin-top:8px;color:#64748b;">ยอดคงเหลือไม่รวมค่าใช้จ่ายที่ยังไม่ได้บันทึก ภาษี หรือค่าธรรมเนียมภายนอก</small>
         </div>
       </div>
