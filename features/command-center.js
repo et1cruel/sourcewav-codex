@@ -58,6 +58,17 @@
           </div>
         </div>
 
+        <a class="checkin-launch-button" href="/scan" aria-label="เปิดกล้องสแกน QR บัตรเข้างาน">
+          <span class="checkin-launch-art"><img src="assets/organizer-checkin-scanner.png" alt="กล้องสแกนล้อมด้วยวงแหวนพลังงานสีเขียว" /></span>
+          <span class="checkin-launch-copy">
+            <span class="checkin-launch-kicker">จุดเช็กอินหน้างาน</span>
+            <strong>สแกน QR เข้างาน</strong>
+            <span>เปิดกล้อง ตรวจบัตร และบันทึกการเข้างานทันที</span>
+            <span class="checkin-launch-cta">เปิดกล้องสแกนบัตร <span aria-hidden="true">↗</span></span>
+          </span>
+          <span class="checkin-launch-status"><i aria-hidden="true"></i> พร้อมใช้งาน</span>
+        </a>
+
         <div class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-label"><span>🎟️ ยอดขายบัตรที่ชำระแล้ว</span><small>${Number(data.ticketsSold) || 0} / ${Number(data.ticketCapacity) || 0} ใบ</small></div>
