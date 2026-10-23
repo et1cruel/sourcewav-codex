@@ -629,6 +629,15 @@
       const { tickets = previewTickets } = previewMode ? {} : user ? await call('my-tickets', {}) : { tickets: [] };
       const orderResult = previewMode || !user ? { orders: [] } : await call('my-orders', {}).catch(error => ({ orders: [], error }));
       const orders = orderResult.orders || [];
+      const avatarResult = previewMode || !user ? { avatarUrl: '' } : await db.from('profiles')
+        .select('avatar_url')
+        .eq('user_id', user.id)
+        .maybeSingle()
+        .then(({ data }) => ({ avatarUrl: data?.avatar_url || '' }))
+        .catch(() => ({ avatarUrl: '' }));
+      const avatarUrl = (() => { try { const url = new URL(avatarResult.avatarUrl || ''); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; } })();
+      const avatarLetter = esc(user?.user_metadata?.display_name?.slice?.(0, 1) || 'ม');
+      const avatarHtml = avatarUrl ? `<img src="${esc(avatarUrl)}" alt="" loading="lazy" />` : avatarLetter;
       const classify = ticket => {
         if (ticket.status === 'checked_in') return 'used';
         if (['cancelled', 'refunded'].includes(ticket.status) || ticket.events?.status === 'cancelled') return 'cancelled';
@@ -701,7 +710,7 @@
           <footer>© 2026 Sourcewav<br><span>Music lives deeper.</span></footer>
         </aside>
         <div class="tickets-main">
-          <header class="tickets-topbar"><span>COMMUNITY <i>/</i> MY TICKETS</span><button type="button" data-ticket-profile><span class="tickets-avatar" aria-hidden="true">${esc(user?.user_metadata?.display_name?.slice?.(0, 1) || 'ม')}</span><span>บัญชีของฉัน</span><b aria-hidden="true">⌄</b></button></header>
+          <header class="tickets-topbar"><span>COMMUNITY <i>/</i> MY TICKETS</span><button type="button" data-ticket-profile><span class="tickets-avatar${avatarUrl ? ' has-avatar-image' : ''}" aria-hidden="true">${avatarHtml}</span><span>บัญชีของฉัน</span><b aria-hidden="true">⌄</b></button></header>
           <section class="tickets-page-hero" aria-label="Sourcewav community"><div><span>PLAY · CONNECT · SUPPORT</span><h1>REAL MUSIC<br>REAL PEOPLE</h1><p>ดนตรี ผู้คน และช่วงเวลาที่ได้เจอกัน</p></div><span class="tickets-hero-mark" aria-hidden="true">SW</span></section>
           <div class="tickets-page-content">
             <header class="my-tickets-heading"><div><span class="tickets-section-kicker">MY LIBRARY</span><h2 id="modalTitle">บัตรของฉัน</h2><p>จัดการบัตรสมาชิก บัตรอีเวนต์ และสิทธิพิเศษของคุณ</p></div><button type="button" class="tickets-add-button" data-ticket-nav="events"><span aria-hidden="true">＋</span> เพิ่มบัตร</button></header>
@@ -714,6 +723,11 @@
         </div>
       </div>`);
       const host = $('#modalContent');
+      host.querySelectorAll('.tickets-avatar img').forEach(image => image.addEventListener('error', () => {
+        const avatar = image.closest('.tickets-avatar');
+        avatar.classList.remove('has-avatar-image');
+        avatar.textContent = avatarLetter;
+      }, { once: true }));
       host.querySelectorAll('.ticket-qr').forEach(node => { if (window.QRCode && node.dataset.qr) new QRCode(node, { text: node.dataset.qr, width: 148, height: 148, correctLevel: QRCode.CorrectLevel.M }); });
       host.querySelectorAll('[data-ticket-filter]').forEach(button => button.addEventListener('click', () => {
         host.querySelectorAll('[data-ticket-filter]').forEach(filter => { const active = filter === button; filter.classList.toggle('is-active', active); filter.setAttribute('aria-pressed', String(active)); });
