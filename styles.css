@@ -2556,6 +2556,47 @@ body.event-purchase-page-active .chat-fab{display:none!important}
 }
 @media(prefers-reduced-motion:reduce){.track-comments-inline{animation:none}}
 
+/* Inline comment thread under community feed posts (expands in place, no modal). */
+.post-comments-inline{display:grid;gap:14px;min-width:0;margin:16px 0 2px;scroll-margin-block:12px;padding:clamp(16px,2.5vw,24px);border:1px solid #858b90;border-radius:16px;color:#f3f4f5;background:linear-gradient(145deg,#171a1e,#34393e 25%,#111418 53%,#383e43 76%,#171a1e);box-shadow:inset 0 1px 2px #fff6,0 10px 24px #12161a35;animation:post-comments-expand .24s cubic-bezier(.2,.8,.2,1) both}
+.post-comments-inline-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.post-comments-inline-head>div{min-width:0}
+.post-comments-inline-head>div>span{color:#75ded5;font-size:10px;font-weight:750;letter-spacing:.12em}
+.post-comments-inline-head h3{margin:5px 0 2px;color:#fff;font-size:21px}
+.post-comments-inline-head p{margin:0;color:#d0d3d5;font-size:14px;font-weight:650;overflow-wrap:anywhere}
+.post-comments-inline-head>button{flex:none;min-width:62px;min-height:40px;padding:0 11px;border:1px solid #777e83;border-radius:10px;color:#f2f3f4;background:linear-gradient(145deg,#3d4348,#171a1e);font:600 13px var(--font);cursor:pointer}
+.post-comments-inline-head>button:hover{border-color:#75ded5;color:#fff}
+.post-comments-inline-head>button:focus-visible,.post-comments-inline-form textarea:focus-visible,.post-comments-inline-actions button:focus-visible,.post-comments-error button:focus-visible{outline:3px solid #55c9c1;outline-offset:2px}
+.post-comments-inline-list{display:grid;align-content:start;gap:8px;max-height:min(52dvh,520px);min-height:110px;overflow:auto;padding:11px;border:1px solid #8c9297;border-radius:13px;background:linear-gradient(145deg,#e2e4e5,#f9f9f9 46%,#c4c8cb);scrollbar-color:#737a7f #d4d6d8}
+.post-comments-status{align-self:center;margin:auto;padding:14px;color:#30363b;font-size:14px;text-align:center}
+.post-comments-error{display:grid;justify-items:start;gap:8px;padding:10px;color:#272c30}
+.post-comments-error p{margin:0;font-size:14px}
+.post-comments-error button{min-height:40px;padding:0 13px;border:1px solid #747b80;border-radius:9px;color:#171a1d;background:linear-gradient(145deg,#fff,#c7cacc);font:600 13px var(--font);cursor:pointer}
+.post-comments-inline-form{display:grid;gap:7px}
+.post-comments-inline-form>label{color:#f1f2f2;font-size:13px;font-weight:700}
+.post-comments-inline-form textarea{width:100%;min-height:86px;max-height:180px;resize:vertical;padding:12px 14px;border:1px solid #777e83;border-radius:11px;outline:none;color:#f4f5f5;background:linear-gradient(145deg,#1a1d21,#30353a 48%,#171a1e);font:15px/1.55 var(--font)}
+.post-comments-inline-form textarea::placeholder{color:#c1c5c8}
+.post-comments-inline-form textarea:focus{border-color:#72dcd4;box-shadow:0 0 0 3px #72dcd433}
+.post-comments-inline-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.post-comments-inline-actions small{color:#c9ccce;font-size:11px}
+.post-comments-inline-actions button{display:flex;align-items:center;justify-content:center;gap:9px;min-width:142px;min-height:44px;padding:8px 14px;border:1px solid #e1e3e4;border-radius:10px;color:#14171a;background:linear-gradient(145deg,#fff 0%,#c7cacc 28%,#f8f8f8 48%,#969b9f 67%,#f3f4f4);box-shadow:inset 0 1px 2px #fff,0 4px 10px #0003;font:700 13px var(--font);cursor:pointer}
+.post-comments-inline-actions button:hover{border-color:#72dcd4;filter:none}
+.post-comments-inline-actions button:disabled{opacity:.6;cursor:wait}
+.post-comments-inline-actions button span{font-size:18px}
+.post-comment-entry{padding:10px 12px;border:1px solid #92999e;border-radius:11px;color:#f3f4f5;background:linear-gradient(145deg,#171a1e,#34393e 48%,#15181b);box-shadow:0 3px 8px #12161a20}
+.post-comment-entry b{color:#75ded5;font-size:13px}
+.post-comment-entry p{margin:5px 0;color:#f3f4f5;font-size:14px;line-height:1.55;overflow-wrap:anywhere;white-space:pre-wrap}
+.post-comment-entry time{color:#c9cdd0;font-size:11px}
+@keyframes post-comments-expand{from{opacity:0;transform:translateY(-6px);clip-path:inset(0 0 100%)}to{opacity:1;transform:translateY(0);clip-path:inset(0)}}
+@media(max-width:680px){
+  .post-comments-inline{gap:11px;margin-block:13px 2px;padding:14px;border-radius:13px}
+  .post-comments-inline-head h3{font-size:19px}
+  .post-comments-inline-list{max-height:46dvh;min-height:92px;padding:8px}
+  .post-comments-inline-form textarea{min-height:76px}
+  .post-comments-inline-actions{flex-wrap:wrap}
+  .post-comments-inline-actions button{min-width:130px}
+}
+@media(prefers-reduced-motion:reduce){.post-comments-inline{animation:none}}
+
 /* Per-track banner artwork on artist profiles. */
 .artist-featured-track.has-track-banner{position:relative;isolation:isolate;overflow:hidden;background:#101314}
 .artist-featured-banner{position:absolute;z-index:0;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;opacity:.48;pointer-events:none}

@@ -229,11 +229,12 @@
     const date = new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(post.created_at));
     const saved = savedSet?.has(post.id);
     const avatarUrl = (() => { try { const url = new URL(author.avatar_url || ''); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; } })();
-    return `<article class="post-card live-post-card" data-live-post="${esc(post.id)}" data-kind="${esc(post.kind)}"><div class="post-top"><div class="avatar avatar-purple live-post-avatar">${esc(initials(author.display_name || author.username))}${avatarUrl ? `<img src="${esc(avatarUrl)}" alt="" loading="lazy" />` : ''}</div><div class="post-author"><strong>${esc(author.display_name || author.username || 'ศิลปิน')}</strong><small>${esc(kind)} · ${esc(date)}</small></div></div>${post.title ? `<h3 class="live-post-title">${esc(post.title)}</h3>` : ''}<p class="post-copy">${esc(post.body).replace(/\n/g, '<br>')}</p><div class="post-actions"><button class="live-like-btn ${liked ? 'liked' : ''}" data-live-like="${esc(post.id)}" aria-pressed="${Boolean(liked)}" aria-label="${liked ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} โพสต์นี้"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.9c0 5.1-8.8 10-8.8 10S3.2 14 3.2 8.9a4.4 4.4 0 0 1 8.8-.1 4.4 4.4 0 0 1 8.8.1Z"/></svg><span>ถูกใจ</span><b>${likes.length}</b></button><button data-live-comment="${esc(post.id)}" aria-label="แสดงความคิดเห็น"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg><span>ความคิดเห็น</span><b>${comments}</b></button><button data-live-share="${esc(post.id)}" aria-label="แชร์โพสต์"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg><span>แชร์</span></button><button class="${saved ? 'liked' : ''}" data-live-save="${esc(post.id)}" aria-pressed="${Boolean(saved)}" aria-label="${saved ? 'นำโพสต์ออกจากรายการที่บันทึก' : 'บันทึกโพสต์'}"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h12v16l-6-4-6 4v-16Z"/></svg><span>${saved ? 'บันทึกแล้ว' : 'เก็บไว้'}</span></button></div></article>`;
+    return `<article class="post-card live-post-card" data-live-post="${esc(post.id)}" data-kind="${esc(post.kind)}"><div class="post-top"><div class="avatar avatar-purple live-post-avatar">${esc(initials(author.display_name || author.username))}${avatarUrl ? `<img src="${esc(avatarUrl)}" alt="" loading="lazy" />` : ''}</div><div class="post-author"><strong>${esc(author.display_name || author.username || 'ศิลปิน')}</strong><small>${esc(kind)} · ${esc(date)}</small></div></div>${post.title ? `<h3 class="live-post-title">${esc(post.title)}</h3>` : ''}<p class="post-copy">${esc(post.body).replace(/\n/g, '<br>')}</p><div class="post-actions"><button class="live-like-btn ${liked ? 'liked' : ''}" data-live-like="${esc(post.id)}" aria-pressed="${Boolean(liked)}" aria-label="${liked ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} โพสต์นี้"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.8 8.9c0 5.1-8.8 10-8.8 10S3.2 14 3.2 8.9a4.4 4.4 0 0 1 8.8-.1 4.4 4.4 0 0 1 8.8.1Z"/></svg><span>ถูกใจ</span><b>${likes.length}</b></button><button data-live-comment="${esc(post.id)}" aria-expanded="false" aria-label="แสดงความคิดเห็น"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg><span>ความคิดเห็น</span><b>${comments}</b></button><button data-live-share="${esc(post.id)}" aria-label="แชร์โพสต์"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg><span>แชร์</span></button><button class="${saved ? 'liked' : ''}" data-live-save="${esc(post.id)}" aria-pressed="${Boolean(saved)}" aria-label="${saved ? 'นำโพสต์ออกจากรายการที่บันทึก' : 'บันทึกโพสต์'}"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h12v16l-6-4-6 4v-16Z"/></svg><span>${saved ? 'บันทึกแล้ว' : 'เก็บไว้'}</span></button></div></article>`;
   }
 
   async function loadFeed() {
     const root = $('#liveFeed'); if (!root) return;
+    const openPostId = activePostComments?.postId || null;
     const { data: userResult } = await db.auth.getUser();
     let query = db.from('posts').select('id,author_id,kind,title,body,created_at,profiles!posts_author_id_fkey(display_name,username,avatar_url),reactions(user_id),comments(count)').eq('status', 'published').eq('visibility', 'public').is('deleted_at', null).order('created_at', { ascending: false }).limit(60);
     const { data, error } = await query;
@@ -246,6 +247,17 @@
     }
     root.innerHTML = posts.length ? posts.map(post => postCard(post, userResult.user?.id, savedSet)).join('') : '<p class="platform-empty">ยังไม่มีโพสต์ในหมวดนี้ — เริ่มบทสนทนาแรกได้เลย</p>';
     root.querySelectorAll('.live-post-avatar img').forEach(image => image.addEventListener('error', () => image.remove(), { once: true }));
+    if (openPostId) {
+      const trigger = root.querySelector(`.live-post-card[data-live-post="${openPostId}"] [data-live-comment]`);
+      const card = trigger?.closest('.live-post-card');
+      activePostComments = null;
+      if (trigger && card) {
+        const title = card.querySelector('.live-post-title')?.textContent?.trim()
+          || card.querySelector('.post-copy')?.textContent?.trim().slice(0, 80)
+          || 'โพสต์';
+        openPostComments(trigger, openPostId, title, { focus: false });
+      }
+    }
   }
 
   async function loadListings() {
@@ -998,30 +1010,82 @@
     modal(`<h2 id="modalTitle">ลงผลงานในตลาด</h2><p>ประกาศงานพร้อมราคาและข้อมูลติดต่อ</p><label class="modal-field">ชื่อผลงาน<input id="listingTitle" maxlength="180" required placeholder="เช่น ปกซิงเกิล / ภาพพิมพ์" /></label><label class="modal-field">ประเภท<select id="listingCategory"><option>ภาพพิมพ์</option><option>ดิจิทัลอาร์ต</option><option>รับ commission</option><option>แลกเปลี่ยน</option></select></label><label class="modal-field">ภาพผลงาน<input id="listingImage" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG หรือ WebP · ไม่เกิน 5 MB</small></label><label class="modal-field">รายละเอียด<textarea id="listingDescription" maxlength="5000" placeholder="ขนาด สไตล์ เงื่อนไข หรือสิ่งที่อยากแลก"></textarea></label><label class="modal-field">ราคา (บาท)<input id="listingPrice" type="number" min="0" max="10000000" step="1" placeholder="เว้นว่างถ้าสอบถามราคา" /></label><button class="modal-primary" id="listingPublishBtn">ลงผลงาน</button>`);
   }
 
-  async function openPostComments(postId) {
-    modal(`<h2 id="modalTitle">คุยกันใต้โพสต์</h2><div class="comment-list" id="postCommentList" aria-live="polite"><p role="status">กำลังโหลดความคิดเห็น…</p></div><form id="commentForm"><label class="modal-field">เขียนความคิดเห็น<textarea id="liveCommentBody" maxlength="2000" required></textarea></label><button class="modal-primary" type="submit">ส่งความคิดเห็น</button></form>`);
-    const list = $('#postCommentList');
+  let activePostComments = null;
+
+  function closePostComments() {
+    if (!activePostComments) return;
+    activePostComments.trigger?.setAttribute('aria-expanded', 'false');
+    activePostComments.panel.remove();
+    activePostComments = null;
+  }
+
+  async function loadPostComments(postId, panel) {
+    const list = $('.post-comments-inline-list', panel);
+    if (!list) return;
+    list.innerHTML = '<p class="post-comments-status" role="status">กำลังโหลดความคิดเห็น…</p>';
     try {
       const { data, error } = await db.from('comments').select('body,created_at,profiles!comments_author_id_fkey(display_name)')
         .eq('post_id', postId).is('deleted_at', null).order('created_at');
       if (error) throw error;
-      const entries = data || [];
-      list.innerHTML = entries.map(comment => `<p class="local-message"><b>${esc(comment.profiles?.display_name || 'สมาชิก')}</b><br>${esc(comment.body)}</p>`).join('')
-        || '<p class="comment-empty">ยังไม่มีความคิดเห็น เริ่มคุยได้เลย</p>';
+      if (!panel.isConnected) return;
+      list.innerHTML = (data || []).map(comment => `<article class="post-comment-entry"><b>${esc(comment.profiles?.display_name || 'สมาชิก')}</b><p>${esc(comment.body)}</p><time datetime="${esc(comment.created_at)}">${esc(new Date(comment.created_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }))}</time></article>`).join('')
+        || '<p class="post-comments-status">ยังไม่มีความคิดเห็น เริ่มคุยได้เลย</p>';
     } catch (error) {
       console.error('Unable to load post comments:', error?.message || error);
-      list.innerHTML = '<div class="comment-load-error" role="alert"><p>โหลดความคิดเห็นไม่สำเร็จ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง</p><button type="button" class="modal-primary" id="retryPostComments">ลองอีกครั้ง</button></div>';
-      $('#retryPostComments')?.addEventListener('click', () => openPostComments(postId));
+      if (!panel.isConnected) return;
+      list.innerHTML = '<div class="post-comments-error" role="alert"><p>โหลดความคิดเห็นไม่สำเร็จ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง</p><button type="button" data-post-comments-retry>ลองอีกครั้ง</button></div>';
+      $('[data-post-comments-retry]', list)?.addEventListener('click', () => loadPostComments(postId, panel));
     }
-    $('#commentForm')?.addEventListener('submit', async event => {
-      event.preventDefault();
+  }
+
+  function openPostComments(trigger, postId, postTitle, options = {}) {
+    if (activePostComments?.postId === postId) { closePostComments(); return; }
+    closePostComments();
+    const card = trigger.closest('.live-post-card');
+    if (!card) return;
+    const panel = document.createElement('section');
+    panel.className = 'post-comments-inline';
+    panel.dataset.postCommentsPanel = postId;
+    panel.setAttribute('aria-label', `ความคิดเห็นของ ${postTitle}`);
+    panel.innerHTML = `<div class="post-comments-inline-head"><div><span>SOURCEWAV · COMMUNITY</span><h3>ความคิดเห็น</h3><p>${esc(postTitle)}</p></div><button type="button" data-post-comments-close aria-label="ปิดความคิดเห็น">ปิด ×</button></div><div class="post-comments-inline-list" aria-live="polite"></div><form class="post-comments-inline-form" data-post-id="${esc(postId)}"><label for="postCommentBody-${esc(postId)}">เขียนความคิดเห็น</label><textarea id="postCommentBody-${esc(postId)}" name="body" maxlength="2000" required placeholder="แสดงความคิดเห็นอย่างสร้างสรรค์…"></textarea><div class="post-comments-inline-actions"><small>ไม่เกิน 2,000 ตัวอักษร</small><button type="submit">ส่งความคิดเห็น <span aria-hidden="true">↗</span></button></div></form>`;
+    card.append(panel);
+    activePostComments = { postId, panel, trigger };
+    trigger.setAttribute('aria-expanded', 'true');
+    if (options.focus !== false) {
+      panel.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      $('textarea', panel)?.focus({ preventScroll: true });
+    }
+    loadPostComments(postId, panel);
+  }
+
+  async function submitPostComment(form) {
+    const postId = form.dataset.postId;
+    const textarea = form.elements.body;
+    const body = textarea?.value.trim();
+    if (!body) return toast('พิมพ์ความคิดเห็นก่อนส่ง');
+    const submit = form.querySelector('[type="submit"]');
+    if (submit) submit.disabled = true;
+    try {
       const user = await needUser(); if (!user) return;
-      const body = $('#liveCommentBody')?.value.trim();
-      if (!body) return toast('พิมพ์ความคิดเห็นก่อนส่ง');
       const { error } = await db.from('comments').insert({ post_id: postId, author_id: user.id, body });
-      if (error) return toast('ส่งความคิดเห็นไม่สำเร็จ กรุณาลองอีกครั้ง');
-      closeModal(); await loadFeed();
-    });
+      if (error) throw error;
+      textarea.value = '';
+      const panel = form.closest('.post-comments-inline');
+      if (panel) {
+        await loadPostComments(postId, panel);
+        const list = $('.post-comments-inline-list', panel);
+        if (list) list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
+        textarea.focus({ preventScroll: true });
+      }
+      const count = document.querySelector(`.live-post-card[data-live-post="${postId}"] [data-live-comment] b`);
+      if (count) count.textContent = Number(count.textContent || 0) + 1;
+      toast('เพิ่มความคิดเห็นแล้ว');
+    } catch (error) {
+      console.error('Unable to post comment:', error?.message || error);
+      toast('ส่งความคิดเห็นไม่สำเร็จ กรุณาลองอีกครั้ง');
+    } finally {
+      if (submit?.isConnected) submit.disabled = false;
+    }
   }
 
   document.addEventListener('click', async event => {
@@ -1044,7 +1108,15 @@
       return;
     }
     if (target.dataset.liveSave) { event.preventDefault(); event.stopImmediatePropagation(); const user = await needUser(); if (!user) return; const id = target.dataset.liveSave; const saved = target.getAttribute('aria-pressed') === 'true'; const result = saved ? await db.from('saved_items').delete().eq('user_id', user.id).eq('item_type', 'post').eq('item_id', id) : await db.from('saved_items').insert({ user_id: user.id, item_type: 'post', item_id: id }); if (result.error) toast(result.error.message); else await loadFeed(); return; }
-    if (target.dataset.liveComment) { event.preventDefault(); event.stopImmediatePropagation(); return openPostComments(target.dataset.liveComment); }
+    if (target.hasAttribute('data-post-comments-close')) { event.preventDefault(); event.stopImmediatePropagation(); return closePostComments(); }
+    if (target.dataset.liveComment) {
+      event.preventDefault(); event.stopImmediatePropagation();
+      const card = target.closest('.live-post-card');
+      const title = card?.querySelector('.live-post-title')?.textContent?.trim()
+        || card?.querySelector('.post-copy')?.textContent?.trim().slice(0, 80)
+        || 'โพสต์';
+      return openPostComments(target, target.dataset.liveComment, title);
+    }
     if (target.dataset.liveShare) { const url = `${location.origin}${location.pathname}#post-${target.dataset.liveShare}`; try { await navigator.clipboard.writeText(url); toast('คัดลอกลิงก์โพสต์แล้ว'); } catch (_) { toast(url); } return; }
     if (target.dataset.buyEvent) { event.preventDefault(); event.stopImmediatePropagation(); return openTicketPurchase(target.dataset.buyEvent); }
     if (target.id === 'manageSlipokSettings') { event.preventDefault(); event.stopImmediatePropagation(); return openSlipOkSettings(target.dataset.eventId, target.dataset.branchId); }
@@ -1094,6 +1166,10 @@
   }, true);
 
   document.addEventListener('submit', event => {
+    if (event.target?.matches?.('.post-comments-inline-form')) {
+      event.preventDefault(); event.stopImmediatePropagation();
+      return submitPostComment(event.target);
+    }
     if (event.target?.id === 'slipokSettingsForm') {
       event.preventDefault(); event.stopImmediatePropagation();
       return saveSlipOkSettings(event.target);
