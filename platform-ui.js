@@ -1244,22 +1244,23 @@
     emojiPicker.style.width = `${width}px`;
     emojiPicker.style.maxHeight = `${Math.max(180, Math.min(430, (window.innerHeight - 24) / zoom))}px`;
     const visualWidth = emojiPicker.offsetWidth * zoom;
-    const visualHeight = emojiPicker.offsetHeight * zoom;
-    let visualLeft = rect.left;
-    if (visualLeft + visualWidth > window.innerWidth - 12) visualLeft = rect.right - visualWidth;
-    visualLeft = Math.max(12, visualLeft);
-    let visualTop = rect.top - visualHeight - 10;
-    if (visualTop < 12) {
-      const clampedAbove = 12;
-      if (clampedAbove + visualHeight <= rect.top - 4) {
-        visualTop = clampedAbove;
-      } else {
-        const below = rect.bottom + 10;
-        visualTop = below + visualHeight <= window.innerHeight - 12
-          ? below
-          : Math.max(12, window.innerHeight - visualHeight - 12);
-      }
+    let visualHeight = emojiPicker.offsetHeight * zoom;
+    const gap = 10;
+    const margin = 12;
+    const spaceAbove = Math.max(0, rect.top - gap - margin);
+    const spaceBelow = Math.max(0, window.innerHeight - rect.bottom - gap - margin);
+    const preferAbove = spaceAbove >= spaceBelow;
+    const available = preferAbove ? spaceAbove : spaceBelow;
+    if (available >= 180 && available < visualHeight) {
+      visualHeight = available;
+      emojiPicker.style.maxHeight = `${visualHeight / zoom}px`;
     }
+    let visualLeft = rect.left;
+    if (visualLeft + visualWidth > window.innerWidth - margin) visualLeft = rect.right - visualWidth;
+    visualLeft = Math.max(margin, visualLeft);
+    let visualTop = preferAbove ? rect.top - visualHeight - gap : rect.bottom + gap;
+    if (visualTop < margin) visualTop = margin;
+    if (visualTop + visualHeight > window.innerHeight - margin) visualTop = Math.max(margin, window.innerHeight - margin - visualHeight);
     emojiPicker.style.left = `${visualLeft / zoom}px`;
     emojiPicker.style.top = `${visualTop / zoom}px`;
   }
