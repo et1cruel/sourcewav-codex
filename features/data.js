@@ -387,6 +387,24 @@
     return product;
   }
 
+  async function updateProduct(id, input) {
+    const owner = await currentUser();
+    if (!owner) return null;
+    const row = checked(await db.from('artist_products').update({
+      title: input.title, category: input.category,
+      product_type: input.type, price_minor: Math.round(Number(input.price) * 100),
+      stock: input.stock, image_url: input.imageUrl, description: input.description,
+      preview_audio_url: input.previewAudioUrl || null
+    }).eq('id', id).eq('artist_id', owner.id).select('*').single(), 'update artist product');
+    const profile = await db.from('profiles').select('user_id,username,display_name').eq('user_id', owner.id).maybeSingle();
+    if (profile.error) fail(profile.error, 'load product artist');
+    const product = fromProduct(row, new Map(profile.data ? [[owner.id, profile.data]] : []));
+    const index = state.artistStoreProducts.findIndex(item => item.id === id);
+    if (index >= 0) state.artistStoreProducts.splice(index, 1, product);
+    else state.artistStoreProducts.unshift(product);
+    return product;
+  }
+
   async function createStoreOrder(product, input) {
     const owner = await currentUser();
     if (!owner) return null;
@@ -472,7 +490,7 @@
     get status() { return status; }, get events() { return organizerEvents.slice(); },
     load, createBookingCard, createBookingOffer, respondBookingOffer,
     toggleFollowArtist, toggleFollowVenue, createDrop, markAllDropsRead,
-    createProduct, createStoreOrder, addExpense, setExpensePaid, addCrew,
+    createProduct, updateProduct, createStoreOrder, addExpense, setExpensePaid, addCrew,
     updateCrewStatus, saveEventSummary, selectEvent
   };
 })(window);

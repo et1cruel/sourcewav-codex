@@ -42,6 +42,13 @@
         return;
       }
 
+      // Edit own product in Store
+      if (target.dataset.editProduct) {
+        e.preventDefault();
+        openAddProductModal(target.dataset.editProduct);
+        return;
+      }
+
       // Buy product in Store
       if (target.dataset.buyProduct) {
         e.preventDefault();

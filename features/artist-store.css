@@ -376,7 +376,7 @@
 .store-image-preview-wrap{position:relative;margin-top:10px;overflow:hidden;border:1px solid #d7deea;border-radius:15px;background:#edf2f8}
 .store-image-preview-wrap[hidden],.booking-image-preview[hidden]{display:none!important}
 .store-image-preview-wrap img{display:block;width:100%;max-height:230px;object-fit:cover}
-.store-image-preview-wrap button{position:absolute;right:10px;bottom:10px;min-height:38px;padding:0 14px;border:1px solid #fff;border-radius:999px;background:#16243bd9;color:#fff;font:600 12px var(--font);cursor:pointer}
+.store-image-preview-wrap button{position:absolute;top:10px;right:10px;bottom:auto;min-height:38px;padding:0 14px;border:1px solid #fff;border-radius:999px;background:#16243bd9;color:#fff;font:600 12px var(--font);cursor:pointer}
 .booking-create-heading{display:flex;gap:14px}
 .booking-create-mark{display:grid;flex:none;place-items:center;font-size:23px}
 .booking-create-form .modal-field{display:block;min-width:0;margin:0 0 15px}
@@ -391,4 +391,59 @@
 .booking-create-modal .booking-create-form :is(input,select,textarea,button):focus-visible,.artist-store-modal .store-product-form :is(input,select,textarea,button):focus-visible{outline:3px solid #6c79da;outline-offset:3px}
 @media(max-width:600px){.artist-store-modal #modalContent,.booking-create-modal #modalContent{padding:23px 17px 18px}.store-create-heading,.booking-create-heading{gap:10px;margin-right:38px}.store-create-mark,.booking-create-mark{width:40px;height:40px;border-radius:13px;font-size:20px}.store-create-heading h2,.booking-create-heading h2{font-size:22px}.store-create-heading p,.booking-create-heading p{font-size:12px}.store-product-fields{grid-template-columns:1fr;gap:0}.store-field-wide{grid-column:auto}.store-product-form .modal-field,.booking-create-form .modal-field,.store-image-field{font-size:12px}.store-product-form .modal-field>input,.store-product-form .modal-field>select,.store-product-form .modal-field>textarea,.booking-create-form .modal-field>input:not([type=file]),.booking-create-form .modal-field>select,.booking-create-form .modal-field>textarea{min-height:50px;font-size:16px}.booking-create-form>div[style*="grid-template-columns"]{grid-template-columns:1fr!important;gap:0!important}}
 @media(max-width:600px){.modal.booking-create-modal{height:calc(100dvh - 20px);max-height:calc(100dvh - 20px);align-self:flex-start;margin-block:10px}.booking-create-modal #modalContent{padding-bottom:max(18px,env(safe-area-inset-bottom))}}
+
+/* Compact creator listing + edit form. The site body is zoomed to 1.18 above 680px, so divide viewport units to keep the modal inside the visual viewport. */
+.modal.artist-store-modal{width:min(620px,calc(100vw / 1.18 - 40px));max-width:min(620px,calc(100vw / 1.18 - 40px));max-height:min(860px,calc(100dvh / 1.18 - 40px))}
+.artist-store-modal #modalContent{max-height:calc(min(860px,calc(100dvh / 1.18 - 40px)) - 2px);padding:22px 24px 18px;scroll-padding-bottom:86px}
+.store-create-heading{gap:12px;margin:0 42px 16px 0}
+.store-create-mark{width:40px;height:40px;border-radius:13px;font-size:20px}
+.store-form-eyebrow{font-size:9px;letter-spacing:1.3px}
+.store-create-heading h2{margin:3px 0;font-size:clamp(21px,2.6vw,25px);letter-spacing:-.3px}
+.store-create-heading p{font-size:12px;line-height:1.55}
+.store-product-fields{gap:0 12px}
+.store-product-form .modal-field{margin:0 0 12px;font-size:13px;line-height:1.4}
+.store-product-form .modal-field>input,.store-product-form .modal-field>select,.store-product-form .modal-field>textarea{min-height:44px;margin-top:6px;padding:10px 12px;border-radius:11px;font-size:16px;line-height:1.35}
+.store-product-form .modal-field>textarea{min-height:84px;line-height:1.5}
+.store-product-form .modal-field small{margin-top:5px;font-size:11px}
+.store-image-field{margin:0 0 12px;font-size:13px}
+.store-image-label{margin-bottom:6px}
+.store-image-pick{min-height:64px;gap:10px;padding:10px 12px;border-radius:12px}
+.store-image-pick-mark{width:36px;height:36px;border-radius:10px;font-size:20px}
+.store-image-pick b{font-size:13px}
+.store-image-pick small{font-size:11px}
+.store-image-preview-wrap{margin-top:8px;border-radius:12px}
+.store-image-preview-wrap img{max-height:120px}
+.store-beat-upload{gap:8px;margin:0 0 12px;padding:12px;border-radius:13px}
+.store-beat-upload-copy{gap:9px}
+.store-beat-icon{width:34px;height:34px;border-radius:10px;font-size:18px}
+.store-beat-upload-copy strong{font-size:13px}
+.store-beat-upload-copy small{font-size:11px}
+.store-product-form .store-audio-pick{padding:10px 12px;border-radius:11px;font-size:13px}
+.store-audio-pick input{margin-top:8px;font-size:12px}
+.store-audio-pick small{margin-top:6px;font-size:11px}
+.store-beat-upload>p{font-size:11px;line-height:1.55}
+.store-create-note{gap:7px;margin:0 0 12px;padding:9px 10px;border-radius:10px}
+.store-create-note p{font-size:11px;line-height:1.5}
+.store-form-actions{position:sticky;bottom:-18px;z-index:2;margin:2px -24px -18px;padding:11px 24px max(16px,env(safe-area-inset-bottom));border-top:1px solid #e1e8f2;background:linear-gradient(180deg,#f7fbff00 0%,#f7fbfff2 26%,#f7fbff 100%);backdrop-filter:blur(8px)}
+.store-publish-btn{min-height:48px;font-size:15px}
+.store-image-field.is-required .store-image-label::after{content:" *";color:#b4441f}
+.product-owner-actions{display:grid;gap:7px;margin-top:4px}
+.product-owner-label{color:#7b8ea2;font-size:11px;font-weight:700;letter-spacing:.2px}
+.product-edit-btn{min-height:38px;border:1px solid #9ccbd4;border-radius:999px;background:#f2fbfd;color:#17657a;font:700 12px var(--font);cursor:pointer;transition:background .16s,border-color .16s,color .16s}
+.product-edit-btn:hover{border-color:#4fb3c5;background:#e4f8fb;color:#0f5364}
+.product-edit-btn:focus-visible{outline:3px solid #6c79da;outline-offset:3px}
+@media(max-width:680px){
+  #modalBackdrop:has(.artist-store-modal){padding:8px}
+  #modalBackdrop .modal.artist-store-modal{width:calc(100vw - 16px);max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);border-radius:20px}
+  #modalBackdrop .artist-store-modal #modalContent{max-height:calc(100dvh - 18px);padding:18px 16px 14px;scroll-padding-bottom:82px}
+  .store-create-heading{gap:10px;margin:0 44px 14px 0}
+  .store-create-mark{width:36px;height:36px;border-radius:11px;font-size:18px}
+  .store-create-heading h2{font-size:21px}
+  .store-create-heading p{font-size:12px}
+  .store-product-fields{grid-template-columns:1fr;gap:0}
+  .store-field-wide{grid-column:auto}
+  .store-product-form .modal-field,.store-image-field{font-size:13px;margin-bottom:12px}
+  .store-product-form .modal-field>input,.store-product-form .modal-field>select,.store-product-form .modal-field>textarea{min-height:46px;font-size:16px}
+  .store-form-actions{bottom:-14px;margin:2px -16px -14px;padding:10px 16px max(14px,env(safe-area-inset-bottom))}
+}
 
