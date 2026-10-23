@@ -27,9 +27,12 @@ Deno.serve(async (request) => {
     if (!qr?.publicUrl || qrError) return json({ error: 'โหลด QR รับเงินของผู้จัดไม่ได้' }, 500);
     return json({
       orderId: order.order_id, eventId: order.event_id, eventTitle: order.event_title,
+      startsAt: order.event_starts_at, endsAt: order.event_ends_at,
+      venueName: order.venue_name || '', venueAddress: order.venue_address || '',
       tierName: order.tier_name, quantity: order.quantity, totalMinor: Number(order.total_minor),
       expiresAt: order.expires_at, paymentQrUrl: qr.publicUrl, bankName: order.bank_name,
-      beneficiaryName: order.beneficiary_name, accountLast4: order.account_last4,
+      organizerName: order.organizer_name || '', beneficiaryName: order.beneficiary_name, accountLast4: order.account_last4,
+      refundPolicy: order.refund_policy || 'ยังไม่ได้ระบุเงื่อนไขโดยละเอียด กรุณาติดต่อผู้จัดงานก่อนชำระเงิน',
     });
   } catch (error) {
     return json({ error: error instanceof Error ? error.message : 'เกิดข้อผิดพลาด' }, 400);

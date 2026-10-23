@@ -12,3 +12,13 @@ database/uploads/
 node_modules/
 dist/
 .next/
+
+# Tool and agent workspace artifacts.
+.agents/
+.playwright-mcp/
+.wrangler/
+supabase/.temp/
+
+# Local design iteration screenshots and scratch files.
+baseline-*.png
+mask-snippet.txt

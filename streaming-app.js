@@ -16,6 +16,7 @@
   let coverPreviewUrl = '';
   let bannerPreviewUrl = '';
   let editCoverPreviewUrl = '';
+  let editBannerPreviewUrl = '';
   let activeTrackComments = null;
   let trackCommentsRequest = 0;
   const coverMimeByType = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
@@ -246,13 +247,14 @@
       <label class="modal-field">ชื่อเพลง<input name="title" required maxlength="100" autocomplete="off" value="${escapeHTML(track.title)}" /></label>
       <label class="modal-field">รูปปกเพลง<input name="cover" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /><small>รูปสี่เหลี่ยมที่แสดงในรายการเพลง · JPG, PNG หรือ WebP · สูงสุด 5 MB</small></label>
       <div class="track-edit-cover-preview" id="trackEditCoverPreview"><img src="${escapeHTML(track.cover_url || '')}" alt="ตัวอย่างรูปปกเพลง"${track.cover_url ? '' : ' hidden'} /><span>${track.cover_url ? 'รูปปกปัจจุบัน' : 'ยังไม่มีรูปปกเพลง'}</span></div>
-      <label class="modal-field">แบนเนอร์เพลง<input name="banner" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /><small>ภาพแนวกว้างแสดงด้านหลังเครื่องเล่น · แนะนำ 1500 × 500 px · สูงสุด 5 MB</small></label>
-      ${track.banner_url ? `<div class="track-edit-banner-preview"><img src="${escapeHTML(track.banner_url)}" alt="แบนเนอร์เพลงปัจจุบัน" /><span>แบนเนอร์ปัจจุบัน</span></div>` : ''}
+      <label class="modal-field">แบนเนอร์เพลง<input name="banner" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" /><small>ใช้กับเพลงนี้เพลงเดียวบนโปรไฟล์ศิลปินและเครื่องเล่น · แนะนำ 1500 × 500 px · สูงสุด 5 MB</small></label>
+      <div class="track-edit-banner-preview" id="trackEditBannerPreview"><img src="${escapeHTML(track.banner_url || '')}" alt="ตัวอย่างแบนเนอร์เพลง"${track.banner_url ? '' : ' hidden'} /><span>${track.banner_url ? 'แบนเนอร์ปัจจุบัน' : 'ยังไม่มีแบนเนอร์เพลงนี้'}</span></div>
       <p class="stream-error" id="trackEditError" role="alert" hidden></p>
       <button class="modal-primary track-edit-submit" id="trackEditSubmit" type="submit">บันทึกการเปลี่ยนแปลง</button>
     </form>`);
     const form = $('#trackEditForm');
     const coverInput = form?.elements.cover;
+    const bannerInput = form?.elements.banner;
     coverInput?.addEventListener('change', () => {
       const file = coverInput.files?.[0];
       const preview = $('#trackEditCoverPreview');
@@ -270,6 +272,24 @@
       image.src = editCoverPreviewUrl;
       image.hidden = false;
       label.textContent = 'ตัวอย่างรูปปกใหม่';
+    });
+    bannerInput?.addEventListener('change', () => {
+      const file = bannerInput.files?.[0];
+      const preview = $('#trackEditBannerPreview');
+      const image = $('img', preview);
+      const label = $('span', preview);
+      if (editBannerPreviewUrl) URL.revokeObjectURL(editBannerPreviewUrl);
+      editBannerPreviewUrl = '';
+      if (!file || !coverMimeByType[file.type] || file.size > maxCoverSize) {
+        image.hidden = !track.banner_url;
+        image.src = track.banner_url || '';
+        label.textContent = track.banner_url ? 'แบนเนอร์ปัจจุบัน' : 'ยังไม่มีแบนเนอร์เพลงนี้';
+        return;
+      }
+      editBannerPreviewUrl = URL.createObjectURL(file);
+      image.src = editBannerPreviewUrl;
+      image.hidden = false;
+      label.textContent = 'ตัวอย่างแบนเนอร์ใหม่สำหรับเพลงนี้';
     });
   }
 
@@ -538,7 +558,7 @@
             </div>
           </div>
           <div class="track-banner-field">
-            <label class="track-cover-label" for="trackBanner">แบนเนอร์เพลง <span>ไม่บังคับ</span></label>
+            <label class="track-cover-label" for="trackBanner">แบนเนอร์เพลงนี้ <span>ไม่บังคับ · แยกตามเพลง</span></label>
             <label class="track-banner-picker" for="trackBanner">
               <input id="trackBanner" name="banner" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" aria-label="เลือกแบนเนอร์เพลง" />
               <span class="track-banner-preview" id="trackBannerPreview" aria-hidden="true">♫</span>
@@ -743,21 +763,19 @@
     const location = [profile.city, profile.province].filter(Boolean).join(' · ');
     const roles = Array.isArray(profile.roles) ? profile.roles : [];
     const latest = profileTracks[0];
-    const bannerUrl = (() => { try { const url = new URL(latest?.banner_url || latest?.cover_url || ''); return ['http:', 'https:'].includes(url.protocol) ? `url("${url.href.replace(/["\\]/g, '')}")` : 'none'; } catch { return 'none'; } })();
-    view.style.setProperty('--artist-banner-image', bannerUrl);
     const totalTracks = profileTracks.length;
     const playlist = profileTracks.slice(0, 4);
-    const featuredMarkup = latest ? `<article class="artist-featured-track">
+    const featuredMarkup = latest ? `<article class="artist-featured-track${latest.banner_url ? ' has-track-banner' : ''}">${latest.banner_url ? `<img class="artist-featured-banner" src="${escapeHTML(latest.banner_url)}" alt="" aria-hidden="true" />` : ''}
       <span class="artist-profile-kicker">SPOTLIGHT · เพลงล่าสุด</span><div class="artist-featured-main">
         <span class="artist-featured-cover">${latest.cover_url ? `<img src="${escapeHTML(latest.cover_url)}" alt="" />` : '<span aria-hidden="true">♫</span>'}</span>
         <div class="artist-featured-copy"><span>${escapeHTML(profile.display_name || profile.username)}</span><h3>${escapeHTML(latest.title)}</h3><p>${escapeHTML(latest.genre)} · ${formatSize(latest.size_bytes)}</p>
           <div class="artist-profile-wave" data-artist-wave="${escapeHTML(latest.id)}" role="img" aria-label="รูปคลื่นเสียง ${escapeHTML(latest.title)}">${Array.from({ length: 72 }, () => '<i style="--bar:10%"></i>').join('')}</div>
           <div class="artist-featured-actions"><button class="artist-featured-play" type="button" data-track-play="${escapeHTML(latest.id)}" aria-label="เล่น ${escapeHTML(latest.title)}">${currentTrack?.id === latest.id && !audio.paused ? 'Ⅱ หยุดเพลง' : '▶ เล่นเพลง'}</button><button class="track-comment-button artist-track-comment" type="button" data-track-comments="${escapeHTML(latest.id)}" aria-expanded="false">ความคิดเห็นเพลงนี้</button></div>
         </div></div></article>` : '<div class="artist-profile-empty"><span aria-hidden="true">♫</span><h3>ยังไม่มีเพลงที่เผยแพร่</h3><p>เพลงที่เปิดให้ฟังสาธารณะจะแสดงตรงนี้</p></div>';
-    const tracksMarkup = profileTracks.map(track => `<article class="track-row${currentTrack?.id === track.id && !audio.paused ? ' is-playing' : ''}" data-track-row="${escapeHTML(track.id)}">
+    const tracksMarkup = profileTracks.map(track => `<article class="track-row artist-profile-track-row${currentTrack?.id === track.id && !audio.paused ? ' is-playing' : ''}${track.banner_url ? ' has-track-banner' : ''}" data-track-row="${escapeHTML(track.id)}">${track.banner_url ? `<img class="artist-track-banner" src="${escapeHTML(track.banner_url)}" alt="" aria-hidden="true" loading="lazy" />` : ''}
         <button type="button" class="track-row-play" data-track-play="${escapeHTML(track.id)}" aria-label="เล่น ${escapeHTML(track.title)}">${currentTrack?.id === track.id && !audio.paused ? 'Ⅱ' : '▶'}</button>
         <span class="track-row-cover" aria-hidden="true">${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="" loading="lazy" />` : '♫'}</span>
-        <div class="track-row-copy"><strong>${escapeHTML(track.title)}</strong><small>${escapeHTML(track.genre)} · ${new Date(track.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</small></div><div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span><button type="button" class="track-comment-button" data-track-comments="${escapeHTML(track.id)}" aria-expanded="false" aria-label="ความคิดเห็นเพลง ${escapeHTML(track.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H12.5C7.5 19 3 14 3 11.5 3 7.5 6.5 4 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg></button>${track.owner_id === currentUserId ? `<button type="button" class="track-edit-button" data-track-edit="${escapeHTML(track.id)}" aria-label="แก้ไขชื่อเพลงและรูปปก ${escapeHTML(track.title)}" title="แก้ไขชื่อเพลงและรูปปก"><img src="assets/edit-pencil-glass.png" alt="" aria-hidden="true" /></button>` : ''}</div>
+        <div class="track-row-copy"><strong>${escapeHTML(track.title)}</strong><small>${escapeHTML(track.genre)} · ${new Date(track.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}</small></div><div class="track-row-meta"><span class="track-genre">${escapeHTML(track.genre)}</span><button type="button" class="track-comment-button" data-track-comments="${escapeHTML(track.id)}" aria-expanded="false" aria-label="ความคิดเห็นเพลง ${escapeHTML(track.title)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H12.5C7.5 19 3 14 3 11.5 3 7.5 6.5 4 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg></button>${track.owner_id === currentUserId ? `<button type="button" class="track-edit-button" data-track-edit="${escapeHTML(track.id)}" aria-label="แก้ไขเพลง รูปปก และแบนเนอร์ ${escapeHTML(track.title)}" title="แก้ไขเพลง รูปปก และแบนเนอร์"><img src="assets/edit-pencil-glass.png" alt="" aria-hidden="true" /></button>` : ''}</div>
       </article>`).join('');
     const genres = [...new Set(profileTracks.map(track => track.genre).filter(Boolean))].slice(0, 6);
     view.innerHTML = `<header class="artist-profile-hero"><div class="artist-profile-cover-art" aria-hidden="true"></div><div class="artist-profile-hero-shade"></div><div class="artist-profile-identity">
@@ -1043,7 +1061,8 @@
     if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
     if (bannerPreviewUrl) URL.revokeObjectURL(bannerPreviewUrl);
     if (editCoverPreviewUrl) URL.revokeObjectURL(editCoverPreviewUrl);
-    coverPreviewUrl = ''; bannerPreviewUrl = ''; editCoverPreviewUrl = '';
+    if (editBannerPreviewUrl) URL.revokeObjectURL(editBannerPreviewUrl);
+    coverPreviewUrl = ''; bannerPreviewUrl = ''; editCoverPreviewUrl = ''; editBannerPreviewUrl = '';
   };
   document.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;

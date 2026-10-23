@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "motion2code": {
+      "source": "lovisdotio/motion2code",
+      "sourceType": "github",
+      "skillPath": "skills/motion2code/SKILL.md",
+      "computedHash": "f3ace9ad02b5436c0dfd826f8b7b4e7dbd56fbb0be25f8028dda2b6370144bb8"
+    }
+  }
+}

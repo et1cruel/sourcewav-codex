@@ -69,6 +69,11 @@
           <span class="checkin-launch-status"><i aria-hidden="true"></i> พร้อมใช้งาน</span>
         </a>
 
+        <section class="command-payment-queue-callout">
+          <div><strong>คิวตรวจการชำระเงิน</strong><small>ตรวจรายการโอนที่ต้องตรวจเพิ่ม พร้อมประวัติการตัดสินใจ</small></div>
+          <button type="button" id="openTicketPaymentQueueBtn">เปิดคิวตรวจ</button>
+        </section>
+
         <div class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-label"><span>🎟️ ยอดขายบัตรที่ชำระแล้ว</span><small>${Number(data.ticketsSold) || 0} / ${Number(data.ticketCapacity) || 0} ใบ</small></div>
@@ -143,6 +148,7 @@
         .then(() => openCommandCenterModal())
         .catch(error => toast(`เปลี่ยนอีเวนต์ไม่สำเร็จ: ${error.message || 'ตรวจสอบข้อมูล'}`));
     });
+    $('#openTicketPaymentQueueBtn')?.addEventListener('click', () => openTicketPaymentQueue(data.eventId));
     $('#openAddExpenseModalBtn')?.addEventListener('click', openAddExpenseModal);
     $('#openAddCrewModalBtn')?.addEventListener('click', openAddCrewModal);
     $('#editEventSummaryBtn')?.addEventListener('click', openEditEventSummaryModal);
@@ -168,6 +174,104 @@
       link.href = url; link.download = `event-report-${data.eventId}.txt`; link.click();
       URL.revokeObjectURL(url);
     });
+  }
+
+  async function openTicketPaymentQueue(eventId) {
+    showModal('<section class="ticket-review-queue"><h2 id="modalTitle">คิวตรวจการชำระเงิน</h2><p role="status">กำลังโหลดรายการตรวจสอบ…</p></section>', 'command-center-modal');
+    try {
+      const client = global.SourcewavSupabase;
+      if (!client) throw new Error('ยังเชื่อมต่อฐานข้อมูลไม่ได้');
+      const { data: payload, error } = await client.functions.invoke('admin-list-ticket-payments', { body: { eventId } });
+      if (error) {
+        const details = await error.context?.clone?.().json?.().catch?.(() => null);
+        throw new Error(details?.error || error.message || 'โหลดคิวตรวจไม่ได้');
+      }
+      const rows = (payload?.payments || []).filter(payment => payment.orderStatus === 'disputed');
+      const followUpAttempts = (payload?.attempts || []).filter(attempt =>
+        ['error', 'timeout', 'quota_exhausted', 'rejected'].includes(attempt.status) && ['awaiting_payment','expired'].includes(attempt.orderStatus));
+      const canReview = payment => payment.status === 'verified' && !(payment.reviews || []).some(review => review.decision === 'rejected');
+      const transferInWindow = payment => payment.transferAt && payment.orderCreatedAt && payment.expiresAt
+        && new Date(payment.transferAt) >= new Date(payment.orderCreatedAt)
+        && new Date(payment.transferAt) <= new Date(payment.expiresAt);
+      const when = value => value && !Number.isNaN(new Date(value).getTime())
+        ? new Date(value).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Bangkok' }) : '—';
+      const ref = value => String(value || '').replace(/-/g, '').slice(-8).toUpperCase();
+      showModal(`<section class="ticket-review-queue">
+        <header><div><span>PAYMENT REVIEW</span><h2 id="modalTitle">คิวตรวจการชำระเงิน</h2><p>อนุมัติหลังตรวจยอดเงินจริงในบัญชีผู้รับแล้วเท่านั้น</p></div><button type="button" id="refreshTicketPaymentQueue">↻ รีเฟรช</button></header>
+        <p class="ticket-review-warning">เงินโอนตรงเข้าบัญชีผู้จัด Sourcewav ไม่ได้ถือเงินแทน การปฏิเสธรายการไม่ได้หมายความว่าคืนเงินแล้ว กรุณาติดต่อผู้ซื้อเพื่อแจ้งขั้นตอนคืนเงินด้วยตนเอง</p>
+        <div class="ticket-review-list">${rows.length ? rows.map(payment => `<article class="ticket-review-card" data-review-id="${esc(payment.id)}">
+          <div class="ticket-review-card-head"><div><span class="ticket-review-state">${!canReview(payment) && payment.reviews?.some(review => review.decision === 'rejected') ? 'ปฏิเสธแล้ว · ติดตามคืนเงิน' : payment.status === 'verified' ? 'ต้องตรวจเพิ่มเติม' : 'ธุรกรรมต้องติดตาม'}</span><h3>${esc(payment.eventTitle)}</h3><p>ออเดอร์ #SW-${ref(payment.orderId)} · ผู้ซื้อ ${esc(ref(payment.buyerId))}</p><p>${(payment.items || []).map(item => `${esc(item.ticket_types?.name || 'บัตร')} × ${Number(item.quantity)}`).join(' · ') || 'ไม่พบรายการบัตร'} · ${esc(payment.venueName || 'ยังไม่ระบุสถานที่')} · ${esc(when(payment.eventStartsAt))}</p></div><strong>${money(payment.expectedAmountMinor / 100)}</strong></div>
+          <div class="ticket-review-facts"><span>ยอดที่ต้องจ่าย <b>${money(payment.expectedAmountMinor / 100)}</b></span><span>ยอดจาก SlipOK <b>${money(payment.amountMinor / 100)}</b></span><span>เลขอ้างอิง <b>${esc(payment.transRef || '—')}</b></span><span>เวลาโอนจาก SlipOK <b>${esc(when(payment.transferAt))}</b></span><span>หมดเวลาจอง <b>${esc(when(payment.expiresAt))}</b></span><span>ส่งสลิปเมื่อ <b>${esc(when(payment.submittedAt))}</b></span></div>
+          <p class="ticket-review-message">${payment.reviews?.some(review => review.decision === 'rejected') ? 'ผู้จัดบันทึกการปฏิเสธแล้ว · ประสานผู้ซื้อเรื่องการคืนเงินด้วยตนเอง และอย่าแสดงสถานะว่าคืนเงินแล้วจนกว่าจะมีหลักฐาน' : payment.status === 'verified' ? transferInWindow(payment) ? 'SlipOK พบเวลาโอนอยู่ในช่วงเวลาจอง แต่ส่งสลิปหลังหมดเวลา · ตรวจยอดเข้าจริงและยืนยันว่ามีจำนวนบัตรเหลือก่อนอนุมัติ' : 'เวลาโอนจาก SlipOK อยู่นอกช่วงเวลาคำสั่งซื้อ · ตรวจรายการเดินบัญชีและจำนวนบัตรก่อนดำเนินการ' : `เหตุผลเข้าคิว: ${esc(payment.message || 'เลขอ้างอิงธุรกรรมถูกใช้กับคำสั่งซื้ออื่น')} · ต้องตรวจรายการเดินบัญชีและติดต่อผู้ซื้อ รายการนี้ยังอนุมัติออกบัตรจากระบบไม่ได้`}</p>
+          ${payment.slipUrl ? `<a class="ticket-review-slip" href="${esc(payment.slipUrl)}" target="_blank" rel="noopener noreferrer">เปิดสลิปที่เก็บแบบส่วนตัว ↗</a>` : '<span class="ticket-review-slip-missing">เปิดสลิปไม่ได้ กรุณาตรวจสิทธิ์และไฟล์</span>'}
+          ${payment.reviews?.length ? `<div class="ticket-review-history"><b>ประวัติ</b>${payment.reviews.map(review => `<p>${esc(review.reviewer_role === 'admin' ? 'ผู้ดูแลระบบ' : 'ผู้จัด')} · ${review.decision === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'} · ${esc(when(review.created_at))}${review.note ? ` · ${esc(review.note)}` : ''}</p>`).join('')}</div>` : ''}
+          ${canReview(payment) ? `<label class="ticket-review-note">บันทึกเหตุผล / หมายเหตุ<textarea rows="2" maxlength="1000" data-review-note placeholder="ระบุสิ่งที่ตรวจสอบแล้วหรือขั้นตอนคืนเงิน"></textarea></label>
+          <label class="ticket-review-confirm"><input type="checkbox" data-review-confirm />ยืนยันว่าตรวจยอดเงินเข้าบัญชีผู้รับจริงแล้ว</label>
+          <div class="ticket-review-actions"><button type="button" data-review-decision="rejected">ปฏิเสธและติดตามกับผู้ซื้อ</button><button type="button" data-review-decision="approved">อนุมัติและออกบัตร</button></div>
+          <div class="ticket-review-result" role="status" aria-live="polite"></div>` : ''}
+        </article>`).join('') : '<div class="ticket-review-empty"><h3>ไม่มีรายการที่ต้องตรวจ</h3><p>คำสั่งซื้อที่ระบบตรวจสอบไม่ได้หรือโอนหลังหมดเวลาจองจะแสดงที่นี่</p></div>'}</div>
+        <section class="ticket-review-follow-up"><h3>รายการที่ระบบตรวจไม่จบหรือสลิปไม่ผ่าน</h3><p>ผู้ซื้อยังส่งสลิปใหม่ในคำสั่งซื้อเดิมได้ รายการกลุ่มนี้ยังไม่ยืนยันการรับเงิน จึงไม่มีปุ่มอนุมัติจากภาพสลิป</p>
+          <div class="ticket-review-list">${followUpAttempts.length ? followUpAttempts.map(attempt => {
+            const state = { error: 'บริการตรวจขัดข้อง', timeout: 'หมดเวลารอผล', quota_exhausted: 'โควต้าตรวจเต็ม', rejected: 'สลิปไม่ผ่าน' }[attempt.status];
+            const reason = { provider_timeout: 'บริการตรวจใช้เวลานานเกินไป', provider_unavailable: 'ติดต่อบริการตรวจไม่ได้', quota_exhausted: 'บริการตรวจใช้โควต้าครบแล้ว', invalid_slipok_credentials: 'ข้อมูลเชื่อมต่อ SlipOK ของผู้จัดไม่ถูกต้อง', duplicate_transaction_reference: 'เลขอ้างอิงธุรกรรมถูกใช้แล้ว' }[attempt.failureReason] || attempt.failureReason || 'ตรวจข้อมูลสลิปและติดต่อผู้ซื้อ';
+            const canRetry = ['provider_timeout', 'provider_unavailable', 'invalid_slipok_credentials'].includes(attempt.failureReason) && Boolean(attempt.slipUrl);
+            return `<article class="ticket-review-card ticket-review-follow-up-card" data-retry-attempt="${esc(attempt.id)}"><div class="ticket-review-card-head"><div><span class="ticket-review-state">${state}</span><h3>${esc(attempt.eventTitle)}</h3><p>ออเดอร์ #SW-${ref(attempt.orderId)} · ผู้ซื้อ ${ref(attempt.buyerId)}</p><p>${esc(attempt.venueName || 'ยังไม่ระบุสถานที่')} · ${esc(when(attempt.eventStartsAt))}</p></div><strong>${money(attempt.expectedAmountMinor / 100)}</strong></div><p class="ticket-review-message">${esc(reason)} · ${esc(when(attempt.createdAt))}</p>${attempt.slipUrl ? `<a class="ticket-review-slip" href="${esc(attempt.slipUrl)}" target="_blank" rel="noopener noreferrer">เปิดสลิปส่วนตัว ↗</a>` : '<span class="ticket-review-slip-missing">ไม่มีไฟล์สลิปในประวัติ</span>'}${canRetry ? '<button type="button" class="ticket-review-retry" data-retry-verification>ตรวจสลิปเดิมซ้ำ</button>' : ''}<div class="ticket-review-result" role="status" aria-live="polite"></div></article>`;
+          }).join('') : '<div class="ticket-review-empty"><p>ไม่มีรายการค้างติดตาม</p></div>'}</div>
+        </section>
+      </section>`, 'command-center-modal');
+      const host = document.querySelector('#modalContent .ticket-review-queue');
+      host?.querySelector('#refreshTicketPaymentQueue')?.addEventListener('click', () => openTicketPaymentQueue(eventId));
+      host?.addEventListener('click', async event => {
+        const retryButton = event.target.closest('[data-retry-verification]');
+        if (retryButton) {
+          const card = retryButton.closest('[data-retry-attempt]');
+          const status = card.querySelector('.ticket-review-result');
+          retryButton.disabled = true;
+          status.textContent = 'กำลังส่งสลิปเดิมให้ SlipOK ตรวจซ้ำ…';
+          const { data: result, error } = await global.SourcewavSupabase.functions.invoke('admin-retry-ticket-verification', {
+            body: { attemptId: card.dataset.retryAttempt },
+          });
+          if (error || result?.error) {
+            const details = await error?.context?.clone?.().json?.().catch?.(() => null);
+            status.textContent = details?.error || result?.error || result?.message || error?.message || 'ตรวจซ้ำไม่สำเร็จ';
+            retryButton.disabled = false;
+            return;
+          }
+          status.textContent = result?.message || 'ตรวจซ้ำเสร็จแล้ว';
+          if (result?.status === 'paid' || result?.status === 'review_required') {
+            window.setTimeout(() => openTicketPaymentQueue(eventId), 1200);
+          } else {
+            window.setTimeout(() => openTicketPaymentQueue(eventId), 1800);
+          }
+          return;
+        }
+        const button = event.target.closest('[data-review-decision]');
+        if (!button) return;
+        const card = button.closest('[data-review-id]');
+        const note = card.querySelector('[data-review-note]').value.trim();
+        const confirmed = card.querySelector('[data-review-confirm]').checked;
+        const status = card.querySelector('.ticket-review-result');
+        const decision = button.dataset.reviewDecision;
+        if (note.length < 3) { status.textContent = 'กรอกเหตุผลการตัดสินใจอย่างน้อย 3 ตัวอักษรก่อนบันทึก'; card.querySelector('[data-review-note]').focus(); return; }
+        if (decision === 'approved' && !confirmed) { status.textContent = 'ยืนยันว่าตรวจยอดเข้าบัญชีผู้รับจริงก่อนออกบัตร'; card.querySelector('[data-review-confirm]').focus(); return; }
+        card.querySelectorAll('[data-review-decision]').forEach(action => { action.disabled = true; });
+        status.textContent = 'กำลังบันทึกผลตรวจสอบ…';
+        const { data: result, error } = await global.SourcewavSupabase.functions.invoke('admin-review-ticket-payment', {
+          body: { submissionId: card.dataset.reviewId, decision, note },
+        });
+        if (error || result?.error) {
+          const details = await error?.context?.clone?.().json?.().catch?.(() => null);
+          status.textContent = details?.error || result?.error || error?.message || 'บันทึกผลตรวจสอบไม่ได้';
+          card.querySelectorAll('[data-review-decision]').forEach(action => { action.disabled = false; });
+          return;
+        }
+        status.textContent = decision === 'approved' ? 'อนุมัติแล้ว · บัตรออกให้ผู้ซื้อแล้ว' : 'บันทึกการปฏิเสธแล้ว · ประสานผู้ซื้อเรื่องการคืนเงินด้วยตนเอง';
+        toast(decision === 'approved' ? 'อนุมัติการชำระเงินและออกบัตรแล้ว' : 'บันทึกผลตรวจแล้ว กรุณาติดตามกับผู้ซื้อ');
+      });
+    } catch (error) {
+      showModal(`<section class="ticket-review-queue"><h2 id="modalTitle">เปิดคิวตรวจไม่ได้</h2><p role="alert">${esc(error.message || 'โหลดรายการตรวจสอบไม่สำเร็จ')}</p><button type="button" id="backToCommandCenter">กลับหลังบ้านผู้จัด</button></section>`, 'command-center-modal');
+      $('#backToCommandCenter')?.addEventListener('click', openCommandCenterModal);
+    }
   }
 
   function openEditEventSummaryModal() {
@@ -272,6 +376,6 @@
     });
   }
 
-  Object.assign(F, { openCommandCenterModal, renderCommandPreview, openAddExpenseModal, openAddCrewModal });
+  Object.assign(F, { openCommandCenterModal, openTicketPaymentQueue, renderCommandPreview, openAddExpenseModal, openAddCrewModal });
   F.command = { bindStatic };
 })(window);

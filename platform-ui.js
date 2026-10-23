@@ -71,6 +71,7 @@
           'submit-ticket-payment': 'ระบบตรวจสอบสลิปยังไม่พร้อมใช้งานในขณะนี้',
           'finalize-ticket-payment': 'ระบบออกบัตรอัตโนมัติยังไม่พร้อมใช้งานในขณะนี้',
           'my-tickets': 'ระบบบัตรของฉันยังไม่พร้อมใช้งานในขณะนี้',
+          'my-orders': 'ระบบติดตามคำสั่งซื้อยังไม่พร้อมใช้งานในขณะนี้',
           'validate-ticket': 'ระบบตรวจบัตรเข้างานยังไม่พร้อมใช้งานในขณะนี้',
         };
         if (messages[name]) throw new Error(messages[name]);
@@ -165,10 +166,11 @@
       listedRooms.unshift(`<button type="button" class="room-directory-item is-active" data-room-switch="${esc(roomId)}" data-room-name="${esc(roomName)}"><i class="room-dot lime" aria-hidden="true"></i><span>${esc(roomName)}</span></button>`);
     }
     const roomButtons = listedRooms.join('');
-    modal(`<main class="room-chat-page" aria-labelledby="roomHeading"><header class="room-chat-topbar"><a href="#feed" class="room-chat-brand" aria-label="Sourcewav หน้าแรก"><img class="room-chat-logo" src="assets/sourcewav-logo.svg" alt="SOURCEWAV BKK" /></a><span id="modalTitle">ห้องพูดคุย</span><button type="button" id="roomClose" aria-label="ปิดห้องพูดคุย">กลับหน้าเว็บ <b aria-hidden="true">×</b></button></header><div class="room-chat-layout"><aside class="room-directory"><div class="room-directory-heading"><h2>ห้องคุย</h2><p>เลือกห้องแล้วคุยกับคอมมูนิตี้</p></div><nav aria-label="รายการห้องพูดคุย">${roomButtons || '<p class="room-directory-empty">ยังไม่มีห้องคุย</p>'}</nav><button type="button" class="room-create-action" id="roomCreateShortcut">＋ สร้างห้องคุย</button></aside><section class="room-chat-main" aria-labelledby="roomHeading"><header class="room-active-heading"><span class="room-active-mark" aria-hidden="true">#</span><div><h1 id="roomHeading">${esc(roomName)}</h1><p>พื้นที่แลกเปลี่ยนไอเดียและพูดคุยกับสมาชิก</p></div></header><div class="room-thread" id="roomThread" aria-live="polite">${messages || '<p class="room-thread-empty">ยังไม่มีข้อความในห้องนี้ เริ่มบทสนทนาได้เลย</p>'}</div><form id="roomMessageForm" class="room-compose"><label class="room-compose-message" for="roomMessage">ข้อความ<textarea id="roomMessage" maxlength="2000" placeholder="เขียนข้อความถึงห้องนี้…"></textarea></label><div class="room-compose-actions"><label class="room-image-pick" for="roomImage"><span aria-hidden="true">＋</span> แนบรูป<input id="roomImage" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG หรือ WebP · สูงสุด 5 MB</small></label><button class="room-send-button" type="submit"><span>ส่งข้อความ</span><b aria-hidden="true">↗</b></button></div></form></section></div></main>`);
+    modal(`<main class="room-chat-page" aria-labelledby="roomHeading"><button type="button" class="room-chat-back-fab" id="roomBack" aria-label="กลับจากห้องแชท">← <span>กลับ</span></button><header class="room-chat-topbar"><a href="#feed" class="room-chat-brand" aria-label="Sourcewav หน้าแรก"><img class="room-chat-logo" src="assets/sourcewav-logo.svg" alt="SOURCEWAV BKK" /></a><span id="modalTitle">ห้องพูดคุย</span><button type="button" id="roomClose" aria-label="ปิดห้องพูดคุย">กลับหน้าเว็บ <b aria-hidden="true">×</b></button></header><div class="room-chat-layout"><aside class="room-directory"><div class="room-directory-heading"><h2>ห้องคุย</h2><p>เลือกห้องแล้วคุยกับคอมมูนิตี้</p></div><nav aria-label="รายการห้องพูดคุย">${roomButtons || '<p class="room-directory-empty">ยังไม่มีห้องคุย</p>'}</nav><button type="button" class="room-create-action" id="roomCreateShortcut">＋ สร้างห้องคุย</button></aside><section class="room-chat-main" aria-labelledby="roomHeading"><header class="room-active-heading"><span class="room-active-mark" aria-hidden="true">#</span><div><h1 id="roomHeading">${esc(roomName)}</h1><p>พื้นที่แลกเปลี่ยนไอเดียและพูดคุยกับสมาชิก</p></div></header><div class="room-thread" id="roomThread" aria-live="polite">${messages || '<p class="room-thread-empty">ยังไม่มีข้อความในห้องนี้ เริ่มบทสนทนาได้เลย</p>'}</div><form id="roomMessageForm" class="room-compose"><label class="room-compose-message" for="roomMessage">ข้อความ<textarea id="roomMessage" maxlength="2000" placeholder="เขียนข้อความถึงห้องนี้…"></textarea></label><div class="room-compose-actions"><label class="room-image-pick" for="roomImage"><span aria-hidden="true">＋</span> แนบรูป<input id="roomImage" type="file" accept="image/jpeg,image/png,image/webp" /><small>JPG, PNG หรือ WebP · สูงสุด 5 MB</small></label><button class="room-send-button" type="submit"><span>ส่งข้อความ</span><b aria-hidden="true">↗</b></button></div></form></section></div></main>`);
     const initialThread = $('#roomThread'); if (initialThread) initialThread.scrollTop = initialThread.scrollHeight;
     $('.room-chat-brand').onclick = async event => { event.preventDefault(); closeModal(); await closeRoomChannel(); location.hash = 'feed'; };
     $('#roomClose').onclick = async () => { closeModal(); await closeRoomChannel(); };
+    $('#roomBack').onclick = async () => { closeModal(); await closeRoomChannel(); };
     $('#roomCreateShortcut').onclick = () => { closeModal(); $('#roomBtn')?.click(); };
     $('#roomMessageForm').onsubmit = async event => {
       event.preventDefault();
@@ -283,7 +285,7 @@
     document.body.classList.add('event-purchase-page-active');
     window.scrollTo(0, 0);
     page.innerHTML = '<div class="event-purchase-toolbar"><a href="#events">← กลับหน้าอีเวนต์</a><span>SOURCEWAV TICKETS</span></div><div class="event-purchase-loading" role="status">กำลังโหลดรายละเอียดงาน…</div>';
-    const { data: event, error } = await db.from('events').select('id,title,description,category,cover_url,poster_urls,starts_at,ends_at,venue_name,venue_address,ticket_types(id,name,price_minor,quantity_total,quantity_sold,quantity_reserved,sales_start,sales_end),event_payment_methods(qr_storage_key,bank_name,beneficiary_name,account_last4)').eq('id', eventId).single();
+    const { data: event, error } = await db.from('events').select('id,organizer_id,title,description,category,cover_url,poster_urls,starts_at,ends_at,venue_name,venue_address,ticket_types(id,name,price_minor,quantity_total,quantity_sold,quantity_reserved,sales_start,sales_end),event_payment_methods(qr_storage_key,bank_name,beneficiary_name,account_last4)').eq('id', eventId).single();
     if (requestId !== eventPurchaseRequest || location.hash !== ticketPurchaseHash(eventId)) return;
     if (error || !event) {
       page.innerHTML = '<div class="event-purchase-toolbar"><a href="#events">← กลับหน้าอีเวนต์</a><span>SOURCEWAV TICKETS</span></div><section class="event-purchase-error"><h1>เปิดรายละเอียดงานไม่ได้</h1><p>งานนี้อาจถูกนำออกหรือไม่พร้อมให้เข้าชม ลองกลับไปเลือกงานอีกครั้ง</p></section>';
@@ -292,6 +294,8 @@
     const now = Date.now();
     const tiers = (event.ticket_types || []).filter(t => t.quantity_total > t.quantity_sold + t.quantity_reserved && (!t.sales_start || new Date(t.sales_start).getTime() <= now) && (!t.sales_end || new Date(t.sales_end).getTime() >= now));
     const method = Array.isArray(event.event_payment_methods) ? event.event_payment_methods[0] : event.event_payment_methods;
+    const { data: authData } = await db.auth.getUser();
+    const canManagePayment = authData.user?.id === event.organizer_id;
     const categoryNames = { music: 'ดนตรี', art: 'ศิลปะ', community: 'คอมมูนิตี้', market: 'ตลาด', other: 'อีเวนต์' };
     const dateOptions = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
     const startDate = new Date(event.starts_at);
@@ -307,7 +311,7 @@
     const purchaseAction = method && tiers.length
       ? '<p>ชำระตรงเข้าบัญชีผู้จัด ระบบตรวจสลิปผ่าน SlipOK ก่อนออกบัตร</p><button class="modal-primary" id="startManualCheckout" type="button">ดู QR และชำระเงิน <span aria-hidden="true">↗</span></button>'
       : `<p>${!tiers.length ? 'บัตรหมดหรือยังไม่เปิดขายในขณะนี้' : 'งานนี้ยังไม่ได้ตั้งค่าบัญชีรับเงิน จึงยังชำระเงินไม่ได้'}</p><button class="modal-primary" id="startManualCheckout" type="button" disabled>${!tiers.length ? 'ยังไม่มีบัตรพร้อมขาย' : 'ยังไม่พร้อมรับชำระ'}</button>`;
-    page.innerHTML = `<div class="event-purchase-page-inner"><div class="event-purchase-toolbar"><a href="#events">← กลับหน้าอีเวนต์</a><span>SOURCEWAV TICKETS</span></div><div class="event-purchase-layout"><section class="event-purchase-art" aria-label="โปสเตอร์งาน">${posterMarkup}</section><div class="event-purchase-content"><article class="event-purchase-info"><span class="event-purchase-category">${esc(categoryNames[event.category] || 'อีเวนต์')}</span><h1 id="eventPurchaseTitle">${esc(event.title)}</h1><div class="event-purchase-facts"><div><span aria-hidden="true">◷</span><p><b>วันและเวลา</b><time datetime="${esc(event.starts_at)}">${esc(startDate.toLocaleString('th-TH', dateOptions))}</time>${endDate ? `<time datetime="${esc(event.ends_at)}">ถึง ${esc(endDate.toLocaleString('th-TH', dateOptions))}</time>` : ''}</p></div><div><span aria-hidden="true">⌖</span><p><b>สถานที่</b><strong>${esc(event.venue_name || 'แจ้งสถานที่ภายหลัง')}</strong>${event.venue_address ? `<span>${esc(event.venue_address)}</span>` : ''}</p></div></div><section class="event-purchase-description"><h2>รายละเอียดงาน</h2><p>${event.description ? esc(event.description) : 'ผู้จัดยังไม่ได้เพิ่มรายละเอียดงาน'}</p></section></article><section class="event-purchase-checkout" aria-labelledby="ticketPurchaseHeading"><header><span>เลือกบัตรเข้าร่วมงาน</span><h2 id="ticketPurchaseHeading">เลือก Tier บัตร</h2></header><label class="modal-field">ประเภทบัตร<select id="ticketTier" ${tiers.length ? '' : 'disabled'}>${tiers.length ? tierOptions : '<option value="">ไม่มีบัตรพร้อมขาย</option>'}</select></label><label class="modal-field">จำนวน<input id="ticketQuantity" type="number" min="1" max="10" value="1" ${tiers.length ? '' : 'disabled'} /></label><div class="checkout-event"><div class="checkout-row"><span>ยอดรวม</span><b id="ticketTotal">${tiers.length ? money(tiers[0].price_minor) : '—'}</b></div>${purchaseAction}</div></section></div></div>${method && tiers.length ? '<button class="mobile-ticket-cta" type="button">เลือกบัตร</button>' : ''}`;
+    page.innerHTML = `<div class="event-purchase-page-inner"><div class="event-purchase-toolbar"><a href="#events">← กลับหน้าอีเวนต์</a><span>SOURCEWAV TICKETS</span></div><div class="event-purchase-layout"><section class="event-purchase-art" aria-label="โปสเตอร์งาน">${posterMarkup}</section><div class="event-purchase-content"><article class="event-purchase-info"><span class="event-purchase-category">${esc(categoryNames[event.category] || 'อีเวนต์')}</span><h1 id="eventPurchaseTitle">${esc(event.title)}</h1><div class="event-purchase-facts"><div><span aria-hidden="true">◷</span><p><b>วันและเวลา</b><time datetime="${esc(event.starts_at)}">${esc(startDate.toLocaleString('th-TH', dateOptions))}</time>${endDate ? `<time datetime="${esc(event.ends_at)}">ถึง ${esc(endDate.toLocaleString('th-TH', dateOptions))}</time>` : ''}</p></div><div><span aria-hidden="true">⌖</span><p><b>สถานที่</b><strong>${esc(event.venue_name || 'แจ้งสถานที่ภายหลัง')}</strong>${event.venue_address ? `<span>${esc(event.venue_address)}</span>` : ''}</p></div></div><section class="event-purchase-description"><h2>รายละเอียดงาน</h2><p>${event.description ? esc(event.description) : 'ผู้จัดยังไม่ได้เพิ่มรายละเอียดงาน'}</p></section></article>${canManagePayment ? `<section class="event-purchase-owner-tools"><div><span>สำหรับผู้จัดงาน</span><h2>การตรวจสลิป SlipOK</h2><p>อัปเดต Branch ID หรือ API Key ได้ ระบบจะตรวจการเชื่อมต่อก่อนบันทึก</p></div><button type="button" id="manageSlipokSettings" data-event-id="${esc(event.id)}" data-branch-id="${esc(method?.slipok_branch_id || '')}">ตั้งค่าการเชื่อมต่อ</button></section>` : ''}<section class="event-purchase-checkout" aria-labelledby="ticketPurchaseHeading"><header><span>เลือกบัตรเข้าร่วมงาน</span><h2 id="ticketPurchaseHeading">เลือก Tier บัตร</h2></header><label class="modal-field">ประเภทบัตร<select id="ticketTier" ${tiers.length ? '' : 'disabled'}>${tiers.length ? tierOptions : '<option value="">ไม่มีบัตรพร้อมขาย</option>'}</select></label><label class="modal-field">จำนวน<input id="ticketQuantity" type="number" min="1" max="10" value="1" ${tiers.length ? '' : 'disabled'} /></label><div class="checkout-event"><div class="checkout-row"><span>ยอดรวม</span><b id="ticketTotal">${tiers.length ? money(tiers[0].price_minor) : '—'}</b></div>${purchaseAction}</div></section></div></div>${method && tiers.length ? '<button class="mobile-ticket-cta" type="button">เลือกบัตร</button>' : ''}`;
     if (posters.length > 1) {
       const caption = $('.event-purchase-poster figcaption', page);
       const image = $('#eventPosterGalleryImage', page);
@@ -341,6 +345,30 @@
     });
   }
 
+  function openSlipOkSettings(eventId, branchId) {
+    modal(`<section class="slipok-settings-modal"><span class="payment-eyebrow">SOURCEWAV TICKETS</span><h2 id="modalTitle">ตั้งค่า SlipOK</h2><p>กรอก Branch ID และ API Key จากหน้าตั้งค่าสาขา SlipOK ระบบจะตรวจสิทธิ์ผ่านหน้าโควตาโดยไม่ส่งสลิปและไม่ใช้โควตาตรวจสลิป</p><form id="slipokSettingsForm" data-event-id="${esc(eventId)}"><label class="modal-field">Branch ID<input id="slipokSettingsBranch" inputmode="numeric" autocomplete="off" value="${esc(branchId)}" placeholder="เช่น 12345" required /></label><label class="modal-field">API Key<input id="slipokSettingsKey" type="password" autocomplete="new-password" placeholder="วาง API Key ของสาขานี้" required /></label><div id="slipokSettingsResult" role="status" aria-live="polite"></div><button class="modal-primary" id="saveSlipokSettings" type="submit">ตรวจสอบและบันทึก</button></form></section>`);
+  }
+
+  async function saveSlipOkSettings(form) {
+    const button = $('#saveSlipokSettings');
+    const keyInput = $('#slipokSettingsKey');
+    const branchId = parseSlipOkBranchId($('#slipokSettingsBranch')?.value);
+    const apiKey = keyInput?.value.trim() || '';
+    if (!branchId) { $('#slipokSettingsBranch')?.focus(); return toast('กรอก Branch ID เป็นตัวเลข หรือวาง URL API จาก SlipOK'); }
+    if (apiKey.length < 8 || apiKey.length > 512) { keyInput?.focus(); return toast('กรอก API Key ของสาขา SlipOK'); }
+    button.disabled = true; button.textContent = 'กำลังตรวจสอบ…';
+    try {
+      await call('update-event-slipok', { eventId: form.dataset.eventId, slipokBranchId: branchId, slipokApiKey: apiKey });
+      closeModal(); toast('เชื่อมต่อ SlipOK สำเร็จและบันทึกการตั้งค่าแล้ว');
+      const page = $('#eventPurchasePage');
+      if (page && !page.hidden) ticketPicker(form.dataset.eventId);
+    } catch (error) {
+      const result = $('#slipokSettingsResult');
+      if (result) result.textContent = error.message || 'บันทึกการตั้งค่าไม่สำเร็จ';
+      button.disabled = false; button.textContent = 'ตรวจสอบและบันทึก';
+    } finally { if (keyInput) keyInput.value = ''; }
+  }
+
   async function beginManualCheckout() {
     const tier = $('#ticketTier')?.value, quantity = Number($('#ticketQuantity')?.value || 1);
     const button = $('#startManualCheckout');
@@ -355,15 +383,41 @@
     button.disabled = true; button.textContent = 'กำลังสร้างรายการ…';
     try {
       const checkout = await call('create-manual-ticket-order', { ticketTypeId: tier, quantity, idempotencyKey: button.dataset.idempotencyKey ||= crypto.randomUUID() });
+      delete button.dataset.idempotencyKey;
       showManualPayment(checkout);
     } catch (error) { button.disabled = false; button.innerHTML = 'ดู QR และชำระเงิน <span aria-hidden="true">↗</span>'; toast(error.message || 'สร้างรายการจองไม่สำเร็จ กรุณาลองใหม่'); }
+  }
+
+  function verificationFollowUp(order) {
+    const issue = order?.verificationIssue;
+    if (issue === 'invalid_slipok_credentials') return 'ผู้จัดต้องแก้ข้อมูลเชื่อมต่อ SlipOK ของสาขาเดิมก่อน ระบบเก็บสลิปไว้ตรวจซ้ำแล้ว ไม่ต้องโอนเงินซ้ำ';
+    if (issue === 'quota_exhausted' || order?.verificationStatus === 'quota_exhausted') return 'SlipOK ใช้โควต้าตรวจครบแล้ว ระบบเก็บรายการไว้ให้ผู้จัดติดตาม ไม่ต้องโอนเงินซ้ำ';
+    if (issue === 'provider_timeout' || order?.verificationStatus === 'timeout') return 'SlipOK ยังไม่ตอบกลับ ระบบเก็บรายการไว้แล้ว โปรดรอผลหรือติดต่อผู้จัด ไม่ต้องโอนเงินซ้ำ';
+    if (issue === 'provider_unavailable' || order?.verificationStatus === 'error') return 'ระบบติดต่อ SlipOK ไม่ได้ ระบบเก็บสลิปไว้ให้ตรวจซ้ำ โปรดรอผลหรือติดต่อผู้จัด ไม่ต้องโอนเงินซ้ำ';
+    return '';
   }
 
   function showManualPayment(checkout) {
     const until = new Date(checkout.expiresAt).getTime();
     const initialSeconds = Math.max(0, Math.ceil((until - Date.now()) / 1000));
     const initialCountdown = `${Math.floor(initialSeconds / 60)}:${String(initialSeconds % 60).padStart(2, '0')}`;
-    modal(`<div class="manual-payment"><header class="payment-heading"><span class="payment-eyebrow">SOURCEWAV TICKETS</span><h2 id="modalTitle">ชำระเงินเพื่อรับบัตร</h2><p>${esc(checkout.eventTitle)} · ${esc(checkout.tierName)} × ${checkout.quantity}</p></header><ol class="payment-steps" aria-label="ขั้นตอนชำระเงิน"><li class="is-current"><b>1</b><span>สแกน QR</span></li><li><b>2</b><span>แนบสลิป</span></li><li><b>3</b><span>รับบัตร</span></li></ol><div class="payment-layout"><section class="payment-qr-column" aria-label="QR สำหรับชำระเงิน"><div class="payment-total"><span>ยอดที่ต้องโอน</span><strong>${money(checkout.totalMinor)}<small> บาท</small></strong></div><div class="real-payment-qr"><img src="${esc(checkout.paymentQrUrl)}" alt="QR รับชำระเงินของผู้จัดงาน ${esc(checkout.eventTitle)}" /></div><p class="qr-hint">สแกนด้วยแอปธนาคาร แล้วตรวจชื่อผู้รับก่อนยืนยัน</p></section><section class="payment-details"><h3>ข้อมูลผู้รับเงิน</h3><div class="checkout-row"><span>ธนาคาร</span><b>${esc(checkout.bankName)}</b></div><div class="checkout-row"><span>ชื่อบัญชี</span><b>${esc(checkout.beneficiaryName)}</b></div>${checkout.accountLast4 ? `<div class="checkout-row"><span>เลขบัญชีลงท้าย</span><b>•••• ${esc(checkout.accountLast4)}</b></div>` : ''}<div class="checkout-row payment-expiry"><span>เวลาจองคงเหลือ</span><b><time data-payment-countdown datetime="${esc(checkout.expiresAt)}">${initialCountdown}</time></b></div><p class="payment-order-ref">รายการ ${esc(checkout.orderId.slice(0, 8).toUpperCase())}</p></section></div><form id="ticketSlipForm" data-order-id="${esc(checkout.orderId)}"><label class="modal-field">ส่งสลิปตัวจริง<input id="ticketSlipFile" type="file" accept="image/jpeg,image/png,image/webp,image/jfif" required /><small>ไฟล์ JPG, PNG, JFIF หรือ WebP ขนาดไม่เกิน 5 MB · ตรวจได้สูงสุด 5 ครั้งต่อรายการ</small></label><button class="modal-primary" id="submitTicketSlip" type="submit">ตรวจสลิปและออกบัตร</button></form><div id="ticketSlipResult" role="status" aria-live="polite"></div></div>`);
+    const eventDate = checkout.startsAt ? new Date(checkout.startsAt).toLocaleString('th-TH', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) : 'ยังไม่ระบุวัน';
+    modal(`<div class="manual-payment"><header class="payment-heading"><span class="payment-eyebrow">SOURCEWAV TICKETS</span><h2 id="modalTitle">ชำระเงินเพื่อรับบัตร</h2><p>${esc(checkout.eventTitle)} · ${esc(checkout.tierName)} × ${checkout.quantity}</p><p class="payment-event-meta">${esc(eventDate)} · ${esc(checkout.venueName || 'ยังไม่ระบุสถานที่')}${checkout.venueAddress ? ` · ${esc(checkout.venueAddress)}` : ''}</p></header><ol class="payment-steps" aria-label="ขั้นตอนชำระเงิน"><li class="is-current"><b>1</b><span>สแกน QR</span></li><li><b>2</b><span>แนบสลิป</span></li><li><b>3</b><span>รับบัตร</span></li></ol><div class="payment-layout"><section class="payment-qr-column" aria-label="QR สำหรับชำระเงิน"><div class="payment-total"><span>ยอดที่ต้องโอน</span><strong>${money(checkout.totalMinor)}<small> บาท</small></strong></div><div class="real-payment-qr"><img src="${esc(checkout.paymentQrUrl)}" alt="QR รับชำระเงินของผู้จัดงาน ${esc(checkout.eventTitle)}" /></div><p class="qr-hint">สแกนด้วยแอปธนาคาร แล้วตรวจชื่อผู้รับก่อนยืนยัน</p></section><section class="payment-details"><h3>ข้อมูลผู้รับเงิน</h3><div class="checkout-row"><span>ธนาคาร</span><b>${esc(checkout.bankName)}</b></div><div class="checkout-row"><span>ชื่อบัญชี</span><b>${esc(checkout.beneficiaryName)}</b></div>${checkout.accountLast4 ? `<div class="checkout-row"><span>เลขบัญชีลงท้าย</span><b>•••• ${esc(checkout.accountLast4)}</b></div>` : ''}<div class="checkout-row payment-expiry"><span>เวลาจองคงเหลือ</span><b><time data-payment-countdown datetime="${esc(checkout.expiresAt)}">${initialCountdown}</time></b></div><p class="payment-order-ref">รายการ #SW-${esc(checkout.orderId.replace(/-/g, '').slice(-8).toUpperCase())}</p></section></div>${checkout.latestSubmission?.status === 'rejected' ? '<p class="order-retry-note">สลิปครั้งก่อนตรวจไม่ผ่าน คุณส่งสลิปต้นฉบับใหม่ได้โดยไม่ต้องสร้างคำสั่งซื้อใหม่</p>' : ''}<p class="order-payee-note">ยอดชำระเข้าบัญชีผู้จัดโดยตรง โปรดตรวจชื่อผู้รับในแอปธนาคารก่อนยืนยัน</p><form id="ticketSlipForm" data-order-id="${esc(checkout.orderId)}"><label class="modal-field">ส่งสลิปตัวจริง<input id="ticketSlipFile" type="file" accept="image/jpeg,image/png,image/webp,image/jfif" required /><small>ไฟล์ JPG, PNG, JFIF หรือ WebP ขนาดไม่เกิน 5 MB · ตรวจได้สูงสุด 5 ครั้งต่อรายการ</small></label><button class="modal-primary" id="submitTicketSlip" type="submit">ตรวจสลิปและออกบัตร</button></form><div id="ticketSlipResult" role="status" aria-live="polite"></div></div>`);
+    const followUp = verificationFollowUp(checkout);
+    if (followUp) {
+      const orderRef = `SW-${checkout.orderId.replace(/-/g, '').slice(-8).toUpperCase()}`;
+      const contact = checkout.organizerId
+        ? `<button type="button" class="modal-secondary" data-order-contact="${esc(checkout.organizerId)}" data-order-ref="${esc(orderRef)}" data-name="${esc(checkout.organizerName || 'ผู้จัดงาน')}">ติดต่อผู้จัดพร้อมเลขคำสั่งซื้อ</button>`
+        : '';
+      $('#ticketSlipForm')?.insertAdjacentHTML('beforebegin', `<p class="order-retry-note" role="status">${esc(followUp)}</p>${contact}`);
+      if (['invalid_slipok_credentials', 'quota_exhausted'].includes(checkout.verificationIssue) || checkout.verificationStatus === 'quota_exhausted') {
+        const qrColumn = $('#modalContent .payment-qr-column'); if (qrColumn) qrColumn.hidden = true;
+        const input = $('#ticketSlipFile'); if (input) input.disabled = true;
+        const submit = $('#submitTicketSlip'); if (submit) { submit.disabled = true; submit.textContent = 'รอผู้จัดตรวจสอบ'; }
+      }
+    }
+    $('#ticketSlipForm')?.insertAdjacentHTML('beforebegin', `<details class="payment-refund-policy" open><summary>เงื่อนไขการยกเลิกและคืนเงิน</summary><p>${esc(checkout.refundPolicy || 'ยังไม่ได้ระบุเงื่อนไขโดยละเอียด กรุณาติดต่อผู้จัดงานก่อนชำระเงิน')}</p><small>ยอดชำระเข้าบัญชีผู้จัดโดยตรง การคืนเงินจึงประสานกับผู้จัดงานผ่านแชท</small></details>`);
+    if (checkout.organizerName) $('#modalContent .payment-details h3')?.insertAdjacentHTML('afterend', `<div class="checkout-row"><span>ผู้จัดงาน</span><b>${esc(checkout.organizerName)}</b></div>`);
     $('#modalContent .qr-hint')?.insertAdjacentHTML('afterend', '<p class="qr-mobile-hint">ใช้มือถือเครื่องเดียว? ลองบันทึกภาพ QR แล้วเลือกภาพในแอปธนาคาร (หากรองรับ) หรือใช้มือถืออีกเครื่องสแกน</p>');
     clearInterval(paymentTimer);
     paymentTimer = setInterval(async () => {
@@ -380,8 +434,8 @@
         const submit = $('#submitTicketSlip'); if (submit) submit.disabled = true;
         return;
       }
-      const { data } = await db.from('orders').select('status').eq('id', checkout.orderId).maybeSingle();
-      if (data?.status === 'paid') {
+      const { order } = await call('my-orders', { orderId: checkout.orderId });
+      if (order?.status === 'paid') {
         clearInterval(paymentTimer); closeModal(); toast('SlipOK ตรวจผ่าน · บัตรของคุณพร้อมใช้งาน'); openMyTickets();
       }
     }, 5000);
@@ -417,15 +471,19 @@
         button.onclick = async () => {
           button.disabled = true; button.textContent = 'กำลังออกบัตร…';
           try {
-            const issued = await call('finalize-ticket-payment', { submissionId: verification.submissionId });
+            const issued = await call('finalize-ticket-payment', { submissionId: verification.submissionId, attemptId: verification.attemptId });
             if (issued.status === 'paid') { clearInterval(paymentTimer); closeModal(); toast('บัตรของคุณพร้อมใช้งานแล้ว'); openMyTickets(); }
+            else if (issued.status === 'review_required') {
+              result.innerHTML = `<div class="slip-check-result is-verified"><strong>ต้องตรวจเพิ่มเติม</strong><span>${esc(issued.message || 'คำสั่งซื้อถูกส่งให้ผู้จัดตรวจสอบ')}</span><small>ไม่ต้องโอนซ้ำ · ติดต่อผู้จัดพร้อมเลขคำสั่งซื้อ</small></div>`;
+              button.disabled = true; button.textContent = 'ส่งตรวจสอบแล้ว'; button.dataset.exhausted = 'true';
+            }
             else throw new Error('ยังออกบัตรไม่ได้ กรุณาลองอีกครั้ง');
           } catch (error) { button.disabled = false; button.textContent = 'ลองออกบัตรอีกครั้ง'; toast(error.message); }
         };
         input.value = '';
       } else if (verification.status === 'review_required') {
         clearInterval(paymentTimer);
-        result.innerHTML = `<div class="slip-check-result is-verified"><strong>ส่งรายการให้ผู้จัดตรวจสอบแล้ว</strong><span>${esc(verification.message || 'ระบบตรวจพบการโอนหลังเวลาจอง')}</span><small>ระบบยังไม่ออกบัตรอัตโนมัติ ผู้จัดต้องตรวจยอดและจำนวนบัตรคงเหลือก่อน</small></div>`;
+        result.innerHTML = `<div class="slip-check-result is-verified"><strong>ส่งรายการให้ผู้จัดตรวจสอบแล้ว</strong><span>${esc(verification.message || 'ระบบต้องตรวจเวลาโอนและจำนวนบัตรก่อนออกบัตร')}</span><small>ระบบยังไม่ออกบัตรอัตโนมัติ ผู้จัดต้องตรวจเวลาโอน ยอดจริง และจำนวนบัตรคงเหลือก่อน</small></div>`;
         button.disabled = true; button.textContent = 'ส่งตรวจสอบแล้ว';
         button.dataset.exhausted = 'true'; input.value = '';
       } else {
@@ -439,7 +497,9 @@
         input.value = '';
       }
     } catch (error) {
-      await db.storage.from('sourcewav-ticket-slips').remove([storageKey]);
+      // Keep slips for provider timeouts and counted attempts so the order remains
+      // auditable. Remove files only when verification never consumed the upload.
+      if (error.attemptCounted !== true) await db.storage.from('sourcewav-ticket-slips').remove([storageKey]);
       const remaining = Number.isInteger(error.attemptsRemaining) ? error.attemptsRemaining : null;
       const exhausted = remaining === 0;
       const retryNote = error.attemptCounted
@@ -451,6 +511,104 @@
       button.dataset.exhausted = String(exhausted);
       input.disabled = exhausted;
     } finally { button.disabled = button.dataset.exhausted === 'true'; }
+  }
+
+  async function resumeTicketOrder(orderId, trigger) {
+    if (!orderId) return;
+    if (trigger) { trigger.disabled = true; trigger.setAttribute('aria-busy', 'true'); }
+    try {
+      const { order } = await call('my-orders', { orderId });
+      if (!order) throw new Error('ไม่พบคำสั่งซื้อ');
+      if (order.verificationStatus === 'processing') {
+        showOrderVerifying(order);
+        return;
+      }
+      if ((order.latestSubmission?.status === 'verified' || order.verifiedAttemptId) && ['awaiting_payment','expired'].includes(order.status)) {
+        showVerifiedOrderRecovery(order);
+        return;
+      }
+      if (order.status === 'expired') {
+        showLateSlipUpload(order);
+        return;
+      }
+      if (order.status !== 'awaiting_payment' || !order.paymentQrUrl) {
+        clearInterval(paymentTimer);
+        const rejected = order.status === 'disputed' && order.latestReview?.decision === 'rejected';
+        const orderRef = `SW-${order.orderId.replace(/-/g, '').slice(-8).toUpperCase()}`;
+        const title = rejected ? 'ผู้จัดปฏิเสธการอนุมัติรายการ' : order.status === 'disputed' ? 'ส่งคำสั่งซื้อให้ตรวจเพิ่มเติมแล้ว' : order.status === 'expired' ? 'คำสั่งซื้อหมดเวลาชำระ' : order.status === 'paid' ? 'ชำระเงินแล้ว' : 'สถานะคำสั่งซื้อ';
+        const message = rejected ? 'ผู้จัดบันทึกผลตรวจแล้ว การปฏิเสธไม่ได้ยืนยันว่าคืนเงินแล้ว กรุณาติดตามการคืนเงินกับผู้จัดโดยตรง'
+          : order.status === 'disputed' ? order.verificationIssue === 'duplicate_transaction_reference' ? 'เลขอ้างอิงธุรกรรมนี้ถูกใช้กับคำสั่งซื้ออื่น ระบบจึงยังไม่ยืนยันการชำระเงินหรือออกบัตร กรุณาติดต่อผู้จัดพร้อมเลขคำสั่งซื้อนี้' : 'ระบบยังไม่ออกบัตรอัตโนมัติ ผู้จัดต้องตรวจยอดเงินจริงและจำนวนบัตรก่อน กรุณาติดต่อผู้จัดพร้อมเลขคำสั่งซื้อนี้'
+          : order.status === 'expired' ? 'อย่าโอนเงินจาก QR เดิม หากโอนก่อนหมดเวลาแล้ว โปรดติดต่อผู้จัดพร้อมหลักฐานและเลขคำสั่งซื้อ'
+          : order.status === 'paid' ? 'คำสั่งซื้อนี้ยืนยันแล้ว บัตรจะแสดงในกระเป๋าบัตรของคุณ' : 'ไม่สามารถกลับไปชำระคำสั่งซื้อนี้ได้';
+        modal(`<section class="order-status-view"><span class="payment-eyebrow">SOURCEWAV TICKETS · #${esc(orderRef)}</span><h2 id="modalTitle">${esc(title)}</h2><p>${esc(message)}</p>${order.latestReview?.note ? `<p class="order-review-note">หมายเหตุจากผู้จัด: ${esc(order.latestReview.note)}</p>` : ''}${order.status === 'disputed' && order.organizerId ? `<button type="button" class="modal-secondary" data-order-contact="${esc(order.organizerId)}" data-order-ref="${esc(orderRef)}" data-name="${esc(order.organizerName || 'ผู้จัดงาน')}">ติดต่อผู้จัดพร้อมเลขคำสั่งซื้อ</button>` : ''}<button type="button" class="modal-primary" data-back-to-tickets>กลับไปบัตรของฉัน</button></section>`);
+        $('#modalContent [data-back-to-tickets]')?.addEventListener('click', openMyTickets);
+        if (order.status === 'paid') openMyTickets();
+        return;
+      }
+      const item = order.items?.[0] || {};
+      showManualPayment({
+        orderId: order.orderId, eventId: order.eventId, eventTitle: order.eventTitle,
+        startsAt: order.startsAt, endsAt: order.endsAt, venueName: order.venueName, venueAddress: order.venueAddress,
+        tierName: item.tierName || 'บัตรเข้างาน', quantity: item.quantity || 1,
+        totalMinor: order.totalMinor, expiresAt: order.expiresAt, paymentQrUrl: order.paymentQrUrl, organizerName: order.organizerName,
+        bankName: order.bankName, beneficiaryName: order.recipientName, accountLast4: order.accountLast4,
+        latestSubmission: order.latestSubmission, verificationStatus: order.verificationStatus,
+        verificationIssue: order.verificationIssue, organizerId: order.organizerId,
+      });
+    } catch (error) { toast(error.message || 'เปิดคำสั่งซื้อไม่ได้'); }
+    finally { if (trigger?.isConnected) { trigger.disabled = false; trigger.removeAttribute('aria-busy'); } }
+  }
+
+  function showOrderVerifying(order) {
+    clearInterval(paymentTimer);
+    const ref = order.orderId.replace(/-/g, '').slice(-8).toUpperCase();
+    modal(`<section class="order-status-view"><span class="payment-eyebrow">SOURCEWAV TICKETS · #SW-${esc(ref)}</span><h2 id="modalTitle">กำลังตรวจสอบสลิป</h2><p>ระบบรับสลิปแล้ว กำลังรอผลตรวจจาก SlipOK <strong>ไม่ต้องโอนหรือส่งสลิปซ้ำ</strong></p><button type="button" class="modal-primary" id="refreshOrderVerification">ตรวจสอบสถานะล่าสุด</button></section>`);
+    $('#refreshOrderVerification')?.addEventListener('click', () => resumeTicketOrder(order.orderId));
+  }
+
+  function showLateSlipUpload(order) {
+    clearInterval(paymentTimer);
+    const ref = order.orderId.replace(/-/g, '').slice(-8).toUpperCase();
+    const item = order.items?.[0] || {};
+    const eventDate = order.startsAt ? new Date(order.startsAt).toLocaleString('th-TH', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) : 'ยังไม่ระบุวัน';
+    const followUp = verificationFollowUp(order);
+    const contact = followUp && order.organizerId
+      ? `<button type="button" class="modal-secondary" data-order-contact="${esc(order.organizerId)}" data-order-ref="SW-${esc(ref)}" data-name="${esc(order.organizerName || 'ผู้จัดงาน')}">ติดต่อผู้จัดพร้อมเลขคำสั่งซื้อ</button>`
+      : '';
+    const waitForOrganizer = ['invalid_slipok_credentials', 'quota_exhausted'].includes(order.verificationIssue)
+      || order.verificationStatus === 'quota_exhausted';
+    modal(`<section class="manual-payment late-slip-upload">
+      <header class="payment-heading"><span class="payment-eyebrow">SOURCEWAV TICKETS · #SW-${esc(ref)}</span><h2 id="modalTitle">ส่งสลิปของคำสั่งซื้อที่หมดเวลา</h2><p>${esc(order.eventTitle)} · ${esc(item.tierName || 'บัตรเข้างาน')} × ${Number(item.quantity || 1)}</p><p class="payment-event-meta">${esc(eventDate)} · ${esc(order.venueName || 'ยังไม่ระบุสถานที่')}${order.venueAddress ? ` · ${esc(order.venueAddress)}` : ''}</p></header>
+      <p class="order-retry-note">QR นี้หมดเวลาจองแล้ว อย่าโอนซ้ำ หากคุณโอนก่อนหมดเวลา ระบบจะตรวจเวลาธุรกรรมจาก SlipOK; ถ้าโอนหลังหมดเวลา รายการจะส่งให้ผู้จัดตรวจยอดและจำนวนบัตรก่อน</p>
+      ${followUp ? `<p class="order-retry-note" role="status">${esc(followUp)}</p>${contact}` : ''}
+      <div class="payment-details"><div class="checkout-row"><span>ยอดคำสั่งซื้อ</span><b>${esc(money(order.totalMinor))}</b></div>${order.organizerName ? `<div class="checkout-row"><span>ผู้จัดงาน</span><b>${esc(order.organizerName)}</b></div>` : ''}<div class="checkout-row"><span>ธนาคารผู้รับ</span><b>${esc(order.bankName || '—')}</b></div><div class="checkout-row"><span>ชื่อบัญชีรับเงิน</span><b>${esc(order.recipientName || '—')}</b></div>${order.accountLast4 ? `<div class="checkout-row"><span>เลขบัญชีลงท้าย</span><b>•••• ${esc(order.accountLast4)}</b></div>` : ''}<div class="checkout-row"><span>หมดเวลาจอง</span><b>${esc(new Date(order.expiresAt).toLocaleString('th-TH'))}</b></div></div>
+      <form id="ticketSlipForm" data-order-id="${esc(order.orderId)}"><label class="modal-field">แนบสลิปต้นฉบับที่ใช้โอน<input id="ticketSlipFile" type="file" accept="image/jpeg,image/png,image/webp,image/jfif" ${waitForOrganizer ? 'disabled' : ''} required /><small>JPG, PNG, JFIF หรือ WebP ไม่เกิน 5 MB · ส่งได้ไม่เกิน 5 ครั้งต่อคำสั่งซื้อ</small></label><button class="modal-primary" id="submitTicketSlip" type="submit" ${waitForOrganizer ? 'disabled' : ''}>${waitForOrganizer ? 'รอผู้จัดตรวจสอบ' : 'ตรวจสอบเวลาโอนและส่งให้ผู้จัดหากจำเป็น'}</button></form>${order.eventStatus === 'published' ? '<button class="modal-secondary" id="startNewTicketOrder" type="button">หากยังไม่ได้โอน · เลือกบัตรใหม่</button>' : ''}<div id="ticketSlipResult" role="status" aria-live="polite"></div>
+    </section>`);
+    $('#startNewTicketOrder')?.addEventListener('click', () => { closeModal(); openTicketPurchase(order.eventId); });
+  }
+
+  function showVerifiedOrderRecovery(order) {
+    clearInterval(paymentTimer);
+    const ref = order.orderId.replace(/-/g, '').slice(-8).toUpperCase();
+    modal(`<section class="order-status-view order-verified-view"><span class="payment-eyebrow">SOURCEWAV TICKETS · #SW-${esc(ref)}</span><h2 id="modalTitle">ยืนยันการชำระเงินแล้ว</h2><p>SlipOK ตรวจสอบการโอนแล้ว ระบบกำลังกู้คืนคำสั่งซื้อ <strong>ไม่ต้องชำระเงินซ้ำ</strong></p><p>${esc(order.eventTitle)} · ${esc(money(order.totalMinor))}</p><button type="button" class="modal-primary" id="retryTicketIssue">กู้คืนและจัดเตรียมบัตร</button><div id="orderRecoveryStatus" role="status" aria-live="polite"></div></section>`);
+    $('#retryTicketIssue')?.addEventListener('click', async event => {
+      const button = event.currentTarget;
+      button.disabled = true; button.textContent = 'กำลังจัดเตรียมบัตร…';
+      const status = $('#orderRecoveryStatus');
+      try {
+        const result = await call('finalize-ticket-payment', { submissionId: order.latestSubmission?.id, attemptId: order.verifiedAttemptId });
+        if (result.status === 'paid') { closeModal(); toast('บัตรของคุณพร้อมใช้งานแล้ว'); openMyTickets(); return; }
+        if (result.status === 'review_required') {
+          if (status) status.textContent = `${result.message} · ไม่ต้องชำระเงินซ้ำ`;
+          button.remove();
+          return;
+        }
+        throw new Error(result.error || 'ระบบยังจัดเตรียมบัตรไม่สำเร็จ');
+      } catch (error) {
+        if (status) status.textContent = `${error.message} · การชำระเงินยืนยันแล้ว ไม่ต้องโอนซ้ำ`;
+        button.disabled = false; button.textContent = 'ลองจัดเตรียมบัตรอีกครั้ง';
+      }
+    });
   }
 
   async function openMyTickets() {
@@ -469,6 +627,8 @@
         order_items: { unit_price_minor: 250000, ticket_types: { name: 'Zone A · Row 12 · Seat 34' }, orders: { id: 'SW-92481', created_at: '2026-08-18T12:00:00+07:00' } }
       }];
       const { tickets = previewTickets } = previewMode ? {} : user ? await call('my-tickets', {}) : { tickets: [] };
+      const orderResult = previewMode || !user ? { orders: [] } : await call('my-orders', {}).catch(error => ({ orders: [], error }));
+      const orders = orderResult.orders || [];
       const classify = ticket => {
         if (ticket.status === 'checked_in') return 'used';
         if (['cancelled', 'refunded'].includes(ticket.status) || ticket.events?.status === 'cancelled') return 'cancelled';
@@ -504,6 +664,30 @@
       }).join('');
       const statusFilters = [['all','ทั้งหมด','▱'],['valid','ยังไม่ถึงวันงาน','▦'],['used','ใช้แล้ว','✓'],['cancelled','ยกเลิก','×']];
       const counts = Object.fromEntries(statusFilters.map(([key]) => [key, key === 'all' ? tickets.length : tickets.filter(ticket => classify(ticket) === key).length]));
+      const orderLabel = order => {
+        if (order.status === 'paid') return ['ชำระแล้ว · บัตรพร้อมใช้งาน', 'paid'];
+        if (order.status === 'disputed' && order.latestReview?.decision === 'rejected') return ['ผู้จัดปฏิเสธ · ประสานคืนเงิน', 'review'];
+        if (order.status === 'disputed') return ['ต้องตรวจเพิ่มเติม · ติดต่อผู้จัด', 'review'];
+        if (order.verificationStatus === 'processing') return ['กำลังตรวจสอบสลิป', 'pending'];
+        if (order.latestSubmission?.status === 'verified' || order.verifiedAttemptId) return ['ยืนยันการชำระแล้ว · กำลังกู้คืนบัตร', 'pending'];
+        if (['timeout','error','quota_exhausted'].includes(order.verificationStatus)) return ['ผลตรวจยังไม่ยืนยัน · อย่าโอนซ้ำ', 'attention'];
+        if (order.latestSubmission?.status === 'rejected') return ['ตรวจสลิปไม่ผ่าน · ส่งใหม่ได้', 'attention'];
+        if (order.status === 'expired') return ['หมดเวลาชำระ · ส่งสลิปที่โอนแล้วได้', 'closed'];
+        if (order.status === 'cancelled') return ['ยกเลิกแล้ว', 'closed'];
+        if (order.status === 'refunded') return ['คืนเงินแล้ว', 'closed'];
+        return ['รอชำระเงิน', 'pending'];
+      };
+      const orderCards = orders.map(order => {
+        const [label, tone] = orderLabel(order);
+        const item = order.items?.[0] || {};
+        const orderRef = order.orderId.replace(/-/g, '').slice(-8).toUpperCase();
+        const canResume = order.status === 'expired' || order.status === 'awaiting_payment' && order.verificationStatus !== 'processing';
+        const nextAction = order.verifiedAttemptId ? 'กู้คืนรายการ' : order.latestSubmission?.status === 'verified' ? 'ลองออกบัตร' : order.latestSubmission?.status === 'rejected' ? 'ส่งสลิปใหม่' : order.status === 'expired' ? 'ส่งสลิปที่โอนแล้ว' : 'เปิดคำสั่งซื้อ';
+        return `<article class="my-order-card" data-order-id="${esc(order.orderId)}">
+          <div><span class="my-order-status is-${tone}">${esc(label)}</span><h4>${esc(order.eventTitle)}</h4><p>${esc(item.tierName || 'บัตรเข้างาน')} × ${Number(item.quantity || 0)} · ${esc(when(order.startsAt))}</p><p class="my-order-venue">${esc(order.venueName || 'ยังไม่ระบุสถานที่')}${order.venueAddress ? ` · ${esc(order.venueAddress)}` : ''}</p><small>คำสั่งซื้อ #SW-${orderRef} · ${esc(shortDate(order.createdAt))}</small>${order.latestReview?.decision === 'rejected' && order.latestReview.note ? `<p class="my-order-review-note">เหตุผลจากผู้จัด: ${esc(order.latestReview.note)}</p>` : ''}<details class="my-order-policy"><summary>เงื่อนไขการยกเลิกและคืนเงิน</summary><p>${esc(order.refundPolicy || 'ยังไม่ได้ระบุเงื่อนไขโดยละเอียด กรุณาติดต่อผู้จัดงาน')}</p></details></div>
+          <div class="my-order-total"><b>${esc(money(order.totalMinor))}</b>${canResume ? `<button type="button" data-order-resume="${esc(order.orderId)}">${nextAction} ↗</button>` : ''}${order.organizerId ? `<button type="button" class="my-order-contact" data-order-contact="${esc(order.organizerId)}" data-order-ref="SW-${orderRef}" data-name="${esc(order.organizerName || 'ผู้จัดงาน')}">ติดต่อผู้จัด</button>` : ''}</div>
+        </article>`;
+      }).join('');
       modal(`<div class="my-tickets-page tickets-shell">
         <aside class="tickets-sidebar">
           <a class="tickets-sidebar-brand" href="#home" data-ticket-nav="home" aria-label="Sourcewav หน้าแรก"><img src="assets/sourcewav-logo.svg" alt="SOURCEWAV" /></a>
@@ -521,6 +705,7 @@
           <section class="tickets-page-hero" aria-label="Sourcewav community"><div><span>PLAY · CONNECT · SUPPORT</span><h1>REAL MUSIC<br>REAL PEOPLE</h1><p>ดนตรี ผู้คน และช่วงเวลาที่ได้เจอกัน</p></div><span class="tickets-hero-mark" aria-hidden="true">SW</span></section>
           <div class="tickets-page-content">
             <header class="my-tickets-heading"><div><span class="tickets-section-kicker">MY LIBRARY</span><h2 id="modalTitle">บัตรของฉัน</h2><p>จัดการบัตรสมาชิก บัตรอีเวนต์ และสิทธิพิเศษของคุณ</p></div><button type="button" class="tickets-add-button" data-ticket-nav="events"><span aria-hidden="true">＋</span> เพิ่มบัตร</button></header>
+            <section class="my-orders-section" aria-labelledby="myOrdersTitle"><div class="tickets-list-heading"><h3 id="myOrdersTitle">คำสั่งซื้อ</h3><span>${orders.length} รายการ</span></div>${orderResult.error ? `<p class="my-orders-unavailable" role="status">ยังโหลดสถานะคำสั่งซื้อไม่ได้ · ${esc(orderResult.error.message)}</p>` : orderCards || '<p class="my-orders-empty">คำสั่งซื้อและสถานะการชำระเงินจะแสดงที่นี่</p>'}<p class="my-orders-support">เงินชำระเข้าบัญชีผู้จัดโดยตรง · ใช้ปุ่ม “ติดต่อผู้จัด” เพื่อติดตามพร้อมเลขคำสั่งซื้อ · การปฏิเสธรายการไม่ได้ยืนยันว่าคืนเงินแล้ว ผู้จัดเป็นผู้ประสานการคืนเงินโดยตรง</p></section>
             <div class="tickets-list-heading"><h3>บัตรทั้งหมด</h3><span>${tickets.length} ใบ</span></div>
             <div class="ticket-filters" role="group" aria-label="กรองบัตรตามสถานะ">${statusFilters.map(([key,label,icon]) => `<button type="button" class="ticket-filter${key === 'all' ? ' is-active' : ''}" data-ticket-filter="${key}" aria-pressed="${key === 'all'}"><span class="ticket-filter-icon" aria-hidden="true">${icon}</span><span>${label}</span><b>${counts[key]}</b></button>`).join('')}</div>
             <div class="my-ticket-list">${ticketCards || `<div class="tickets-empty"><h3>${user ? 'ยังไม่มีบัตรในกระเป๋า' : 'เข้าสู่ระบบเพื่อดูบัตรของคุณ'}</h3><p>${user ? 'บัตรที่ซื้อสำเร็จจะแสดงอยู่ที่นี่' : 'บัตรที่ซื้อสำเร็จจะแสดงอยู่ที่นี่ เมื่อเข้าสู่ระบบด้วยบัญชีที่ใช้ซื้อบัตร'}</p>${user ? '<button type="button" class="ticket-login-action" data-ticket-nav="events">เลือกดูอีเวนต์</button>' : '<button type="button" class="ticket-login-action" data-ticket-login>เข้าสู่ระบบ</button>'}</div>`}</div>
@@ -544,6 +729,7 @@
         target.hidden = expanded; button.setAttribute('aria-expanded', String(!expanded));
         button.textContent = expanded ? 'รายละเอียดบัตร' : 'ซ่อนรายละเอียด';
       }));
+      host.querySelectorAll('[data-order-resume]').forEach(button => button.addEventListener('click', () => resumeTicketOrder(button.dataset.orderResume, button)));
       host.querySelectorAll('[data-ticket-nav]').forEach(link => link.addEventListener('click', event => {
         event.preventDefault();
         const destination = link.dataset.ticketNav;
@@ -618,6 +804,7 @@
         <label class="modal-field">ที่อยู่สถานที่<input id="newEventAddress" maxlength="400" required placeholder="ที่อยู่สำหรับผู้เข้าร่วมงาน" /></label>
         <div class="event-poster-upload"><label class="modal-field">โปสเตอร์งาน (สูงสุด 4 รูป)<input id="newEventPoster" type="file" accept="image/jpeg,image/png,image/webp" multiple /><small>เลือกได้ไม่เกิน 4 รูป · แนวตั้ง 2:3 แนะนำ 1200 × 1800 px · JPG, PNG หรือ WebP · รูปละไม่เกิน 5 MB</small><span id="eventPosterSelectionCount" class="event-poster-selection-count" aria-live="polite">ยังไม่ได้เลือกรูป</span></label><div class="event-poster-preview-grid" id="eventPosterPreviewGrid" aria-label="ตัวอย่างโปสเตอร์"><div class="event-poster-preview"><span>รูปที่ 1</span></div><div class="event-poster-preview"><span>รูปที่ 2</span></div><div class="event-poster-preview"><span>รูปที่ 3</span></div><div class="event-poster-preview"><span>รูปที่ 4</span></div></div></div>
         <label class="modal-field">รายละเอียดงาน<textarea id="newEventDescription" maxlength="5000" placeholder="ไลน์อัป กำหนดการ หรือข้อมูลที่อยากให้ผู้ชมทราบ"></textarea><small>ไม่เกิน 5,000 ตัวอักษร</small></label>
+        <label class="modal-field">เงื่อนไขการยกเลิกและคืนเงิน<textarea id="newEventRefundPolicy" maxlength="2000" minlength="10" required placeholder="อธิบายกรณีที่คืนเงินได้ วิธีติดต่อผู้จัด และระยะเวลาดำเนินการ"></textarea><small>ผู้ซื้อจะเห็นข้อความนี้ก่อนชำระเงิน และจะถูกบันทึกไว้กับคำสั่งซื้อ</small></label>
       </section>
       <section class="ticket-sell-section ticket-sell-inventory">
         <div class="ticket-sell-section-heading"><span aria-hidden="true">▣</span><div><h3>ประเภทและจำนวนบัตร</h3><p>กำหนดราคาและจำนวนที่เปิดขาย</p></div></div>
@@ -686,6 +873,7 @@
     const quantity = Number(value('newTierStock'));
     const venue = value('newEventVenue').trim();
     const address = value('newEventAddress').trim();
+    const refundPolicy = value('newEventRefundPolicy').trim();
     const bankName = value('newPaymentBank').trim();
     const beneficiaryName = value('newPaymentBeneficiary').trim();
     const accountLast4 = value('newPaymentLast4').trim();
@@ -699,6 +887,7 @@
     if (!Number.isFinite(+startsAt) || startsAt <= new Date()) return invalid('newEventStarts', 'เลือกวันเริ่มงานในอนาคต');
     if (!Number.isFinite(+endsAt) || endsAt <= startsAt) return invalid('newEventEnds', 'วันจบงานต้องอยู่หลังวันเริ่มงาน');
     if (venue.length < 2 || !address) return invalid(venue.length < 2 ? 'newEventVenue' : 'newEventAddress', 'กรอกชื่อและที่อยู่สถานที่จัดงาน');
+    if (refundPolicy.length < 10 || refundPolicy.length > 2000) return invalid('newEventRefundPolicy', 'ระบุเงื่อนไขการยกเลิกและคืนเงินอย่างน้อย 10 ตัวอักษร');
     if (!Number.isInteger(price) || price < 20 || price > 150000) return invalid('newTierPrice', 'ราคาบัตรต้องอยู่ระหว่าง ฿20 ถึง ฿150,000');
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10000) return invalid('newTierStock', 'จำนวนบัตรต้องอยู่ระหว่าง 1 ถึง 10,000 ใบ');
     if (!bankName || !beneficiaryName || (accountLast4 && !/^\d{4}$/.test(accountLast4))) return invalid('newPaymentBank', 'กรอกธนาคารและชื่อบัญชี และเลขท้าย 4 หลักถ้าต้องการแสดง');
@@ -719,7 +908,7 @@
       }
       const { error: uploadError } = await db.storage.from('sourcewav-event-payment-qr').upload(paymentQrKey, qrFile, { contentType: qrFile.type, cacheControl: '3600', upsert: false });
       if (uploadError) throw new Error('อัปโหลด QR รับเงินไม่สำเร็จ: ' + uploadError.message);
-      await call('create-event', { title, category: value('newEventCategory'), startsAt: value('newEventStarts'), endsAt: value('newEventEnds'), venueName: venue, venueAddress: address, description: value('newEventDescription'), tierName: value('newTierName'), priceBaht: price, quantity, paymentQrKey, posterStorageKeys, bankName, beneficiaryName, accountLast4, slipokBranchId, slipokApiKey });
+      await call('create-event', { title, category: value('newEventCategory'), startsAt: value('newEventStarts'), endsAt: value('newEventEnds'), venueName: venue, venueAddress: address, description: value('newEventDescription'), refundPolicy, tierName: value('newTierName'), priceBaht: price, quantity, paymentQrKey, posterStorageKeys, bankName, beneficiaryName, accountLast4, slipokBranchId, slipokApiKey });
       slipokApiKeyInput.value = '';
       location.hash = '#events'; closeModal(); await loadEvents(); toast('สร้างอีเวนต์และ Tier บัตรแล้ว');
     } catch (error) { slipokApiKeyInput.value = ''; await db.storage.from('sourcewav-event-payment-qr').remove([paymentQrKey, ...posterStorageKeys]); button.disabled = false; button.textContent = 'เผยแพร่งานและเปิดขายบัตร'; toast(error.message); }
@@ -763,7 +952,7 @@
     const { data: me } = await db.auth.getUser();
     const root = $('#chatPanel');
     const view = $('#chatThreadView'); view.hidden = false; root.classList.add('has-active-chat');
-    view.innerHTML = `<div class="chat-thread-head"><button id="backToChats" type="button" aria-label="กลับไปยังรายชื่อแชท">← <span>แชททั้งหมด</span></button><div class="chat-recipient"><span class="chat-recipient-avatar">${esc(initials(displayName))}</span><span><b>${esc(displayName || 'บทสนทนา')}</b><small>บทสนทนาส่วนตัว</small></span></div></div><div class="chat-thread-messages" id="threadMessages">${(data || []).map(m => `<p class="live-chat-message ${m.sender_id === me.user?.id ? 'mine' : ''}"><b>${esc(m.profiles?.display_name || 'สมาชิก')}</b><br>${esc(m.body)}<small>${esc(new Date(m.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }))}</small></p>`).join('') || '<p class="chat-first-message">เริ่มบทสนทนาด้วยข้อความสั้น ๆ ได้เลย</p>'}</div><form id="chatCompose" class="chat-compose"><input id="chatText" maxlength="5000" aria-label="ข้อความที่จะส่ง" placeholder="เขียนข้อความ..." required /><button type="submit"><span>ส่งข้อความ</span><span aria-hidden="true">↗</span></button></form>`;
+    view.innerHTML = `<div class="chat-thread-head"><button id="backToChats" type="button" aria-label="กลับไปยังรายการแชท">← <span>กลับรายการแชท</span></button><div class="chat-recipient"><span class="chat-recipient-avatar">${esc(initials(displayName))}</span><span><b>${esc(displayName || 'บทสนทนา')}</b><small>บทสนทนาส่วนตัว</small></span></div></div><div class="chat-thread-messages" id="threadMessages">${(data || []).map(m => `<p class="live-chat-message ${m.sender_id === me.user?.id ? 'mine' : ''}"><b>${esc(m.profiles?.display_name || 'สมาชิก')}</b><br>${esc(m.body)}<small>${esc(new Date(m.created_at).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }))}</small></p>`).join('') || '<p class="chat-first-message">เริ่มบทสนทนาด้วยข้อความสั้น ๆ ได้เลย</p>'}</div><form id="chatCompose" class="chat-compose"><input id="chatText" maxlength="5000" aria-label="ข้อความที่จะส่ง" placeholder="เขียนข้อความ..." required /><button type="submit"><span>ส่งข้อความ</span><span aria-hidden="true">↗</span></button></form>`;
     $('#backToChats').onclick = async () => { if (chatChannel) db.removeChannel(chatChannel); chatChannel = null; root.classList.remove('has-active-chat'); view.hidden = true; await refreshConversationList(); };
     $('#chatCompose').onsubmit = async e => { e.preventDefault(); const body = $('#chatText').value.trim(); if (!body) return; const { error: sendError } = await db.from('messages').insert({ conversation_id: id, sender_id: me.user.id, body }); if (sendError) return toast(sendError.message); $('#chatText').value = ''; await refreshConversationList(); };
     view.querySelector('#threadMessages').scrollTop = 999999;
@@ -844,6 +1033,7 @@
     if (target.dataset.liveComment) { event.preventDefault(); event.stopImmediatePropagation(); return openPostComments(target.dataset.liveComment); }
     if (target.dataset.liveShare) { const url = `${location.origin}${location.pathname}#post-${target.dataset.liveShare}`; try { await navigator.clipboard.writeText(url); toast('คัดลอกลิงก์โพสต์แล้ว'); } catch (_) { toast(url); } return; }
     if (target.dataset.buyEvent) { event.preventDefault(); event.stopImmediatePropagation(); return openTicketPurchase(target.dataset.buyEvent); }
+    if (target.id === 'manageSlipokSettings') { event.preventDefault(); event.stopImmediatePropagation(); return openSlipOkSettings(target.dataset.eventId, target.dataset.branchId); }
     if (target.id === 'searchGo') { event.preventDefault(); event.stopImmediatePropagation(); return searchSourcewav(); }
     if (target.id === 'createRoomBtn') { event.preventDefault(); event.stopImmediatePropagation(); return createRoom(); }
     if (target.dataset.liveRoom || target.dataset.openRoom || target.dataset.roomSwitch) { event.preventDefault(); event.stopImmediatePropagation(); return openRoom(target.dataset.liveRoom || target.dataset.openRoom || target.dataset.roomSwitch, target.dataset.roomName || target.textContent.trim()); }
@@ -861,6 +1051,21 @@
       $('#chatPanel').classList.add('open'); $('#chatPanel').dataset.liveBound = '1';
       await loadChatList(); return startConversation(target.dataset.searchChat, target.dataset.name || 'สมาชิก');
     }
+    if (target.dataset.orderContact) {
+      event.preventDefault(); event.stopImmediatePropagation();
+      const user = await needUser(); if (!user) return;
+      if (user.id === target.dataset.orderContact) return toast('คำสั่งซื้อนี้เป็นของคุณ');
+      const organizerId = target.dataset.orderContact;
+      const organizerName = target.dataset.name || 'ผู้จัดงาน';
+      const orderRef = target.dataset.orderRef || '';
+      closeModal();
+      $('#chatPanel').classList.add('open'); $('#chatPanel').dataset.liveBound = '1';
+      await loadChatList();
+      await startConversation(organizerId, organizerName);
+      const message = $('#chatText');
+      if (message && orderRef) { message.value = `ขอติดต่อเรื่องคำสั่งซื้อ ${orderRef}`; message.focus(); }
+      return;
+    }
     if (target.dataset.contactSeller) { event.preventDefault(); const user = await needUser(); if (user) { if (user.id === target.dataset.contactSeller) return toast('นี่คือผลงานของคุณ'); $('#chatPanel').classList.add('open'); await loadChatList(); await startConversation(target.dataset.contactSeller, target.dataset.sellerName); } return; }
     if (target.id === 'createListingBtn') { event.preventDefault(); event.stopImmediatePropagation(); return openCreateListing(); }
     if (target.id === 'listingPublishBtn') { event.preventDefault(); event.stopImmediatePropagation(); return createListing(); }
@@ -875,6 +1080,10 @@
   }, true);
 
   document.addEventListener('submit', event => {
+    if (event.target?.id === 'slipokSettingsForm') {
+      event.preventDefault(); event.stopImmediatePropagation();
+      return saveSlipOkSettings(event.target);
+    }
     if (event.target?.id !== 'ticketSlipForm') return;
     event.stopImmediatePropagation();
     submitTicketSlip(event);

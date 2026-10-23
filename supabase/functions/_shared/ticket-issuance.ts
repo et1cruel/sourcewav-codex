@@ -14,9 +14,13 @@ export async function issueSlipOkSubmission(db: DbClient, submissionId: string, 
     .eq('id', submission.order_id).single();
   if (orderError || !order || order.buyer_id !== buyerId) return { error: 'ไม่พบคำสั่งซื้อของบัญชีนี้', statusCode: 404 };
   if (order.status === 'paid') return { status: 'paid', orderId: order.id, ticketCount: null };
-  if (order.status !== 'awaiting_payment' || !order.expires_at || new Date(order.expires_at) <= new Date()) {
-    if (order.status === 'awaiting_payment') await db.rpc('release_ticket_order', { p_order: order.id, p_status: 'expired' });
-    return { error: 'คำสั่งซื้อหมดอายุแล้ว กรุณาเลือกบัตรใหม่', statusCode: 409 };
+  if (order.status === 'disputed') {
+    return { status: 'review_required', message: 'คำสั่งซื้อถูกส่งให้ผู้จัดตรวจสอบแล้ว ระบบยังไม่ออกบัตรและไม่ต้องชำระเงินซ้ำ' };
+  }
+  const recoveryCandidate = order.status === 'expired' || order.status === 'awaiting_payment'
+    && (!order.expires_at || new Date(order.expires_at) <= new Date());
+  if (order.status !== 'awaiting_payment' && !recoveryCandidate) {
+    return { error: 'คำสั่งซื้อไม่อยู่ในสถานะที่จัดเตรียมบัตรได้ กรุณาติดต่อผู้จัด', statusCode: 409 };
   }
   if (Number(submission.slipok_amount_minor) !== Number(order.total_minor)) return { error: 'ยอดสลิปไม่ตรงกับยอดคำสั่งซื้อ', statusCode: 409 };
 
@@ -40,9 +44,13 @@ export async function issueSlipOkSubmission(db: DbClient, submissionId: string, 
     console.error('Unable to issue verified SlipOK tickets:', error.message);
     return { error: 'SlipOK ยืนยันแล้ว แต่ยังออกบัตรไม่สำเร็จ กรุณากดลองออกบัตรอีกครั้ง', statusCode: 503 };
   }
+  if (status === 'review_required') {
+    return { status: 'review_required', message: 'ยืนยันสลิปแล้ว แต่คำสั่งซื้อหมดเวลาหรือเวลาธุรกรรมอยู่นอกช่วงจอง ระบบส่งให้ผู้จัดตรวจยอดและจำนวนบัตรก่อน' };
+  }
   if (status === 'expired') {
     await db.rpc('release_ticket_order', { p_order: order.id, p_status: 'expired' });
     return { error: 'คำสั่งซื้อหมดอายุแล้ว กรุณาเลือกบัตรใหม่', statusCode: 409 };
   }
+  if (status !== 'paid' && status !== 'already_paid') return { error: 'ระบบยังจัดเตรียมบัตรไม่ได้ กรุณาติดต่อผู้จัดพร้อมเลขคำสั่งซื้อ', statusCode: 409 };
   return { status: 'paid', orderId: order.id, ticketCount: tickets.length };
 }

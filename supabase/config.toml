@@ -9,10 +9,16 @@ verify_jwt = false
 [functions.my-tickets]
 verify_jwt = false
 
+[functions.my-orders]
+verify_jwt = false
+
 [functions.validate-ticket]
 verify_jwt = false
 
 [functions.create-event]
+verify_jwt = false
+
+[functions.update-event-slipok]
 verify_jwt = false
 
 [functions.create-manual-ticket-order]
@@ -28,4 +34,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.admin-review-ticket-payment]
+verify_jwt = false
+
+[functions.admin-retry-ticket-verification]
 verify_jwt = false

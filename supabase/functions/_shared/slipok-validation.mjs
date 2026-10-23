@@ -32,26 +32,30 @@ export function evaluateSlipOk({ responseOk, responseStatus, result, expectedAmo
   const values = receiverValues(data.receiver);
   const observedMinor = Number.isFinite(Number(data.amount)) ? Math.round(Number(data.amount) * 100) : null;
   const transRef = typeof data.transRef === 'string' && data.transRef.length > 0 && data.transRef.length <= 100 ? data.transRef : null;
+  const transferDate = typeof data.transTimestamp === 'string' ? new Date(data.transTimestamp) : null;
+  const transferAt = transferDate && Number.isFinite(transferDate.getTime()) ? transferDate.toISOString() : null;
   const accountValue = values.find(({ kind }) => kind === 'account')?.value;
   const accountDigits = accountValue?.replace(/\D/g, '') || '';
   const last4Matches = !expectedAccountLast4 || !accountDigits || accountDigits.slice(-4) === expectedAccountLast4;
   const receiverVerified = result?.success === true && data.success === true && values.length > 0 && last4Matches;
   const verified = responseOk === true && result?.success === true && data.success === true
     && observedMinor === Number(expectedAmountMinor) && data.countryCode === 'TH'
-    && receiverVerified && transRef !== null;
+    && receiverVerified && transRef !== null && transferAt !== null;
   const code = Number.isInteger(Number(result?.code)) ? Number(result.code) : null;
   const failureReason = verified ? ''
     : observedMinor !== null && observedMinor !== Number(expectedAmountMinor) ? 'amount_mismatch'
       : values.length === 0 ? 'receiver_not_verified'
         : !last4Matches ? 'receiver_mismatch'
           : data.countryCode !== 'TH' ? 'unsupported_country'
-            : !transRef ? 'transaction_reference_missing' : 'slip_rejected';
+      : !transRef ? 'transaction_reference_missing'
+        : !transferAt ? 'transfer_timestamp_missing' : 'slip_rejected';
   return {
-    verified, observedMinor, transRef, receiverVerified, code, failureReason,
+    verified, observedMinor, transRef, transferAt, receiverVerified, code, failureReason,
     safeResult: {
       success: result?.success === true,
       slipSuccess: data.success === true,
       transRef,
+      transTimestamp: transferAt,
       amount: observedMinor,
       countryCode: typeof data.countryCode === 'string' ? data.countryCode.slice(0, 2) : null,
     },
