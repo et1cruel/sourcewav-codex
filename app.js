@@ -15,7 +15,7 @@ function setActiveRail(link){
   railIndicator.style.transform=`translateY(${link.offsetTop}px)`;
 }
 railItems.forEach(link=>link.addEventListener('click',()=>setActiveRail(link)));
-function syncRailToHash(){const match=railItems.find(link=>link.hash===window.location.hash)||railItems.find(link=>link.classList.contains('active'));if(match)setActiveRail(match)}
+function syncRailToHash(){const hash=window.location.hash||'#home';const match=railItems.find(link=>link.hash===hash);const fallback=hash==='#home'?railItems.find(link=>link.hash==='#feed'):railItems.find(link=>link.classList.contains('active'));if(match||fallback)setActiveRail(match||fallback)}
 syncRailToHash();window.addEventListener('hashchange',syncRailToHash);window.addEventListener('resize',()=>setActiveRail(railItems.find(link=>link.classList.contains('active'))));
 /* --------------------------------------------------------------------------
    แผนที่สถานที่จัดงาน — Leaflet + OpenStreetMap

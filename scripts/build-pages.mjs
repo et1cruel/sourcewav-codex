@@ -15,6 +15,7 @@ const rootFiles = [
   'i18n.js',
   'prototype-app.js',
   'streaming-app.js',
+  'listening-room-app.js',
   'supabase-client.js',
 ];
 
