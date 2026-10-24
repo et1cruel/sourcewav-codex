@@ -843,11 +843,8 @@
       </section>
       <section class="ticket-sell-section ticket-sell-inventory">
         <div class="ticket-sell-section-heading"><span aria-hidden="true">▣</span><div><h3>ประเภทและจำนวนบัตร</h3><p>กำหนดราคาและจำนวนที่เปิดขาย</p></div></div>
-        <div class="ticket-sell-grid ticket-sell-tier-grid">
-          <label class="modal-field">ชื่อประเภทบัตร<input id="newTierName" value="บัตรทั่วไป" maxlength="100" /></label>
-          <label class="modal-field">ราคา (บาท)<input id="newTierPrice" type="number" min="20" max="150000" step="1" value="250" /></label>
-          <label class="modal-field">จำนวนบัตร<input id="newTierStock" type="number" min="1" max="10000" value="100" /></label>
-        </div>
+        <div id="newTicketTiers" class="ticket-sell-tier-list" aria-label="รายการประเภทบัตร"></div>
+        <button type="button" id="addTicketTier" class="ticket-tier-add">＋ เพิ่มประเภทบัตร</button>
         <p class="ticket-sell-assurance"><span aria-hidden="true">✓</span> ผู้จัดรับเงินตรง · SlipOK ตรวจสอบสลิปก่อนออกบัตรอัตโนมัติ</p>
       </section>
       <section class="ticket-sell-section ticket-payment-settings">
@@ -866,6 +863,21 @@
     </div>`);
     const startsInput = $('#newEventStarts');
     const endsInput = $('#newEventEnds');
+    let ticketTierCount = 0;
+    const addTicketTier = (tier = {}) => {
+      const index = ticketTierCount++;
+      const row = document.createElement('div');
+      row.className = 'ticket-sell-tier-row';
+      row.innerHTML = `<label class="modal-field">ชื่อประเภทบัตร<input data-tier-name maxlength="100" value="${esc(tier.name || (index === 0 ? 'บัตรทั่วไป' : ''))}" placeholder="เช่น VIP / Early Bird" /></label><label class="modal-field">ราคา (บาท)<input data-tier-price type="number" min="20" max="150000" step="1" value="${esc(tier.priceBaht ?? (index === 0 ? 250 : ''))}" /></label><label class="modal-field">จำนวนบัตร<input data-tier-stock type="number" min="1" max="10000" value="${esc(tier.quantity ?? (index === 0 ? 100 : ''))}" /></label><button type="button" class="ticket-tier-remove" aria-label="ลบประเภทบัตร" ${index === 0 ? 'disabled' : ''}>ลบ</button>`;
+      row.querySelector('.ticket-tier-remove').addEventListener('click', () => { row.remove(); });
+      $('#newTicketTiers').append(row);
+    };
+    addTicketTier();
+    $('#addTicketTier').addEventListener('click', () => {
+      if ($('#newTicketTiers').children.length >= 10) { toast('เพิ่มประเภทบัตรได้สูงสุด 10 ประเภท'); return; }
+      addTicketTier();
+      $('#newTicketTiers').lastElementChild?.querySelector('[data-tier-name]')?.focus();
+    });
     const localDateTimeNow = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
     startsInput.min = localDateTimeNow();
     startsInput.addEventListener('change', () => { endsInput.min = startsInput.value || localDateTimeNow(); });
@@ -904,8 +916,11 @@
     const title = value('newEventTitle').trim();
     const startsAt = new Date(value('newEventStarts'));
     const endsAt = new Date(value('newEventEnds'));
-    const price = Number(value('newTierPrice'));
-    const quantity = Number(value('newTierStock'));
+    const tiers = [...$('#newTicketTiers').querySelectorAll('.ticket-sell-tier-row')].map(row => ({
+      name: row.querySelector('[data-tier-name]').value.trim(),
+      priceBaht: Number(row.querySelector('[data-tier-price]').value),
+      quantity: Number(row.querySelector('[data-tier-stock]').value),
+    }));
     const venue = value('newEventVenue').trim();
     const address = value('newEventAddress').trim();
     const refundPolicy = value('newEventRefundPolicy').trim();
@@ -923,8 +938,19 @@
     if (!Number.isFinite(+endsAt) || endsAt <= startsAt) return invalid('newEventEnds', 'วันจบงานต้องอยู่หลังวันเริ่มงาน');
     if (venue.length < 2 || !address) return invalid(venue.length < 2 ? 'newEventVenue' : 'newEventAddress', 'กรอกชื่อและที่อยู่สถานที่จัดงาน');
     if (refundPolicy.length < 10 || refundPolicy.length > 2000) return invalid('newEventRefundPolicy', 'ระบุเงื่อนไขการยกเลิกและคืนเงินอย่างน้อย 10 ตัวอักษร');
-    if (!Number.isInteger(price) || price < 20 || price > 150000) return invalid('newTierPrice', 'ราคาบัตรต้องอยู่ระหว่าง ฿20 ถึง ฿150,000');
-    if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10000) return invalid('newTierStock', 'จำนวนบัตรต้องอยู่ระหว่าง 1 ถึง 10,000 ใบ');
+    if (!tiers.length) return invalid('addTicketTier', 'เพิ่มประเภทบัตรอย่างน้อย 1 ประเภท');
+    const tierNames = new Set();
+    for (const [index, tier] of tiers.entries()) {
+      const row = $('#newTicketTiers').children[index];
+      const nameInput = row.querySelector('[data-tier-name]');
+      const priceInput = row.querySelector('[data-tier-price]');
+      const stockInput = row.querySelector('[data-tier-stock]');
+      nameInput.id = `newTierName${index}`; priceInput.id = `newTierPrice${index}`; stockInput.id = `newTierStock${index}`;
+      if (!tier.name || tier.name.length > 100 || tierNames.has(tier.name.toLocaleLowerCase())) return invalid(nameInput.id, 'กรอกชื่อประเภทบัตรให้ครบ และห้ามซ้ำกัน');
+      tierNames.add(tier.name.toLocaleLowerCase());
+      if (!Number.isInteger(tier.priceBaht) || tier.priceBaht < 20 || tier.priceBaht > 150000) return invalid(priceInput.id, 'ราคาบัตรต้องอยู่ระหว่าง ฿20 ถึง ฿150,000');
+      if (!Number.isInteger(tier.quantity) || tier.quantity < 1 || tier.quantity > 10000) return invalid(stockInput.id, 'จำนวนบัตรต้องอยู่ระหว่าง 1 ถึง 10,000 ใบ');
+    }
     if (!bankName || !beneficiaryName || (accountLast4 && !/^\d{4}$/.test(accountLast4))) return invalid('newPaymentBank', 'กรอกธนาคารและชื่อบัญชี และเลขท้าย 4 หลักถ้าต้องการแสดง');
     if (!slipokBranchId) return invalid('newSlipOkBranch', 'กรอก Branch ID เป็นตัวเลข หรือวาง URL API Key จาก api.slipok.com');
     if (slipokApiKey.length < 8 || slipokApiKey.length > 512) return invalid('newSlipOkApiKey', 'กรอก SlipOK API Key ของบัญชีผู้รับ');
@@ -943,7 +969,7 @@
       }
       await window.SourcewavS3.upload('image', paymentQrKey, qrFile)
         .catch(uploadError => { throw new Error('อัปโหลด QR รับเงินไม่สำเร็จ: ' + uploadError.message); });
-      await call('create-event', { title, category: value('newEventCategory'), startsAt: value('newEventStarts'), endsAt: value('newEventEnds'), venueName: venue, venueAddress: address, description: value('newEventDescription'), refundPolicy, tierName: value('newTierName'), priceBaht: price, quantity, paymentQrKey, posterStorageKeys, bankName, beneficiaryName, accountLast4, slipokBranchId, slipokApiKey });
+      await call('create-event', { title, category: value('newEventCategory'), startsAt: value('newEventStarts'), endsAt: value('newEventEnds'), venueName: venue, venueAddress: address, description: value('newEventDescription'), refundPolicy, ticketTiers: tiers, paymentQrKey, posterStorageKeys, bankName, beneficiaryName, accountLast4, slipokBranchId, slipokApiKey });
       slipokApiKeyInput.value = '';
       location.hash = '#events'; closeModal(); await loadEvents(); toast('สร้างอีเวนต์และ Tier บัตรแล้ว');
     } catch (error) { slipokApiKeyInput.value = ''; await window.SourcewavS3.remove([paymentQrKey, ...posterStorageKeys]).catch(() => {}); button.disabled = false; button.textContent = 'เผยแพร่งานและเปิดขายบัตร'; toast(error.message); }

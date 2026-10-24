@@ -14,8 +14,14 @@ Deno.serve(async (request) => {
     const category = ['music', 'art', 'community', 'market', 'other'].includes(body.category) ? body.category : 'other';
     const startsAt = new Date(body.startsAt);
     const endsAt = new Date(body.endsAt);
-    const price = Math.round(Number(body.priceBaht) * 100);
-    const stock = Number(body.quantity);
+    const legacyPrice = Math.round(Number(body.priceBaht) * 100);
+    const legacyStock = Number(body.quantity);
+    const rawTiers = Array.isArray(body.ticketTiers) ? body.ticketTiers : [{ name: body.tierName || 'บัตรทั่วไป', priceBaht: Number(body.priceBaht), quantity: Number(body.quantity) }];
+    const ticketTiers = rawTiers.map((tier: any) => ({
+      name: String(tier?.name || '').trim(),
+      price: Math.round(Number(tier?.priceBaht) * 100),
+      stock: Number(tier?.quantity),
+    }));
     const paymentQrKey = String(body.paymentQrKey || '');
     const legacyPosterStorageKey = String(body.posterStorageKey || '');
     const posterStorageKeys = Array.isArray(body.posterStorageKeys)
@@ -26,7 +32,8 @@ Deno.serve(async (request) => {
     const accountLast4 = String(body.accountLast4 || '').trim();
     const slipokBranchId = String(body.slipokBranchId || '').trim();
     const slipokApiKey = String(body.slipokApiKey || '').trim();
-    if (title.length < 4 || title.length > 180 || venueName.length < 2 || venueName.length > 160 || venueAddress.length > 400 || refundPolicy.length < 10 || refundPolicy.length > 2000 || !Number.isFinite(+startsAt) || !Number.isFinite(+endsAt) || endsAt <= startsAt || startsAt <= new Date() || !Number.isInteger(price) || price < 2000 || price > 15000000 || !Number.isInteger(stock) || stock < 1 || stock > 10000 || bankName.length < 1 || bankName.length > 80 || beneficiaryName.length < 1 || beneficiaryName.length > 120 || (accountLast4 && !/^\d{4}$/.test(accountLast4)) || !paymentQrKey.startsWith(`${user.id}/`) || paymentQrKey.length > 300 || posterStorageKeys.length > 4 || posterStorageKeys.some((key: string) => !key.startsWith(`${user.id}/`) || key.length > 300) || !/^\d{1,20}$/.test(slipokBranchId) || slipokApiKey.length < 8 || slipokApiKey.length > 512) {
+    const tierNames = ticketTiers.map((tier: { name: string }) => tier.name.toLocaleLowerCase());
+    if (title.length < 4 || title.length > 180 || venueName.length < 2 || venueName.length > 160 || venueAddress.length > 400 || refundPolicy.length < 10 || refundPolicy.length > 2000 || !Number.isFinite(+startsAt) || !Number.isFinite(+endsAt) || endsAt <= startsAt || startsAt <= new Date() || !ticketTiers.length || ticketTiers.length > 10 || ticketTiers.some((tier: { name: string; price: number; stock: number }) => !tier.name || tier.name.length > 100 || !Number.isInteger(tier.price) || tier.price < 2000 || tier.price > 15000000 || !Number.isInteger(tier.stock) || tier.stock < 1 || tier.stock > 10000) || new Set(tierNames).size !== tierNames.length || !Number.isFinite(legacyPrice) || !Number.isFinite(legacyStock) || bankName.length < 1 || bankName.length > 80 || beneficiaryName.length < 1 || beneficiaryName.length > 120 || (accountLast4 && !/^\d{4}$/.test(accountLast4)) || !paymentQrKey.startsWith(`${user.id}/`) || paymentQrKey.length > 300 || posterStorageKeys.length > 4 || posterStorageKeys.some((key: string) => !key.startsWith(`${user.id}/`) || key.length > 300) || !/^\d{1,20}$/.test(slipokBranchId) || slipokApiKey.length < 8 || slipokApiKey.length > 512) {
       return json({ error: 'กรอกข้อมูลงาน ราคา (อย่างน้อย ฿20) จำนวนบัตร และวันเวลาให้ถูกต้อง' }, 400);
     }
     const encryptionKey = Deno.env.get('SLIPOK_CREDENTIAL_ENCRYPTION_KEY') || '';
@@ -66,7 +73,7 @@ Deno.serve(async (request) => {
     if (!roles?.length) return json({ error: 'ฟีเจอร์นี้สำหรับบัญชี Organizer ที่ผ่านการยืนยันเท่านั้น' }, 403);
     const { data: event, error } = await db.from('events').insert({ organizer_id: user.id, title, description: String(body.description || '').slice(0, 5000), refund_policy: refundPolicy, category, starts_at: startsAt.toISOString(), ends_at: endsAt.toISOString(), venue_name: venueName, venue_address: venueAddress, cover_url: posterUrls[0] || null, poster_urls: posterUrls, status: 'published', currency: 'THB' }).select('id').single();
     if (error) throw error;
-    const { error: tierError } = await db.from('ticket_types').insert({ event_id: event.id, name: String(body.tierName || 'บัตรทั่วไป').slice(0, 100), price_minor: price, currency: 'THB', quantity_total: stock });
+    const { error: tierError } = await db.from('ticket_types').insert(ticketTiers.map((tier: { name: string; price: number; stock: number }) => ({ event_id: event.id, name: tier.name, price_minor: tier.price, currency: 'THB', quantity_total: tier.stock })));
     if (tierError) {
       await db.from('events').delete().eq('id', event.id);
       throw tierError;

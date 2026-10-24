@@ -1944,6 +1944,14 @@ body.artist-profile-active .layout.artist-profile-active{display:block;width:100
 .ticket-sell-section-heading .ticket-sell-secure{display:inline-flex;align-items:center;gap:5px;width:auto;height:auto;margin-left:auto;padding:5px 9px;border:1px solid #52c7a333;border-radius:999px;color:#8bdbbb;background:#17342b;font-size:11px;font-weight:650;white-space:nowrap}
 .ticket-sell-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px}
 .ticket-sell-tier-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ticket-sell-tier-list{display:grid;gap:10px}
+.ticket-sell-tier-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,.9fr) minmax(110px,.9fr) auto;align-items:end;gap:12px;padding:13px;border:1px solid #ffffff18;border-radius:14px;background:#0e0e17}
+.ticket-sell-tier-row .modal-field{min-width:0;margin:0}
+.ticket-tier-remove,.ticket-tier-add{min-height:44px;padding:0 15px;border:1px solid #ffffff28;border-radius:11px;color:#e5dbf4;background:#ffffff0a;font:700 13px var(--font);cursor:pointer}
+.ticket-tier-remove:disabled{opacity:.35;cursor:not-allowed}
+.ticket-tier-remove:not(:disabled):hover,.ticket-tier-add:hover{border-color:#b99ae7;background:#b99ae715}
+.ticket-tier-add{margin-top:10px;color:#e2d2ff}
+.ticket-sell-tier-row input:focus-visible,.ticket-tier-add:focus-visible,.ticket-tier-remove:focus-visible{outline:2px solid #c3a7f4;outline-offset:2px}
 .ticket-sell-modal .modal-field{min-width:0;margin-top:11px;color:#d6d3de;font-size:13px;font-weight:650;line-height:1.45}
 .ticket-sell-modal .modal-field:focus-within{color:#e7d8ff;transform:none}
 .ticket-sell-modal .modal-field input,.ticket-sell-modal .modal-field textarea,.ticket-sell-modal .modal-field select{min-height:46px;margin-top:6px;padding:10px 12px;border:1px solid #3a3d4a;border-radius:10px;color:#f1eff7;background:#10131b;box-shadow:inset 0 1px 3px #0003;font:14px var(--font)}
@@ -1977,6 +1985,8 @@ body.artist-profile-active .layout.artist-profile-active{display:block;width:100
   .ticket-sell-section-heading h3{font-size:15px}
   .ticket-sell-section-heading p{font-size:11px}
   .ticket-sell-grid,.ticket-sell-tier-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 9px}
+  .ticket-sell-tier-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:0 9px}
+  .ticket-tier-remove{grid-column:2;justify-self:end;margin-top:8px}
   .ticket-sell-modal .modal-field{margin-top:9px;font-size:12px}
   .ticket-sell-modal .modal-field input,.ticket-sell-modal .modal-field textarea,.ticket-sell-modal .modal-field select{min-height:44px;padding:9px 10px;font-size:16px}
   .ticket-sell-modal .modal-field input[type=file]{min-height:46px;font-size:12px}
@@ -1984,7 +1994,7 @@ body.artist-profile-active .layout.artist-profile-active{display:block;width:100
   .ticket-sell-footer>span{text-align:center;font-size:11px}
   .ticket-sell-modal>#publishEvent{width:100%;min-width:0;min-height:46px;font-size:14px}
 }
-@media(max-width:390px){.ticket-sell-grid,.ticket-sell-tier-grid{grid-template-columns:minmax(0,1fr)}.ticket-sell-heading h2{font-size:19px}.ticket-sell-footer>span{font-size:10px}}
+@media(max-width:390px){.ticket-sell-grid,.ticket-sell-tier-grid,.ticket-sell-tier-row{grid-template-columns:minmax(0,1fr)}.ticket-tier-remove{grid-column:1}.ticket-sell-heading h2{font-size:19px}.ticket-sell-footer>span{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.ticket-sell-modal>#publishEvent{transition:none}}
 
 /* Keep dialogs comfortably inset from the viewport and give surfaces a lifted edge. */
