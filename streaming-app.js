@@ -563,19 +563,28 @@
     const container = $('#roomTrackList');
     if (!container) return;
     const roomCount = $('#roomTrackCount');
-    if (roomCount) roomCount.textContent = `${tracks.length} RELEASE${tracks.length === 1 ? '' : 'S'} · SOURCEWAV COMMUNITY`;
+    if (roomCount) roomCount.textContent = `${tracks.length} เพลง · ${new Set(tracks.map(track => track.artist_profile?.username || track.artist_profile?.display_name || track.artist)).size} ศิลปิน`;
     if (!tracks.length) {
       container.innerHTML = '<div class="listening-room-empty"><span>♫</span><b>ยังไม่มีเพลงใน Listening Room</b><p>เพลงใหม่จากศิลปินในชุมชนจะแสดงที่นี่</p></div>';
       return;
     }
-    container.innerHTML = tracks.map((track, index) => {
-      const roomArtist = track.artist_profile?.display_name || track.artist;
-      const roomUsername = track.artist_profile?.username;
-      const roomFollowers = track.artist_profile?.follower_count;
-      const roomAvatar = safeImageUrl(track.artist_profile?.avatar_url);
-      const roomAvatarMarkup = `<span class="listening-track-artist-avatar" aria-hidden="true">${roomAvatar ? `<img src="${escapeHTML(roomAvatar)}" alt="" loading="lazy">` : `<i>${escapeHTML((roomArtist || '?').slice(0, 1).toUpperCase())}</i>`}</span>`;
-      return `<article class="listening-track-row${currentTrack?.id === track.id && !audio.paused ? ' is-playing' : ''}" data-room-track-row="${escapeHTML(track.id)}"><span class="listening-track-index">${String(index + 1).padStart(2, '0')}</span><button type="button" class="listening-track-cover" data-room-track-play="${escapeHTML(track.id)}" aria-label="${currentTrack?.id === track.id && !audio.paused ? 'หยุด' : 'เล่น'} ${escapeHTML(track.title)}">${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="ปกเพลง ${escapeHTML(track.title)}" loading="lazy">` : '<span>♫</span>'}<i>${currentTrack?.id === track.id && !audio.paused ? 'Ⅱ' : '▶'}</i></button><div class="listening-track-copy"><strong>${escapeHTML(track.title)}</strong><span class="listening-track-artist-line">${roomAvatarMarkup}${roomUsername ? `<a class="listening-track-artist" href="#artist/${encodeURIComponent(roomUsername)}" data-artist-profile="${escapeHTML(roomUsername)}">${escapeHTML(roomArtist)}</a>` : `<span>${escapeHTML(roomArtist)}</span>`}${typeof roomFollowers === 'number' ? `<em><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-1.6a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4V20"/><circle cx="9.5" cy="7.5" r="3.5"/><path d="M17 11.2a3.2 3.2 0 0 0 0-6.4M21 20v-1.6a3.9 3.9 0 0 0-3-3.8"/></svg>${roomFollowers.toLocaleString('th-TH')} ผู้ติดตาม</em>` : ''}</span></div><span class="listening-track-genre">${escapeHTML(track.genre)}</span><span class="listening-track-plays">${Number(track.play_count || 0).toLocaleString('th-TH')} plays</span><button type="button" class="listening-track-open" data-room-track-play="${escapeHTML(track.id)}" aria-label="เล่นเพลง ${escapeHTML(track.title)}">↗</button></article>`;
-    }).join('');
+    const artists = new Map();
+    tracks.forEach(track => {
+      const username = track.artist_profile?.username;
+      const name = track.artist_profile?.display_name || track.artist;
+      const key = username || name.trim().toLocaleLowerCase();
+      if (!artists.has(key)) artists.set(key, { name, username, profile: track.artist_profile, tracks: [] });
+      artists.get(key).tracks.push(track);
+    });
+    container.innerHTML = `<div class="listening-gallery-grid">${[...artists.values()].flatMap(artist => artist.tracks.map((track, trackIndex) => {
+      const isPlaying = currentTrack?.id === track.id && !audio.paused;
+      const avatar = safeImageUrl(artist.profile?.avatar_url);
+      const avatarMarkup = `<span class="listening-track-artist-avatar" aria-hidden="true">${avatar ? `<img src="${escapeHTML(avatar)}" alt="" loading="lazy">` : `<i>${escapeHTML((artist.name || '?').slice(0, 1).toUpperCase())}</i>`}</span>`;
+      const artistName = artist.username
+        ? `<a href="#artist/${encodeURIComponent(artist.username)}" data-artist-profile="${escapeHTML(artist.username)}">${escapeHTML(artist.name)}</a>`
+        : `<span>${escapeHTML(artist.name)}</span>`;
+      return `<article class="listening-track-row listening-gallery-card${isPlaying ? ' is-playing' : ''}" data-room-track-row="${escapeHTML(track.id)}"><div class="listening-gallery-artist-bar">${artist.username ? `<a class="listening-gallery-avatar-link" href="#artist/${encodeURIComponent(artist.username)}" data-artist-profile="${escapeHTML(artist.username)}">${avatarMarkup}</a>` : avatarMarkup}<span class="listening-gallery-artist-name">${artistName}</span><span class="listening-gallery-index">${String(trackIndex + 1).padStart(2, '0')}</span></div><button type="button" class="listening-track-cover listening-gallery-art" data-room-track-play="${escapeHTML(track.id)}" aria-label="${isPlaying ? 'หยุด' : 'เล่น'} ${escapeHTML(track.title)}">${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="ปกเพลง ${escapeHTML(track.title)}" loading="lazy">` : '<span>♫</span>'}<i>${isPlaying ? 'Ⅱ' : '▶'}</i></button><div class="listening-track-copy listening-gallery-copy"><strong title="${escapeHTML(track.title)}">${escapeHTML(track.title)}</strong><div class="listening-gallery-meta"><span class="listening-track-genre">${escapeHTML(track.genre)}</span><span class="listening-track-plays">${Number(track.play_count || 0).toLocaleString('th-TH')} plays</span></div></div><button type="button" class="listening-track-open listening-gallery-play" data-room-track-play="${escapeHTML(track.id)}" aria-label="${isPlaying ? 'หยุด' : 'เล่น'} เพลง ${escapeHTML(track.title)}">${isPlaying ? 'Ⅱ' : '▶'}</button></article>`;
+    })).join('')}</div>`;
   }
 
   function renderTracks() {
