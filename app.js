@@ -6,13 +6,9 @@ navLinks.forEach(link=>link.addEventListener('click',()=>setActiveNav(link)));
 const initialNav=navLinks.find(link=>link.hash===window.location.hash)||navLinks.find(link=>link.classList.contains('active'));
 setActiveNav(initialNav);window.addEventListener('resize',()=>setActiveNav(navLinks.find(link=>link.classList.contains('active'))));
 const rail=$('.left-rail'),railItems=$$('.left-rail .rail-item');
-let railIndicator;
 function setActiveRail(link){
   if(!link||!rail)return;
   railItems.forEach(item=>{const active=item===link;item.classList.toggle('active',active);item.setAttribute('aria-current',active?'page':'false')});
-  if(!railIndicator){railIndicator=document.createElement('span');railIndicator.className='rail-active-indicator';railIndicator.setAttribute('aria-hidden','true');rail.append(railIndicator)}
-  railIndicator.style.height=`${link.offsetHeight}px`;
-  railIndicator.style.transform=`translateY(${link.offsetTop}px)`;
 }
 railItems.forEach(link=>link.addEventListener('click',()=>setActiveRail(link)));
 function syncRailToHash(){const hash=window.location.hash||'#home';const match=railItems.find(link=>link.hash===hash);const fallback=hash==='#home'?railItems.find(link=>link.hash==='#feed'):railItems.find(link=>link.classList.contains('active'));if(match||fallback)setActiveRail(match||fallback)}
