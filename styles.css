@@ -2921,13 +2921,22 @@ body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .l
 body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-inner{display:contents}
 body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-cover{grid-column:1;width:62px;border-radius:8px}
 body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-copy{grid-column:2}
-body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-play{grid-column:3;width:46px;height:46px}
+body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-play{grid-column:3;width:46px;height:46px;border:1px solid #fff;background:#f5f2f5;color:#171217;box-shadow:inset 0 1px #fff,0 3px 12px #0008;font-size:17px;font-weight:900}
+body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-play:hover:not(:disabled){transform:scale(1.06);background:#fff;color:#171217;box-shadow:0 0 0 4px #ed42d631,0 4px 15px #0009}
+body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-play:active:not(:disabled){transform:scale(.94)}
+body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-play:focus-visible{outline:2px solid #ed42d6;outline-offset:3px}
 body:has(.listening-room-page:not([hidden])) .listening-room-extra-controls{grid-column:4;display:flex;align-items:center;gap:6px}
 body:has(.listening-room-page:not([hidden])) .listening-room-extra-button{display:grid;width:34px;height:34px;place-items:center;border:1px solid #ffffff2b;border-radius:50%;background:#ffffff08;color:#eee7ed;font:700 19px/1 var(--font);cursor:pointer;transition:color .16s ease,background .16s ease,border-color .16s ease}
 body:has(.listening-room-page:not([hidden])) .listening-room-extra-button:hover:not(:disabled){border-color:#ed42d6a8;background:#ed42d61c;color:#ff9be9}
 body:has(.listening-room-page:not([hidden])) .listening-room-extra-button:focus-visible{outline:2px solid #ed42d6;outline-offset:2px}
 body:has(.listening-room-page:not([hidden])) .listening-room-extra-button:disabled{opacity:.38;cursor:not-allowed}
 body:has(.listening-room-page:not([hidden])) .listening-room-repeat[aria-pressed="true"]{border-color:#ed42d6;background:#ed42d62b;color:#ff9be9;box-shadow:0 0 12px #ed42d633}
+body:has(.listening-room-page:not([hidden])) .listening-room-volume{display:flex;width:clamp(92px,12vw,148px);align-items:center;gap:7px;color:#b7aeb7;font-size:17px;line-height:1}
+body:has(.listening-room-page:not([hidden])) .listening-room-volume input{width:100%;height:5px;margin:0;appearance:none;border:0;border-radius:99px;background:linear-gradient(90deg,#ed42d6 var(--room-volume-level,100%),#ffffff38 var(--room-volume-level,100%));cursor:pointer}
+body:has(.listening-room-page:not([hidden])) .listening-room-volume input::-webkit-slider-thumb{width:13px;height:13px;appearance:none;border:2px solid #171317;border-radius:50%;background:#fff;box-shadow:0 0 0 1px #ffffff9c}
+body:has(.listening-room-page:not([hidden])) .listening-room-volume input::-moz-range-thumb{width:10px;height:10px;border:2px solid #171317;border-radius:50%;background:#fff;box-shadow:0 0 0 1px #ffffff9c}
+body:has(.listening-room-page:not([hidden])) .listening-room-volume input:focus-visible{outline:2px solid #ed42d6;outline-offset:5px}
+body:has(.listening-room-page:not([hidden])) .listening-room-volume input:disabled{opacity:.4;cursor:not-allowed}
 body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-progress{grid-column:5;min-width:0}
 body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-copy h2{font-size:16px}
 body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-copy p{font-size:12px}
@@ -2939,9 +2948,19 @@ body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .l
   body:has(.listening-room-page:not([hidden])) .listening-room-extra-controls{gap:3px}
   body:has(.listening-room-page:not([hidden])) .listening-room-extra-button{width:30px;height:30px;font-size:17px}
   body:has(.listening-room-page:not([hidden])) .listening-room-repeat{width:32px;height:32px}
+  body:has(.listening-room-page:not([hidden])) .listening-room-volume{width:clamp(70px,19vw,106px);gap:5px}
   body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-progress{grid-column:1/-1;grid-row:2;grid-template-columns:34px minmax(0,1fr) 34px;gap:8px;font-size:10px}
   body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-copy h2{font-size:14px}
   body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-copy p{font-size:11px}
+}
+@media(max-width:420px){
+  body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked{grid-template-columns:40px minmax(0,1fr) 36px auto;gap:7px 6px;padding-inline:8px}
+  body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-cover{width:40px}
+  body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-play{width:36px;height:36px}
+  body:has(.listening-room-page:not([hidden])) .listening-room-extra-controls{gap:2px}
+  body:has(.listening-room-page:not([hidden])) .listening-room-extra-button{width:27px;height:27px;font-size:15px}
+  body:has(.listening-room-page:not([hidden])) .listening-room-repeat{width:29px;height:29px}
+  body:has(.listening-room-page:not([hidden])) .listening-room-volume{width:66px;gap:3px;font-size:15px}
 }
 
 /* Shared luminous glass treatment for the two music entry actions. */
