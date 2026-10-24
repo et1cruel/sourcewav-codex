@@ -898,6 +898,10 @@
     const now = $('#roomNowLabel');
     const selected = Boolean(currentTrack);
     const playing = selected && !audio.paused;
+    const roomPage = $('#listeningRoomPage');
+    const roomPlayer = roomPage?.querySelector('.listening-room-player');
+    roomPage?.classList.toggle('has-docked-player', selected);
+    roomPlayer?.classList.toggle('is-docked', selected);
     title.textContent = currentTrack?.title || 'เลือกเพลงเพื่อเริ่มฟัง';
     if (artist) artist.textContent = currentTrack?.artist_profile?.display_name || currentTrack?.artist || 'เพลงจากชุมชนคนทำเพลงอิสระ';
     if (genre) genre.textContent = currentTrack?.genre || 'SOURCEWAV COMMUNITY';
