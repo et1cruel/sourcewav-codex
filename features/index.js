@@ -19,6 +19,9 @@
     });
     F.booking.bindStatic();
     F.drops.bindStatic();
+    setInterval(() => {
+      if (document.visibilityState === 'visible') F.data.refreshLikeNotifications().catch(error => console.error('Song like notifications refresh failed:', error.message));
+    }, 45000);
     F.command.bindStatic();
     F.store.bindStatic();
 

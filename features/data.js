@@ -58,6 +58,42 @@
     isPromoted: Boolean(row.is_promoted), promoTag: row.is_promoted ? 'SPONSORED' : '',
     badgeLabel: row.is_promoted ? 'สปอนเซอร์' : '', read
   });
+  async function refreshLikeNotifications() {
+    if (!db || !user) {
+      state.likeNotifications = [];
+      Core.updateNotificationBadge();
+      return state.likeNotifications;
+    }
+    const result = await db.from('notifications')
+      .select('id,payload,read_at,created_at')
+      .eq('user_id', user.id).eq('kind', 'audio_track_like')
+      .order('created_at', { ascending: false }).limit(100);
+    const rows = checked(result, 'load song like notifications') || [];
+    const actorIds = [...new Set(rows.map(row => row.payload?.actor_id).filter(Boolean))];
+    const profileResult = actorIds.length
+      ? await db.from('profiles').select('user_id,username,display_name,avatar_url').in('user_id', actorIds)
+      : { data: [], error: null };
+    const profiles = new Map((checked(profileResult, 'load song like profiles') || []).map(row => [row.user_id, row]));
+    state.likeNotifications = rows.map(row => ({
+      id: row.id, actorId: row.payload?.actor_id || '',
+      actorName: profileName(profiles, row.payload?.actor_id, profileHandle(profiles, row.payload?.actor_id) || 'สมาชิก'),
+      actorHandle: profileHandle(profiles, row.payload?.actor_id),
+      actorAvatar: profiles.get(row.payload?.actor_id)?.avatar_url || '',
+      trackId: row.payload?.track_id || '', trackTitle: row.payload?.track_title || 'เพลงของคุณ',
+      createdAt: row.created_at, read: Boolean(row.read_at)
+    }));
+    Core.updateNotificationBadge();
+    return state.likeNotifications;
+  }
+
+  async function markLikeNotificationsRead(ids) {
+    if (!db || !user || !ids.length) return;
+    checked(await db.from('notifications').update({ read_at: new Date().toISOString() })
+      .eq('user_id', user.id).eq('kind', 'audio_track_like').is('read_at', null).in('id', ids), 'mark song like notifications read');
+    const readSet = new Set(ids);
+    state.likeNotifications.forEach(item => { if (readSet.has(item.id)) item.read = true; });
+    Core.updateNotificationBadge();
+  }
   const fromProduct = (row, profiles) => ({
     id: row.id, artistId: row.artist_id,
     artistName: profileName(profiles, row.artist_id, 'ศิลปิน'),
@@ -249,6 +285,7 @@
     }
     status = 'online';
     setNotice('');
+    await refreshLikeNotifications();
     Core.updateNotificationBadge();
     global.SourcewavMap?.refreshVenueFollows();
     return state;
@@ -488,7 +525,7 @@
 
   global.SourcewavFeatureData = {
     get status() { return status; }, get events() { return organizerEvents.slice(); },
-    load, createBookingCard, createBookingOffer, respondBookingOffer,
+    load, refreshLikeNotifications, markLikeNotificationsRead, createBookingCard, createBookingOffer, respondBookingOffer,
     toggleFollowArtist, toggleFollowVenue, createDrop, markAllDropsRead,
     createProduct, updateProduct, createStoreOrder, addExpense, setExpensePaid, addCrew,
     updateCrewStatus, saveEventSummary, selectEvent

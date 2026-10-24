@@ -125,6 +125,7 @@ create table public.audio_tracks (
   cover_storage_key text,
   mime_type text not null check (mime_type in ('audio/mpeg','audio/wav','audio/flac','audio/ogg','audio/mp4','audio/aac','audio/webm')),
   byte_size bigint not null check (byte_size between 1 and 52428800),
+  play_count bigint not null default 0 check (play_count >= 0),
   duration_ms bigint check (duration_ms is null or duration_ms between 1 and 86400000),
   visibility text not null default 'public' check (visibility in ('public','members','private')),
   status text not null default 'published' check (status in ('processing','published','hidden','removed')),
@@ -560,3 +561,115 @@ create policy user_states_update_self on public.user_states for update using ((s
 -- Order/payment/ticket/refund rows are read-only to their owners. No browser write policy exists for
 -- orders, order items, payments, webhook events, tickets, refunds, check-ins, moderation, or audit logs.
 -- Expose mutations and staff workflows through a trusted server with verified permissions.
+
+create or replace function public.record_audio_track_play(p_track_id uuid)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  updated_count bigint;
+begin
+  update public.audio_tracks
+  set play_count = play_count + 1
+  where id = p_track_id
+    and status = 'published'
+    and visibility = 'public'
+    and deleted_at is null
+  returning play_count into updated_count;
+  return updated_count;
+end;
+$$;
+revoke all on function public.record_audio_track_play(uuid) from public;
+grant execute on function public.record_audio_track_play(uuid) to anon, authenticated;
+grant select on public.audio_track_likes to anon, authenticated;
+grant delete on public.audio_tracks to authenticated;
+
+create or replace function public.notify_audio_track_like()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  track_owner uuid;
+  track_title text;
+begin
+  if tg_op = 'DELETE' then
+    delete from public.notifications
+    where kind = 'audio_track_like'
+      and payload->>'track_id' = old.track_id::text
+      and payload->>'actor_id' = old.user_id::text;
+    return old;
+  end if;
+
+  select owner_id, title into track_owner, track_title
+  from public.audio_tracks where id = new.track_id;
+  if track_owner is not null and track_owner <> new.user_id then
+    insert into public.notifications (user_id, kind, payload)
+    values (track_owner, 'audio_track_like', jsonb_build_object(
+      'actor_id', new.user_id, 'track_id', new.track_id, 'track_title', track_title
+    ));
+  end if;
+  return new;
+end;
+$$;
+revoke all on function public.notify_audio_track_like() from public;
+create trigger audio_track_like_notification
+after insert or delete on public.audio_track_likes
+for each row execute function public.notify_audio_track_like();
+grant select on public.notifications to authenticated;
+revoke update on public.notifications from authenticated;
+grant update (read_at) on public.notifications to authenticated;
+
+create table public.audio_track_play_events (
+  track_id uuid not null references public.audio_tracks(id) on delete cascade,
+  listener_key text not null,
+  period_start timestamptz not null,
+  created_at timestamptz not null default now(),
+  primary key (track_id, listener_key, period_start)
+);
+create index audio_track_play_events_created_idx on public.audio_track_play_events (created_at);
+alter table public.audio_track_play_events enable row level security;
+revoke all on public.audio_track_play_events from anon, authenticated;
+
+create or replace function public.record_audio_track_listen(p_track_id uuid, p_session_id uuid)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  track_owner uuid;
+  current_count bigint;
+  listener_key text;
+  inserted_track uuid;
+begin
+  if p_track_id is null or p_session_id is null then return null; end if;
+  select owner_id, play_count into track_owner, current_count
+  from public.audio_tracks
+  where id = p_track_id and status = 'published'
+    and visibility = 'public' and deleted_at is null;
+  if track_owner is null then return null; end if;
+  if track_owner = auth.uid() then return current_count; end if;
+  listener_key := case when auth.uid() is null
+    then 'guest:' || p_session_id::text
+    else 'user:' || auth.uid()::text end;
+  insert into public.audio_track_play_events (track_id, listener_key, period_start)
+  values (p_track_id, listener_key,
+    to_timestamp(floor(extract(epoch from now()) / 1800) * 1800))
+  on conflict do nothing
+  returning track_id into inserted_track;
+  if inserted_track is not null then
+    update public.audio_tracks set play_count = play_count + 1
+    where id = p_track_id returning play_count into current_count;
+  else
+    select play_count into current_count from public.audio_tracks where id = p_track_id;
+  end if;
+  return current_count;
+end;
+$$;
+revoke all on function public.record_audio_track_play(uuid) from anon, authenticated;
+revoke all on function public.record_audio_track_listen(uuid, uuid) from public;
+grant execute on function public.record_audio_track_listen(uuid, uuid) to anon, authenticated;

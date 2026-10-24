@@ -1423,3 +1423,151 @@
   background-image:linear-gradient(145deg,rgba(8,18,29,.12),rgba(10,21,32,.2) 52%,rgba(7,17,27,.26)),url("assets/sourcewav-reference.jpg");
   background-size:cover;background-position:center 42%;background-repeat:no-repeat;
 }
+
+
+/* Community feed refresh: tactile print grain, clear editorial hierarchy, and calmer interaction states. */
+#feed .section-block>.section-heading{align-items:flex-end;margin-bottom:17px}
+#feed .section-block>.section-heading>div{position:relative;padding-left:14px}
+#feed .section-block>.section-heading>div:before{position:absolute;top:4px;bottom:5px;left:0;width:3px;border-radius:3px;background:linear-gradient(180deg,#ed42d6,#59c9c4);content:""}
+#feed .section-block>.section-heading .section-kicker{display:inline-block;margin-bottom:4px;color:#ad3a9d;font-size:11px;font-weight:800;letter-spacing:.1em}
+#feed .section-block>.section-heading h2{color:#241a29;letter-spacing:-.035em}
+#feed .section-block>.section-heading .text-action{min-height:40px;padding-inline:15px;border:1px solid #e6c9e1;background:linear-gradient(145deg,#fff,#fbf4fa);color:#923781;box-shadow:0 4px 12px #4a17420c,inset 0 1px #fff;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+#feed .section-block>.section-heading .text-action:hover{transform:translateY(-2px);border-color:#d98bcf;box-shadow:0 8px 18px #7b257318,inset 0 1px #fff}
+#feed .composer{min-height:78px;gap:13px;padding:12px 14px;border:1px solid #e7d4e5;border-radius:18px;background:radial-gradient(ellipse at 100% 0%,#f7d8f039,transparent 42%),repeating-linear-gradient(0deg,#fff0 0 5px,#9d679008 5px 6px),linear-gradient(140deg,#fff 0%,#fdfafd 65%,#f7f0f7 100%);box-shadow:0 12px 28px #30142a0c,0 2px 5px #30142a08,inset 0 1px #fff;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease}
+#feed .composer:before{top:-52px;right:-20px;width:190px;height:130px;background:radial-gradient(circle,#e244cf20,transparent 70%);filter:blur(25px)}
+#feed .composer:focus-within{transform:translateY(-1px);border-color:#d79acb;box-shadow:0 0 0 4px #d83ecb12,0 16px 34px #30142a12,inset 0 1px #fff}
+#feed .composer>.avatar{width:42px;height:42px;border:2px solid #fff;box-shadow:0 0 0 1px #d8c2d8,0 4px 11px #24152418}
+#feed .composer-input{min-height:46px;padding-inline:15px;border:1px solid #e9e1e9;border-radius:13px;background:#fff;color:#796d7b;text-align:left;box-shadow:inset 0 1px 3px #29182908;transition:border-color .18s ease,background .18s ease,box-shadow .18s ease}
+#feed .composer-input:hover{border-color:#d8b6d5;background:#fff;box-shadow:0 0 0 3px #d844cf0d}
+#feed .composer-send{min-height:44px;min-width:88px;border:1px solid #f084df;border-radius:12px;background:linear-gradient(145deg,#ea56d5,#bd27af 72%,#a41d9b);box-shadow:0 4px 0 #8b1b80,0 8px 16px #b321a52c,inset 0 1px #ffffff70;color:#fff;font-weight:800;transition:transform .16s ease,box-shadow .16s ease,filter .16s ease}
+#feed .composer-send:hover{transform:translateY(-2px);filter:saturate(1.08);box-shadow:0 6px 0 #8b1b80,0 12px 20px #b321a53a,inset 0 1px #ffffff80}
+#feed .composer-send:active{transform:translateY(2px);box-shadow:0 1px 0 #8b1b80,0 3px 8px #b321a526}
+#feed .feed-filters{display:flex;align-items:center;gap:8px;margin:19px 0 14px;padding:0 1px 11px;border-bottom:1px solid #e7dce7}
+#feed .filter-chip{min-height:36px;padding:0 14px;border:1px solid #e4dce5;border-radius:999px;background:linear-gradient(180deg,#fff,#f8f5f8);color:#66576a;font-size:12px;font-weight:700;box-shadow:0 2px 5px #27142708;transition:transform .16s ease,border-color .16s ease,background .16s ease,color .16s ease,box-shadow .16s ease}
+#feed .filter-chip:hover{transform:translateY(-1px);border-color:#d4a6d0;background:#fff;color:#87347d;box-shadow:0 5px 12px #68215e12}
+#feed .filter-chip.selected{border-color:#bc2ead;background:linear-gradient(135deg,#c32bb4,#e34bcf);color:#fff;box-shadow:0 4px 0 #8d2084,0 7px 14px #b923a52b,inset 0 1px #ffffff60}
+#feed .feed-sort{margin-left:auto;color:#847487;font-size:11px;font-weight:650}
+#feed #liveFeed{display:grid;gap:14px}
+#feed .live-post-card{--post-accent:#c039ae;isolation:isolate;padding:19px 21px 13px;border:1px solid #777;border-radius:24px;background-color:#bdbd;background-image:linear-gradient(180deg,rgba(255,255,255,.92) 0%,rgba(255,255,255,.22) 3%,rgba(0,0,0,.12) 8%,transparent 18%,transparent 80%,rgba(0,0,0,.16) 92%,rgba(255,255,255,.45) 98%,rgba(255,255,255,.9) 100%),linear-gradient(90deg,rgba(255,255,255,.85) 0%,rgba(255,255,255,.25) 2%,rgba(0,0,0,.18) 5%,transparent 13%,transparent 86%,rgba(0,0,0,.2) 95%,rgba(255,255,255,.32) 98%,rgba(255,255,255,.78) 100%),radial-gradient(ellipse at 28% 22%,rgba(255,255,255,.28),transparent 28%),linear-gradient(145deg,#ccc 0%,#b8b8b8 48%,#c5c5c5 100%);background-size:100% 100%;box-shadow:0 12px 24px rgba(19,13,20,.16),0 3px 7px rgba(19,13,20,.11),inset 0 2px 3px rgba(255,255,255,.93),inset 0 -3px 5px rgba(22,22,22,.4),inset 0 0 0 1px rgba(255,255,255,.4);transition:transform .2s ease,border-color .2s ease,box-shadow .22s ease}
+#feed .live-post-card:before{z-index:-1;inset:5px;border:1px solid rgba(255,255,255,.46);border-radius:19px;background:linear-gradient(145deg,rgba(255,255,255,.25),transparent 24%,transparent 72%,rgba(0,0,0,.06));box-shadow:inset 0 1px 2px rgba(255,255,255,.72),inset 0 -2px 4px rgba(0,0,0,.2);opacity:.9;filter:none;transition:opacity .2s ease,transform .3s ease}
+#feed .live-post-card:after{position:absolute;z-index:-1;top:6px;right:7px;bottom:6px;left:7px;border:1px solid rgba(34,34,34,.1);border-radius:19px;background:linear-gradient(180deg,rgba(255,255,255,.13),transparent 12%,transparent 88%,rgba(17,17,17,.07));content:"";pointer-events:none}
+#feed .live-post-card[data-kind="music"]{--post-accent:#a52cc0}
+#feed .live-post-card[data-kind="art"]{--post-accent:#dd4c9f}
+#feed .live-post-card[data-kind="talk"]{--post-accent:#268d8a}
+#feed .live-post-card[data-kind="collab"]{--post-accent:#bd6b2e}
+#feed .live-post-card[data-kind="announcement"]{--post-accent:#526cc1}
+#feed .live-post-card:hover{transform:translateY(-2px);border-color:#858585;box-shadow:0 18px 32px #130d1438,0 4px 9px #130d1426,inset 0 2px 3px #ffffffed,inset 0 -3px 5px #16161665,inset 0 0 0 1px #ffffff80}
+#feed .live-post-card:hover:before{transform:translateY(-1px);opacity:1}
+#feed .live-post-card:focus-within{border-color:#8c6590;box-shadow:0 0 0 3px #bb48b51c,0 13px 26px #130d1433,inset 0 2px 3px #ffffffed,inset 0 -3px 5px #16161665}
+#feed .live-post-card .post-top{align-items:center;gap:11px;padding-bottom:13px;border-bottom:1px solid rgba(70,70,70,.3)}
+#feed .live-post-card .live-post-avatar{width:43px;height:43px;border:2px solid #f7f7f7;background:linear-gradient(145deg,#eee,#9d9d9d);box-shadow:0 0 0 1px #686868,0 4px 10px rgba(17,17,17,.19)}
+#feed .live-post-card .post-author strong{color:#222;font-size:14px;font-weight:800}
+#feed .live-post-card .post-author small{display:block;margin-top:3px;color:#222;font-size:11px;line-height:1.5}
+#feed .live-post-card .post-author small:first-letter{color:inherit}
+#feed .live-post-card .live-post-title{margin:14px 0 4px;color:#171717;font-size:18px;font-weight:800;line-height:1.55;letter-spacing:-.02em}
+#feed .live-post-card .post-copy{margin:13px 0 17px;color:#292929;font-size:14px;line-height:1.95;overflow-wrap:anywhere}
+#feed .live-post-card .post-copy b{color:#742c70}
+#feed .live-post-card .post-actions{display:flex;flex-wrap:wrap;gap:8px;padding-top:11px;margin:0;border-top:1px solid rgba(70,70,70,.3)}
+#feed .live-post-card .post-actions button{min-height:38px;gap:7px;padding:0 11px;border:1px solid #50505033;border-radius:10px;background:linear-gradient(180deg,#ffffffa8,#8c8c8c29);color:#353535;font-size:12px;font-weight:700;box-shadow:inset 0 1px #ffffff9c,0 2px 3px #17171715;transition:transform .16s ease,border-color .16s ease,background .16s ease,color .16s ease,box-shadow .16s ease}
+#feed .live-post-card .post-actions button:hover{transform:translateY(-1px);border-color:#56505677;background:linear-gradient(180deg,#fff,#c8c8c8);color:#612b60;box-shadow:0 4px 8px #17171720,inset 0 1px #fff}
+#feed .live-post-card .post-actions button:active{transform:translateY(0) scale(.98)}
+#feed .live-post-card .post-actions button b{min-width:19px;padding:1px 5px;border-radius:999px;background:rgba(51,49,51,.09);color:#343034;font-size:10px;text-align:center}
+#feed .live-post-card .post-actions .live-like-btn.liked{border-color:#9c568f;background:linear-gradient(145deg,#eed3eb,#c8a9c7);color:#76286b}
+#feed .live-post-card .post-actions .live-like-btn.liked b{background:#a8419740;color:#67225e}
+#feed .live-post-card .post-actions .like-heart{width:21px;height:21px;flex-basis:21px}
+#feed .live-post-card .post-actions button:focus-visible,#feed .filter-chip:focus-visible,#feed .composer-send:focus-visible,#feed .composer-input:focus-visible{outline:3px solid #bd3cad;outline-offset:3px}
+#feed .platform-loading,#feed .platform-empty{margin:0;padding:28px 22px;border:1px solid #a5a5a5;border-radius:20px;background:linear-gradient(180deg,rgba(255,255,255,.54),rgba(255,255,255,.1) 8%,transparent 82%,rgba(0,0,0,.12)),linear-gradient(145deg,#c9c9c9,#b6b6b6);box-shadow:inset 0 2px 3px rgba(255,255,255,.86),inset 0 -3px 5px rgba(23,23,23,.36),0 10px 24px rgba(19,13,20,.16);color:#303030;font-size:13px;line-height:1.8;text-align:center}
+@media(max-width:680px){
+  #feed .section-block>.section-heading{align-items:center;margin-bottom:14px}
+  #feed .section-block>.section-heading>div{padding-left:11px}
+  #feed .section-block>.section-heading .section-kicker{font-size:10px}
+  #feed .section-block>.section-heading .text-action{min-height:38px;padding-inline:12px;font-size:11px}
+  #feed .composer{min-height:68px;gap:9px;padding:9px;border-radius:15px}
+  #feed .composer>.avatar{width:36px;height:36px}
+  #feed .composer-input{min-width:0;min-height:42px;padding-inline:11px;font-size:11px}
+  #feed .composer-send{min-width:62px;min-height:42px;padding-inline:10px;font-size:11px}
+  #feed .feed-filters{gap:7px;margin:15px 0 12px;padding-bottom:9px;overflow-x:auto;scrollbar-width:none}
+  #feed .feed-filters::-webkit-scrollbar{display:none}
+  #feed .filter-chip{min-height:34px;flex:none;padding-inline:12px;font-size:11px}
+  #feed .feed-sort{display:none}
+  #feed #liveFeed{gap:11px}
+  #feed .live-post-card{padding:15px 14px 11px;border-radius:15px}
+  #feed .live-post-card .post-top{gap:9px;padding-bottom:11px}
+  #feed .live-post-card .live-post-avatar{width:39px;height:39px}
+  #feed .live-post-card .post-author strong{font-size:13px}
+  #feed .live-post-card .post-author small{font-size:10px}
+  #feed .live-post-card .live-post-title{margin-top:12px;font-size:16px}
+  #feed .live-post-card .post-copy{margin:11px 0 14px;font-size:13px;line-height:1.85}
+  #feed .live-post-card .post-actions{gap:4px;padding-top:8px}
+  #feed .live-post-card .post-actions button{min-height:37px;gap:5px;padding-inline:7px;font-size:10px}
+  #feed .live-post-card .post-actions button .action-icon{width:15px;height:15px;flex-basis:15px}
+  #feed .live-post-card .post-actions .like-heart{width:19px;height:19px;flex-basis:19px}
+}
+@media(max-width:390px){
+  #feed .composer{gap:7px;padding:8px}
+  #feed .composer>.avatar{width:32px;height:32px}
+  #feed .composer-send{min-width:55px;padding-inline:7px}
+  #feed .live-post-card .post-actions{justify-content:space-between}
+  #feed .live-post-card .post-actions button{gap:4px;padding-inline:5px;font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){
+  #feed .composer,#feed .composer-input,#feed .composer-send,#feed .filter-chip,#feed .live-post-card,#feed .live-post-card:before,#feed .live-post-card .post-actions button,#feed .section-block>.section-heading .text-action{transition:none!important}
+  #feed .composer-send:hover,#feed .filter-chip:hover,#feed .live-post-card:hover,#feed .live-post-card .post-actions button:hover{transform:none}
+}
+
+
+/* Feed post contrast: remove the inset box rails and reserve a clean white text lane. */
+#feed .live-post-card{
+  background-image:linear-gradient(180deg,transparent 0 34%,rgba(255,255,255,.97) 38% 83%,transparent 88%),linear-gradient(180deg,rgba(255,255,255,.92) 0%,rgba(255,255,255,.22) 3%,rgba(0,0,0,.12) 8%,transparent 18%,transparent 80%,rgba(0,0,0,.16) 92%,rgba(255,255,255,.45) 98%,rgba(255,255,255,.9) 100%),linear-gradient(90deg,rgba(255,255,255,.85) 0%,rgba(255,255,255,.25) 2%,rgba(0,0,0,.18) 5%,transparent 13%,transparent 86%,rgba(0,0,0,.2) 95%,rgba(255,255,255,.32) 98%,rgba(255,255,255,.78) 100%),radial-gradient(ellipse at 28% 22%,rgba(255,255,255,.28),transparent 28%),linear-gradient(145deg,#ccc 0%,#b8b8b8 48%,#c5c5c5 100%);
+}
+#feed .live-post-card:before,#feed .live-post-card:after{content:none}
+
+
+/* Final Sourcewav UI pass — quiet feed loading/empty feedback instead of the inherited beveled gray panel. */
+#feed .platform-loading,#feed .platform-empty{
+  min-height:0!important;
+  margin:0!important;
+  padding:22px 18px!important;
+  border:1px solid #e8dce7!important;
+  border-radius:14px!important;
+  background:linear-gradient(110deg,#fff,#fbf7fb)!important;
+  box-shadow:none!important;
+  color:#625562!important;
+  font-size:14px!important;
+  line-height:1.7!important;
+  text-align:center!important;
+}
+@media(max-width:680px){
+  #feed .platform-loading,#feed .platform-empty{
+    min-height:0!important;
+    padding:19px 14px!important;
+    border-radius:13px!important;
+    background:#fff!important;
+    color:#625562!important;
+    font-size:13px!important;
+  }
+}
+
+/* Feed typography: keep names, post text, and controls readable. */
+#feed .section-block>.section-heading .section-kicker{font-size:13px}
+#feed .section-block>.section-heading h2{font-size:27px}
+#feed .section-block>.section-heading .text-action{font-size:14px}
+#feed .composer-input,#feed .composer-send{font-size:14px}
+#feed .filter-chip{font-size:14px}
+#feed .feed-sort{font-size:13px}
+#feed .live-post-card .post-author strong{font-size:17px;line-height:1.4}
+#feed .live-post-card .post-author small{font-size:13px}
+#feed .live-post-card .live-post-title{font-size:22px;line-height:1.45}
+#feed .live-post-card .post-copy{font-size:17px;line-height:1.75}
+#feed .live-post-card .post-actions button{font-size:14px}
+#feed .live-post-card .post-actions button b{font-size:12px}
+@media(max-width:680px){
+  #feed .section-block>.section-heading h2{font-size:23px}
+  #feed .composer-input,#feed .composer-send{font-size:13px}
+  #feed .filter-chip{font-size:13px}
+  #feed .live-post-card .post-author strong{font-size:16px}
+  #feed .live-post-card .post-author small{font-size:12px}
+  #feed .live-post-card .live-post-title{font-size:20px}
+  #feed .live-post-card .post-copy{font-size:16px}
+  #feed .live-post-card .post-actions button{font-size:12px}
+}

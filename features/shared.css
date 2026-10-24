@@ -197,6 +197,8 @@
 .drop-card{gap:15px;padding:16px;border:1px solid #dbe4eb;border-radius:14px;background:#fff;transition:border-color .16s,background-color .16s,box-shadow .16s}
 .drop-card:hover{border-color:#b7cad7;box-shadow:0 5px 16px #19364d0c}
 .drop-card.unread{border-left:4px solid #315ee8;background:#f8fbff;box-shadow:inset 0 0 0 1px #e3edfb}
+.drop-icon.song-like-icon{background:#ffe5f2;color:#c91d72}
+.song-like-alert .drop-action-btn{text-decoration:none}
 .drop-card.sponsored-drop{border-color:#d8e7a1;border-left:4px solid #b7d635;background:#fbfdf4;box-shadow:none}
 .drop-icon{flex:0 0 46px;width:46px;height:46px;border-radius:13px;font-size:20px}
 .drop-content{min-width:0}
@@ -281,3 +283,58 @@
 .drop-create-modal #boostDropForm .modal-field:first-child,.drop-create-modal #boostDropForm .modal-field:nth-child(3),.drop-create-modal #boostDropForm .modal-field:nth-child(4),.drop-create-modal #boostDropForm .modal-primary{grid-column:1/-1}
 .drop-create-modal #boostDropForm .modal-field textarea{min-height:120px}
 @media(max-width:520px){.modal.drop-create-modal{padding:27px 20px 23px}.drop-create-heading{gap:12px;margin-right:34px}.drop-create-modal #boostDropForm{grid-template-columns:1fr}.drop-create-modal #boostDropForm .modal-field,.drop-create-modal #boostDropForm .modal-primary{grid-column:1}}
+
+/* Post composer shares the profile editor's chrome frame and Sourcewav artwork. */
+.modal.composer-modal{width:min(960px,calc(100vw - 28px));max-height:calc(100dvh - 28px);padding:0 30px 24px;border:8px solid transparent;border-radius:22px;background:linear-gradient(145deg,#050608d9,#09090bc9 52%,#09090bd9),url("../assets/sourcewav-reference.jpg") center 42%/cover padding-box,linear-gradient(138deg,#fff 0%,#60656a 8%,#1f2225 17%,#f4f5f5 29%,#777c80 43%,#fdfdfd 58%,#4e5357 71%,#e4e5e6 86%,#565b5f 100%) border-box;color:#f4f4f5;box-shadow:0 30px 100px #000c,inset 0 1px 2px #fff8,inset 0 -3px 9px #000}
+.composer-modal .composer-heading{margin:0 -30px 22px;padding:18px 30px 20px;border:0;border-bottom:1px solid #d5d8db;border-radius:14px 14px 0 0;background:radial-gradient(ellipse at 22% 0%,#ffffff45,transparent 35%),linear-gradient(180deg,#101215 0%,#24282c 55%,#111316 86%,#62676b 98%,#f5f5f5 100%);box-shadow:inset 0 2px 2px #fff8,inset 0 -4px 8px #000a}
+.composer-modal .composer-heading:before{content:none}
+.composer-modal .composer-brand-row{position:relative;z-index:1;min-height:50px;margin-bottom:7px;padding-right:48px}
+.composer-modal .composer-brand-mark{border-color:#a2e5e8;background:#13181b;box-shadow:0 0 0 3px #45c7d326}
+.composer-modal .composer-brand-name span{color:#d7fa48}
+.composer-modal .composer-audience{border-color:#ffffff45;background:#ffffff12;color:#f1f2f3}
+.composer-modal .composer-heading-copy{position:relative;z-index:1}
+.composer-modal .composer-heading h2{font-size:27px}
+.composer-modal .composer-heading p{color:#d5d8da;font-size:15px}
+.composer-soundwave{position:absolute;top:18px;right:205px;display:flex;align-items:center;justify-content:space-between;width:min(29%,270px);height:50px;opacity:.55;pointer-events:none}
+.composer-soundwave i{width:3px;height:var(--wave);border-radius:3px;background:linear-gradient(180deg,#e9ecee,#70767b 58%,#dadddf);box-shadow:0 1px 2px #0009}
+.composer-modal .modal-close{top:12px;right:12px;width:46px;height:46px;border:2px solid #f5f5f5;border-radius:50%;background:linear-gradient(145deg,#fff,#b8bdc1 26%,#f9fafa 47%,#777d82 66%,#e7e9ea 88%);color:#17191b;box-shadow:0 0 0 3px #171a1d,inset 0 1px 2px #fff,0 4px 10px #000b}
+.composer-modal .modal-close:hover{border-color:#fff;background:linear-gradient(145deg,#fff,#d5d8da 35%,#fff 55%,#9ca2a6);transform:none}
+.composer-modal .composer-fields{grid-template-columns:minmax(0,1fr) minmax(0,1.45fr);grid-template-rows:auto auto;align-items:start;gap:4px 20px}
+.composer-modal .composer-fields .modal-field:first-child{grid-column:1;grid-row:1}
+.composer-modal .composer-fields .modal-field:nth-child(2){grid-column:2;grid-row:1 / span 2}
+.composer-modal .composer-fields .modal-field:nth-child(3){grid-column:1;grid-row:2}
+.composer-modal .modal-field{margin-top:0;color:#f0f1f2;font-size:16px}
+.composer-modal .composer-label-row{color:#f0f1f2;font-weight:750}
+.composer-modal .composer-optional{background:#3a3c41;color:#e5e5e8}
+.composer-modal .composer-required{background:#15474a;color:#c8f6f3}
+.composer-modal .modal-field input,.composer-modal .modal-field select,.composer-modal .modal-field textarea{border:1px solid #55585d;border-radius:12px;background:#1b1c20;color:#f5f5f6;box-shadow:inset 0 1px 3px #0008;font-size:16px}
+.composer-modal .modal-field input,.composer-modal .modal-field select{min-height:54px}
+.composer-modal .modal-field textarea{min-height:168px}
+.composer-modal .modal-field input::placeholder,.composer-modal .modal-field textarea::placeholder{color:#b8b9c0;opacity:1}
+.composer-modal .modal-field input:focus,.composer-modal .modal-field select:focus,.composer-modal .modal-field textarea:focus{border-color:#8edce0;background:#1f2125;box-shadow:0 0 0 3px #53c3c530}
+.composer-modal .composer-field-meta,.composer-modal .composer-field-meta #postBodyCount{color:#d0d0d4}
+.composer-modal .composer-footer{margin-top:18px;padding-top:15px;border-top-color:#ffffff58}
+.composer-modal .composer-footer-note{color:#e3e4e6;font-size:14px}
+.composer-modal .composer-footer-note svg{color:#8cdbde}
+.composer-modal .emoji-toggle{border-color:#666b70;background:linear-gradient(145deg,#2b2d31,#17191c);box-shadow:inset 0 1px #ffffff3b;color:#f2f2f3}
+.composer-modal .modal-primary{min-height:52px;border:1px solid #ededee;border-radius:11px;background:linear-gradient(145deg,#f4f4f5,#cfd1d3 53%,#f6f6f7);color:#17191b;box-shadow:inset 0 1px #fff,0 4px 11px #0008;font-weight:750}
+.composer-modal .modal-primary:hover:not(:disabled){background:linear-gradient(145deg,#fff,#e0e2e4 55%,#fff);box-shadow:inset 0 1px #fff,0 6px 15px #0009;transform:translateY(-1px)}
+.composer-modal .modal-primary:disabled{border-color:#5e6266;background:#45484c;color:#c0c2c5;box-shadow:none}
+.composer-modal :focus-visible{outline:3px solid #8edce0;outline-offset:3px}
+@media(max-width:700px){
+  .modal.composer-modal{width:min(620px,calc(100vw - 16px));max-height:calc(100dvh - 16px);padding:0 18px 18px;border-width:6px;border-radius:16px}
+  .composer-modal .composer-heading{margin:0 -18px 18px;padding:15px 18px 18px}
+  .composer-modal .composer-fields{grid-template-columns:minmax(0,1fr);gap:0}
+  .composer-modal .composer-fields .modal-field:first-child,.composer-modal .composer-fields .modal-field:nth-child(2),.composer-modal .composer-fields .modal-field:nth-child(3){grid-column:1;grid-row:auto;margin-top:12px}
+  .composer-modal .modal-field textarea{min-height:118px}
+  .composer-soundwave{width:34%;opacity:.35}
+}
+@media(max-width:520px){
+  .composer-modal .composer-heading h2{font-size:24px}
+  .composer-modal .composer-heading p{font-size:14px}
+  .composer-modal .composer-brand-row{padding-right:46px}
+  .composer-modal .composer-audience{font-size:11px}
+  .composer-soundwave{display:none}
+  .composer-modal .composer-field-meta{flex-wrap:wrap;font-size:12px}
+  .composer-modal .composer-footer-note{font-size:13px}
+}

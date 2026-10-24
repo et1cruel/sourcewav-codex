@@ -50,7 +50,7 @@
   const state = {};
 
   const seedDefaults = () => ({
-    bookingCards: [], bookingOffers: [], dropAlerts: [], followedVenues: [],
+    bookingCards: [], bookingOffers: [], dropAlerts: [], likeNotifications: [], followedVenues: [],
     followedArtists: [], eventCommand: {}, artistStoreProducts: [], artistStoreOrders: []
   });
 
@@ -60,6 +60,7 @@
       bookingCards: Array.isArray(s.bookingCards) ? s.bookingCards : [],
       bookingOffers: Array.isArray(s.bookingOffers) ? s.bookingOffers : [],
       dropAlerts: Array.isArray(s.dropAlerts) ? s.dropAlerts : [],
+      likeNotifications: Array.isArray(s.likeNotifications) ? s.likeNotifications : [],
       followedVenues: Array.isArray(s.followedVenues) ? s.followedVenues : [],
       followedArtists: Array.isArray(s.followedArtists) ? s.followedArtists : [],
       eventCommand: s.eventCommand && typeof s.eventCommand === 'object' ? s.eventCommand : {},
@@ -85,12 +86,15 @@
   });
 
   function updateNotificationBadge() {
-    const unreadCount = state.dropAlerts.filter(a => !a.read).length;
+    const unreadCount = state.dropAlerts.filter(a => !a.read).length + state.likeNotifications.filter(a => !a.read).length;
     const btn = $('#notificationBtn');
     if (btn) {
       const count = $('.notification-count', btn);
-      if (count) count.textContent = String(unreadCount);
-      btn.setAttribute('aria-label', unreadCount ? `Drop Alerts · ${unreadCount} รายการใหม่` : 'Drop Alerts');
+      if (count) {
+        count.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+        count.hidden = unreadCount === 0;
+      }
+      btn.setAttribute('aria-label', unreadCount ? `การแจ้งเตือน · ${unreadCount} รายการใหม่` : 'การแจ้งเตือน');
       const dot = $('i', btn);
       if (dot) {
         dot.classList.toggle('badge-active', unreadCount > 0);

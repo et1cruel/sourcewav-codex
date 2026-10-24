@@ -11,20 +11,21 @@
   let activeDropTab = 'all';
 
   function renderDropAlertsCenter() {
-    const unread = state.dropAlerts.filter(a => !a.read).length;
+    const unread = state.dropAlerts.filter(a => !a.read).length + state.likeNotifications.filter(a => !a.read).length;
 
     showModal(`
       <div class="drop-center-modal">
         <div class="drop-center-heading">
           <div class="drop-center-title">
             <span class="drop-center-icon" aria-hidden="true">♧</span>
-            <div><h2 id="modalTitle">การแจ้งเตือน</h2><p>ติดตามข่าวเพลง งาน และสถานที่ที่คุณสนใจ</p></div>
+            <div><h2 id="modalTitle">การแจ้งเตือน</h2><p>คนที่ชอบเพลงของคุณ และข่าวจากคอมมูนิตี้</p></div>
           </div>
           ${unread ? '<button type="button" id="markAllDropsReadBtn" class="drop-mark-read">อ่านทั้งหมดแล้ว</button>' : ''}
         </div>
 
         <div class="drop-tabs" role="group" aria-label="กรองการแจ้งเตือน">
-          <button type="button" class="drop-tab-btn ${activeDropTab === 'all' ? 'active' : ''}" data-drop-tab="all" aria-pressed="${activeDropTab === 'all'}">ทั้งหมด <b>${state.dropAlerts.length}</b></button>
+          <button type="button" class="drop-tab-btn ${activeDropTab === 'all' ? 'active' : ''}" data-drop-tab="all" aria-pressed="${activeDropTab === 'all'}">ทั้งหมด <b>${state.dropAlerts.length + state.likeNotifications.length}</b></button>
+          <button type="button" class="drop-tab-btn ${activeDropTab === 'likes' ? 'active' : ''}" data-drop-tab="likes" aria-pressed="${activeDropTab === 'likes'}"><span aria-hidden="true">♥</span> ไลก์เพลง</button>
           <button type="button" class="drop-tab-btn ${activeDropTab === 'music' ? 'active' : ''}" data-drop-tab="music" aria-pressed="${activeDropTab === 'music'}"><span aria-hidden="true">♫</span> เพลงใหม่</button>
           <button type="button" class="drop-tab-btn ${activeDropTab === 'ticket' ? 'active' : ''}" data-drop-tab="ticket" aria-pressed="${activeDropTab === 'ticket'}"><span aria-hidden="true">▣</span> บัตรและงาน</button>
           <button type="button" class="drop-tab-btn ${activeDropTab === 'venue' ? 'active' : ''}" data-drop-tab="venue" aria-pressed="${activeDropTab === 'venue'}"><span aria-hidden="true">⌖</span> สถานที่</button>
@@ -52,19 +53,34 @@
   }
 
   function renderDropItemsHTML() {
-    const items = state.dropAlerts.filter(a => {
+    const items = [
+      ...state.dropAlerts.map(item => ({ ...item, itemKind: 'drop' })),
+      ...state.likeNotifications.map(item => ({ ...item, itemKind: 'like' }))
+    ].filter(a => {
       if (activeDropTab === 'all') return true;
+      if (activeDropTab === 'likes') return a.itemKind === 'like';
+      if (a.itemKind === 'like') return false;
       if (activeDropTab === 'sponsored') return a.isPromoted;
       if (activeDropTab === 'ticket') return ['ticket', 'event'].includes(a.type);
       return a.type === activeDropTab;
-    });
+    }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     if (!items.length) {
       const isAll = activeDropTab === 'all';
-      return `<div class="drop-empty"><span class="drop-empty-icon" aria-hidden="true">${isAll ? '♧' : '⌕'}</span><h3>${isAll ? 'ยังไม่มีการแจ้งเตือน' : 'ยังไม่มีรายการในหมวดนี้'}</h3><p>${isAll ? 'เมื่อศิลปินหรือสถานที่ที่คุณติดตามมีข่าวใหม่ เราจะแสดงไว้ที่นี่' : 'ลองเลือกหมวดอื่นเพื่อดูข่าวเพิ่มเติม'}</p></div>`;
+      return `<div class="drop-empty"><span class="drop-empty-icon" aria-hidden="true">${isAll ? '♧' : '⌕'}</span><h3>${isAll ? 'ยังไม่มีการแจ้งเตือน' : 'ยังไม่มีรายการในหมวดนี้'}</h3><p>${isAll ? 'เมื่อมีคนกดไลก์เพลงของคุณ หรือมีข่าวใหม่ รายการจะปรากฏที่นี่' : 'ลองเลือกหมวดอื่นเพื่อดูข่าวเพิ่มเติม'}</p></div>`;
     }
 
     return items.map(drop => {
+      if (drop.itemKind === 'like') return `
+        <article class="drop-card song-like-alert ${drop.read ? '' : 'unread'}" data-like-notification-id="${esc(drop.id)}">
+          <div class="drop-icon song-like-icon" aria-hidden="true">♥</div>
+          <div class="drop-content">
+            <div class="drop-topline"><span class="drop-creator"><b>${esc(drop.actorName)}</b>${drop.actorHandle ? ` · @${esc(drop.actorHandle)}` : ''}</span><span class="drop-time">${esc(new Date(drop.createdAt).toLocaleString('th-TH'))}</span></div>
+            <h4>กดไลก์เพลงของคุณ</h4>
+            <p>${esc(drop.trackTitle)}</p>
+            ${drop.trackId ? `<a class="drop-action-btn" data-like-track-id="${esc(drop.trackId)}" data-like-notification-id="${esc(drop.id)}" href="?track=${encodeURIComponent(drop.trackId)}#music">ฟังเพลง ↗</a>` : ''}
+          </div>
+        </article>`;
       const iconMap = {
         music: '♫',
         event: '⌁',
@@ -118,13 +134,15 @@
       });
     });
 
-    $('#markAllDropsReadBtn')?.addEventListener('click', () => {
-      global.SourcewavFeatureData.markAllDropsRead().then(ok => {
-        if (!ok) return;
+    $('#markAllDropsReadBtn')?.addEventListener('click', async () => {
+      try {
+        const ids = state.likeNotifications.filter(item => !item.read).map(item => item.id);
+        await global.SourcewavFeatureData.markLikeNotificationsRead(ids);
+        await global.SourcewavFeatureData.markAllDropsRead();
         Core.updateNotificationBadge();
         renderDropAlertsCenter();
-        toast('บันทึกสถานะอ่านทั้งหมดลงฐานข้อมูลแล้ว');
-      }).catch(error => toast(`บันทึกไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`));
+        toast('อ่านการแจ้งเตือนทั้งหมดแล้ว');
+      } catch (error) { toast(`บันทึกไม่สำเร็จ: ${error.message || 'ตรวจสอบการเชื่อมต่อฐานข้อมูล'}`); }
     });
 
     $('#openBoostDropModalBtn')?.addEventListener('click', openBoostDropModal);
@@ -133,6 +151,14 @@
   }
 
   function bindDropActionClicks() {
+    $$('[data-like-notification-id][data-like-track-id]').forEach(link => {
+      link.addEventListener('click', async e => {
+        e.preventDefault();
+        try { await global.SourcewavFeatureData.markLikeNotificationsRead([link.dataset.likeNotificationId]); }
+        catch (error) { console.error('Mark song like notification read failed:', error.message); }
+        location.assign(link.href);
+      });
+    });
     $$('.drop-action-btn').forEach(btn => {
       btn.addEventListener('click', e => {
         e.stopPropagation();
@@ -257,12 +283,18 @@
   const isFollowingArtist = id => (Array.isArray(state.followedArtists) ? state.followedArtists : []).includes(id);
 
   function bindStatic() {
-    $('#notificationBtn')?.addEventListener('click', e => {
+    $('#notificationBtn')?.addEventListener('click', async e => {
       e.preventDefault();
       e.stopImmediatePropagation();
+      try { await global.SourcewavFeatureData.refreshLikeNotifications(); }
+      catch (error) { console.error('Song like notifications failed to load:', error.message); }
       renderDropAlertsCenter();
     });
-    $('#openDropCenterBtn')?.addEventListener('click', renderDropAlertsCenter);
+    $('#openDropCenterBtn')?.addEventListener('click', async () => {
+      try { await global.SourcewavFeatureData.refreshLikeNotifications(); }
+      catch (error) { console.error('Song like notifications failed to load:', error.message); }
+      renderDropAlertsCenter();
+    });
   }
 
   Object.assign(F, { renderDropAlertsCenter, renderDropPreview, toggleFollowVenue, toggleFollowArtist, isFollowingArtist, openBoostDropModal });

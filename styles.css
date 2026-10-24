@@ -645,6 +645,11 @@ body:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;bac
 .live-post-card { animation: live-card-in .28s ease both; }
 .live-post-avatar { position:relative; flex:none; overflow:hidden; }
 .live-post-avatar img { position:absolute; inset:0; width:100%; height:100%; border-radius:inherit; object-fit:cover; }
+.post-profile-link{display:inline-flex;flex:none;border-radius:50%;text-decoration:none}
+.post-profile-link:hover .live-post-avatar{box-shadow:0 0 0 3px #9bc7ec}
+.post-profile-link:focus-visible,.post-author-link:focus-visible,.post-comment-entry a:focus-visible,.track-comment-entry a:focus-visible{outline:2px solid #70c9df;outline-offset:3px}
+.post-author-link{color:inherit;text-decoration:none}
+.post-author-link:hover{text-decoration:underline}
 .live-like-btn.liked { color: #b5e95f; }
 .live-listing { display: grid; grid-template-columns: 54px minmax(0,1fr) auto; gap: 12px; align-items: center; width: 100%; padding: 13px; margin: 9px 0; border: 1px solid rgba(192,218,195,.14); border-radius: 14px; background: rgba(255,255,255,.035); }.listing-art-image { width:54px;height:62px;border-radius:11px;object-fit:cover; }
 .listing-art-mark { display:grid; place-items:center; width:54px; height:62px; border-radius:11px; color:#c9f27a; background:linear-gradient(145deg,#3c514a,#1b2924); font:600 1.45rem Oswald,sans-serif; }
@@ -1380,7 +1385,9 @@ html[lang="th"] :is(p, h1, h2, h3, h4, label, .nav-link, .rail-item, .room-item,
 /* Header Drop Alerts control replaces the standalone release shortcut. */
 .drop-alert-trigger{position:relative;display:inline-flex;align-items:center;gap:5px;min-height:40px;padding:5px 7px;border:1px solid #f06fe399;border-radius:14px;color:#fff;background:linear-gradient(120deg,#bd22a9,#e33ac6 68%,#ba27b0);box-shadow:0 5px 16px #dc36c044,inset 0 1px 0 #ffffff70;cursor:pointer;transition:transform .18s ease,box-shadow .18s ease,filter .18s ease}
 .drop-alert-trigger{width:40px;min-width:40px;justify-content:center;gap:0;padding:4px;border-radius:12px}
-.drop-alert-label,.drop-alert-trigger .notification-count{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.drop-alert-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.drop-alert-trigger .notification-count{position:absolute;top:-7px;right:-8px;z-index:2;min-width:18px;height:18px;border-radius:7px;background:#dbf56c;color:#273027;font-size:10px;font-weight:800;box-shadow:0 2px 7px #1118}
+.drop-alert-trigger .notification-count[hidden]{display:none}
 .drop-alert-trigger .pixel-bell{width:23px;height:23px}
 .drop-alert-trigger:hover{transform:translateY(-1px);box-shadow:0 8px 21px #dc36c068,0 0 17px #ef65db66,inset 0 1px 0 #ffffff88;filter:none}
 .pixel-bell{display:block;width:23px;height:23px;flex:none;overflow:visible;fill:#ffe26c;filter:drop-shadow(0 1px 0 #742263) drop-shadow(0 2px 2px #59165588);image-rendering:pixelated}
@@ -2540,9 +2547,18 @@ body.event-purchase-page-active .chat-fab{display:none!important}
 .track-comments-inline-actions button span{font-size:18px}
 @keyframes track-comments-expand{from{opacity:0;transform:translateY(-6px);clip-path:inset(0 0 100%)}to{opacity:1;transform:translateY(0);clip-path:inset(0)}}
 .track-comment-entry{padding:10px 12px;border:1px solid #92999e;border-radius:11px;color:#f3f4f5;background:linear-gradient(145deg,#171a1e,#34393e 48%,#15181b);box-shadow:0 3px 8px #12161a20}
+.comment-author-row{display:flex;align-items:center;gap:9px;min-width:0}
+.comment-author-row b{min-width:0;overflow-wrap:anywhere}
+.comment-avatar-link{display:inline-flex;flex:none;border-radius:50%;text-decoration:none}
+.comment-avatar{position:relative;display:grid;place-items:center;flex:none;width:34px;height:34px;overflow:hidden;border:1px solid #ffffffa0;border-radius:50%;background:linear-gradient(145deg,#e8d9f7,#acb6d0);color:#453752;font-size:14px;font-weight:800;box-shadow:0 2px 6px #0005}
+.comment-avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.comment-avatar-link:hover .comment-avatar{border-color:#78ddd4;box-shadow:0 0 0 2px #78ddd473}
+.comment-avatar-link:focus-visible{outline:2px solid #70c9df;outline-offset:3px}
 .track-comment-entry b{color:#75ded5;font-size:13px}
-.track-comment-entry p{margin:5px 0;color:#f3f4f5;font-size:14px;line-height:1.55;overflow-wrap:anywhere;white-space:pre-wrap}
-.track-comment-entry time{color:#c9cdd0;font-size:11px}
+.track-comment-entry b a,.post-comment-entry b a{color:inherit;text-decoration:none}
+.track-comment-entry b a:hover,.post-comment-entry b a:hover{text-decoration:underline}
+.track-comment-entry p{margin:5px 0 5px 43px;color:#f3f4f5;font-size:14px;line-height:1.55;overflow-wrap:anywhere;white-space:pre-wrap}
+.track-comment-entry time{display:block;margin-left:43px;color:#c9cdd0;font-size:11px}
 .comment-empty{padding:14px;color:#343a3f;text-align:center}
 @media(max-width:680px){
   .track-row-meta .track-comment-button{width:32px;height:32px}
@@ -2585,8 +2601,8 @@ body.event-purchase-page-active .chat-fab{display:none!important}
 .post-comments-inline-actions button[type="submit"] span{font-size:18px}
 .post-comment-entry{padding:10px 12px;border:1px solid #92999e;border-radius:11px;color:#f3f4f5;background:linear-gradient(145deg,#171a1e,#34393e 48%,#15181b);box-shadow:0 3px 8px #12161a20}
 .post-comment-entry b{color:#75ded5;font-size:13px}
-.post-comment-entry p{margin:5px 0;color:#f3f4f5;font-size:14px;line-height:1.55;overflow-wrap:anywhere;white-space:pre-wrap}
-.post-comment-entry time{color:#c9cdd0;font-size:11px}
+.post-comment-entry p{margin:5px 0 5px 43px;color:#f3f4f5;font-size:14px;line-height:1.55;overflow-wrap:anywhere;white-space:pre-wrap}
+.post-comment-entry time{display:block;margin-left:43px;color:#c9cdd0;font-size:11px}
 @keyframes post-comments-expand{from{opacity:0;transform:translateY(-6px);clip-path:inset(0 0 100%)}to{opacity:1;transform:translateY(0);clip-path:inset(0)}}
 @media(max-width:680px){
   .post-comments-inline{gap:11px;margin-block:13px 2px;padding:14px;border-radius:13px}
@@ -2672,3 +2688,144 @@ body.event-purchase-page-active .chat-fab{display:none!important}
 .order-retry-note{border:1px solid #d5965577;background:#8a4a191c;color:#ffd4a2}
 .order-payee-note{border:1px solid #ffffff15;background:#ffffff06;color:#c8c3cd}
 @media(max-width:650px){.my-orders-section{margin-bottom:23px}.my-order-card{gap:9px;padding:12px}.my-order-card h4{font-size:14px}.my-order-card p{font-size:11px}.my-order-total>b{font-size:14px}.my-order-total button{font-size:10px;padding:0 8px}.order-status-view{padding:22px 17px}}
+
+
+.track-social-like,.track-share-button,.track-delete-button,.track-share-modal button,.track-share-modal a{display:inline-flex;align-items:center;justify-content:center;min-height:36px;padding:6px 9px;border:1px solid #bfaad0;border-radius:9px;background:#f5effb;color:#513a68;font:600 11px var(--font);cursor:pointer;text-decoration:none;white-space:nowrap}
+.track-social-like.is-liked{background:#fbe8f1;color:#a82a67}
+.track-social-like{gap:4px;min-width:54px;padding:4px 6px;border:0;background:transparent;color:#51677f}
+.track-social-like.is-liked,.track-social-like.is-liked:hover{background:transparent;color:#b83e60}
+.track-social-like .like-heart{display:block;width:25px;height:25px;object-fit:contain;opacity:.82;filter:saturate(.7) contrast(1.02);transition:transform .18s ease,filter .18s ease}
+.track-social-like:hover .like-heart{opacity:1;transform:translateY(-1px) scale(1.05)}
+.track-social-like.is-liked .like-heart{opacity:1;filter:drop-shadow(0 0 5px #e0324f73);transform:scale(1.06)}
+.track-social-like b{font-variant-numeric:tabular-nums}
+.track-row-meta .track-more-button,.stream-release-copy>div:last-child .track-more-button{order:1}
+.track-row-meta .track-social-like,.stream-release-copy>div:last-child .track-social-like{order:2;margin-inline:auto}
+.track-row-meta .track-comment-button,.stream-release-copy>div:last-child .track-comment-button{order:3}
+.track-row-meta .track-edit-button{order:4}
+.track-row-meta .track-views,.stream-release-copy>div:last-child [data-track-views]{order:0}
+.track-social-like:focus-visible,.track-more-button:focus-visible,.track-more-menu button:focus-visible{outline:2px solid #8456ad;outline-offset:3px}
+.track-delete-button{margin-top:14px;color:#a42438;border-color:#dc9eaa;background:#fff1f3}
+.track-share-modal{display:flex;flex-direction:column;gap:12px}
+.track-share-modal p{margin:0;line-height:1.6}
+#trackStoryPreview{width:min(100%,230px);aspect-ratio:9/16;object-fit:contain;align-self:center;border-radius:12px;background:#302246}
+.track-views{font-variant-numeric:tabular-nums;white-space:nowrap}
+.artist-release-count{font-weight:700}
+.track-more-button{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;padding:0;border:1px solid #b9bbc2;border-radius:11px;background:linear-gradient(145deg,#fff,#d6d9df);color:#3e3c4b;box-shadow:0 2px 6px #1b1b2b20,inset 0 1px #fff;cursor:pointer}
+.track-more-button svg{width:22px;height:22px;fill:currentColor;pointer-events:none}
+.track-more-button:hover,.track-more-button[aria-expanded=true]{border-color:#a984c6;background:linear-gradient(145deg,#fff,#e8dcf4)}
+.track-more-menu{position:fixed;z-index:10000;min-width:174px;padding:5px;border:1px solid #b9abc7;border-radius:12px;background:linear-gradient(145deg,#fff,#e8e2ee);box-shadow:0 12px 32px #19132655,inset 0 1px #fff}
+.track-more-menu button{display:flex;align-items:center;gap:9px;width:100%;min-height:44px;padding:5px 9px;border:0;border-radius:8px;background:transparent;color:#3e2e51;font:700 12px var(--font);text-align:left;cursor:pointer}
+.track-more-menu button:hover{background:#d9c9e9}
+.track-more-menu img{width:34px;height:34px;object-fit:contain;pointer-events:none}
+.stream-release-copy>div:last-child .track-comment-button{order:1}
+.stream-release-copy>div:last-child .track-social-like{order:2}
+.stream-release-copy>div:last-child .track-more-button{order:3;flex-basis:34px;width:34px;height:34px;margin-left:auto;border-radius:9px}
+.stream-release-copy>div:last-child .track-more-button svg{width:18px;height:18px}
+.stream-section>.track-list .track-row-meta .track-more-button{order:5;flex:0 0 34px;width:34px;height:34px;margin-left:auto;border-radius:9px}
+.stream-section>.track-list .track-row-meta .track-more-button svg{width:18px;height:18px}
+@media(max-width:680px){.stream-section>.track-list .track-row,.artist-profile-track-list .track-row{grid-template-columns:32px 40px minmax(0,1fr)}.stream-section>.track-list .track-row-meta,.artist-profile-track-list .track-row-meta{display:flex;grid-column:2/-1;flex-wrap:wrap;gap:6px}.stream-release-copy>div:last-child{flex-wrap:wrap}.artist-featured-copy p{display:flex;flex-wrap:wrap;align-items:center;gap:6px}}
+
+/* Music sharing follows the listening room's brushed metal and lilac controls. */
+.modal:has(.track-share-modal){width:min(790px,100%);max-height:min(92vh,900px);padding:28px;border:1px solid #d8dce1;border-radius:22px;color:#f7f3fb;background:linear-gradient(145deg,#15191e 0%,#353b42 19%,#111418 37%,#3b4148 53%,#14171c 73%,#252a31 88%,#0b0d11 100%);box-shadow:0 30px 80px #070912b8,inset 0 1px 2px #fff9,inset 0 -2px 5px #000;scrollbar-color:#a68dbc #20232a}
+.modal:has(.track-share-modal):before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:repeating-linear-gradient(0deg,#ffffff05 0 1px,transparent 1px 5px),radial-gradient(circle at 75% 10%,#b48bc638,transparent 45%)}
+.modal:has(.track-share-modal) .modal-close{z-index:2;top:18px;right:18px;width:38px;height:38px;border:1px solid #ffffff8c;background:linear-gradient(145deg,#fdfdff,#bfc2c8);color:#24232e;box-shadow:0 4px 12px #0006,inset 0 1px #fff}
+.track-share-modal{position:relative;z-index:1;gap:21px}
+.track-share-heading{padding-right:50px}
+.track-share-heading>span{display:block;margin-bottom:6px;color:#d8b9eb;font:700 10px var(--font);letter-spacing:2px}
+.modal .track-share-heading h2{margin:0;color:#fff;font-size:clamp(26px,3vw,34px);text-shadow:0 2px 10px #0009}
+.track-share-track{display:flex;align-items:center;gap:12px;margin-top:12px;min-width:0}
+.track-share-track img,.track-share-track>span{display:grid;place-items:center;flex:0 0 54px;width:54px;height:54px;object-fit:cover;border:1px solid #e9d9f7;border-radius:9px;background:#79618d;color:#fff;box-shadow:0 5px 12px #0007}
+.track-share-track>span{font-size:25px}
+.modal .track-share-song{margin-top:4px;color:#fff;font-size:14px;font-weight:700;overflow-wrap:anywhere}
+.track-share-song span{color:#d2c4dd;font-weight:500}
+.track-share-layout{display:grid;grid-template-columns:minmax(200px,260px) minmax(0,1fr);gap:22px;align-items:start}
+.track-share-preview{padding:11px;border:1px solid #e4e7ed;border-radius:16px;background:linear-gradient(145deg,#fff,#bdc1c6 20%,#f9f9fb 39%,#a8adb3 56%,#f4f5f7 78%,#9299a2);box-shadow:0 12px 25px #0005,inset 0 1px 2px #fff}
+.track-share-preview>span{display:flex;justify-content:space-between;padding:1px 3px 8px;color:#333443;font:800 9px var(--font);letter-spacing:1.5px}
+.track-share-preview i{font-style:normal;color:#675677}
+#trackStoryPreview{display:block;width:100%;max-width:none;aspect-ratio:9/16;object-fit:contain;border:1px solid #ffffff90;border-radius:9px;background:linear-gradient(145deg,#292d36,#18151f);box-shadow:0 3px 10px #16161b69}
+#trackStoryVideoPreview{display:block;width:100%;aspect-ratio:9/16;object-fit:contain;border:1px solid #ffffff90;border-radius:9px;background:#15131b;box-shadow:0 3px 10px #16161b69}
+.track-share-side{align-self:stretch;display:flex;flex-direction:column;min-width:0;padding:20px;border:1px solid #ffffff80;border-radius:16px;background:linear-gradient(145deg,#fefefe,#d7d9dc 19%,#fafafa 37%,#b2b6bc 56%,#f6f6f7 77%,#c5c8cd);box-shadow:0 10px 22px #0004,inset 0 1px 2px #fff}
+.modal .track-share-intro{color:#282332;font-size:19px;font-weight:800;line-height:1.4}
+.modal .track-share-hint{margin-top:6px;color:#5f576b;font-size:12px;line-height:1.7}
+.track-share-trim{display:grid;gap:8px;margin-top:17px;padding:13px;border:1px solid #a8a4b3;border-radius:12px;background:#ffffffa6;box-shadow:inset 0 1px #fff}
+.track-share-trim label{color:#332b3e;font-size:12px;font-weight:800}
+.track-share-trim input[type=range]{width:100%;height:24px;margin:0;accent-color:#805a98;cursor:pointer}
+.track-share-trim input[type=range]:disabled{opacity:.55;cursor:not-allowed}
+.track-share-trim>div{display:flex;justify-content:space-between;gap:8px;align-items:center;color:#554b62;font-size:11px}
+.track-share-trim strong{color:#3c2850;font-variant-numeric:tabular-nums;white-space:nowrap}
+.track-share-trim small{text-align:right}
+.track-share-modal .track-share-trim button{min-height:36px;padding:6px 11px;border:1px solid #a795bb;border-radius:8px;background:#eee6f5;color:#4d3862;font-size:11px;font-weight:750}
+.track-share-modal .track-share-trim button:disabled{opacity:.6;cursor:not-allowed}
+.track-share-actions{display:grid;gap:9px;margin-top:auto;padding-top:24px}
+.track-share-modal .track-share-actions button,.track-share-modal .track-share-actions a{width:100%;min-height:43px;padding:9px 12px;border:1px solid #b9a5c9;border-radius:11px;background:linear-gradient(145deg,#fff,#ebe0f7);color:#4d3665;font-size:12px;font-weight:750;white-space:normal;box-shadow:0 3px 8px #59436a1c,inset 0 1px #fff;transition:transform .15s,box-shadow .15s}
+.track-share-modal .track-share-actions button:hover,.track-share-modal .track-share-actions a:hover{transform:translateY(-2px);box-shadow:0 6px 12px #59436a38}
+.track-share-modal #shareTrackStory{border-color:#5c3e70;background:linear-gradient(145deg,#805a98,#4a315e);color:#fff;box-shadow:0 5px 13px #3c235a50,inset 0 1px #d2a6e568}
+.track-share-modal #makeTrackStoryVideo,.track-share-modal #shareTrackStoryVideo{border-color:#5c3e70;background:linear-gradient(145deg,#805a98,#4a315e);color:#fff;box-shadow:0 5px 13px #3c235a50,inset 0 1px #d2a6e568}
+.track-share-modal #shareTrackStory:disabled{opacity:.65;cursor:wait}
+.track-share-modal #shareTrackStory:disabled:hover{transform:none}
+.modal .track-share-modal #trackShareStatus{min-height:22px;margin-top:12px;color:#514062;font-size:11px;overflow-wrap:anywhere}
+@media(max-width:600px){.modal:has(.track-share-modal){max-height:94vh;padding:20px 16px}.track-share-modal{gap:14px}.track-share-layout{grid-template-columns:minmax(0,1fr);gap:14px}.track-share-preview{width:min(100%,225px);justify-self:center}.track-share-side{padding:16px}.track-share-actions{padding-top:15px}.modal .track-share-intro{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.track-share-modal .track-share-actions button,.track-share-modal .track-share-actions a{transition:none}}
+
+/* Give music card controls a stable row on narrow screens. */
+@media(max-width:680px){
+  .stream-player{grid-template-columns:minmax(0,1fr);gap:14px}
+  .stream-cover{width:110px;justify-self:center}
+  .stream-main{width:100%;min-width:0}
+  .stream-main h3,.stream-main>p{text-align:center}
+  .stream-now{justify-content:center}
+  .stream-controls{flex-wrap:wrap;justify-content:center;gap:8px;margin-top:10px}
+  .stream-extra-control.is-secondary{width:34px;height:34px;font-size:11px}
+  .stream-play{width:46px;height:46px}
+  .stream-release-grid{display:grid;grid-auto-flow:column;grid-auto-columns:clamp(210px,68vw,250px);grid-template-columns:none;gap:12px;overflow-x:auto;overscroll-behavior-inline:contain;scroll-snap-type:x mandatory;padding:3px 3px 13px;scrollbar-width:thin}
+  .stream-release-card{display:flex;flex-direction:column;min-width:0;padding:10px;scroll-snap-align:start}
+  .stream-release-copy{display:flex;flex:1;flex-direction:column;min-width:0;padding:9px 3px 2px}
+  .stream-release-copy h4{min-height:2.4em;margin-bottom:10px;font-size:14px;white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2}
+  .stream-release-copy>div:last-child{display:grid;grid-template-columns:36px minmax(0,1fr) 34px;align-items:center;justify-items:center;gap:5px;width:100%;margin-top:auto;padding-top:8px;border-top:1px solid #6f737646}
+  .stream-release-copy>div:last-child [data-track-views]{grid-column:1/-1;justify-self:start;white-space:nowrap;font-size:10px}
+  .stream-release-copy>div:last-child .track-more-button{grid-column:3;grid-row:2;justify-self:end;margin-left:0}
+  .stream-release-copy>div:last-child .track-social-like{grid-column:2;grid-row:2;min-width:0;margin:0}
+  .stream-release-copy>div:last-child .track-comment-button{grid-column:1;grid-row:2}
+}
+
+/* Keep the music releases in the Home feed. */
+#home #music{background:radial-gradient(ellipse at 8% 0%,#fff 0%,transparent 25%),linear-gradient(115deg,#b7babe,#f5f6f6 30%,#d2d4d6 58%,#fff 76%,#92969a);color:#24202c}
+#home #music .stream-heading h2{color:#24202c}
+#home #music .stream-heading p{color:#4b4650}
+#music .stream-releases{margin:26px 0 0}
+#music .stream-releases[hidden]{display:none}
+#music .stream-subheading{margin-bottom:15px}
+#music .stream-subheading h3,#music>.track-list-head strong{color:#30243e;font-size:16px;font-weight:750}
+#music .stream-release-grid{display:grid;grid-auto-flow:row;grid-auto-columns:auto;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;overflow:visible;scroll-snap-type:none;padding:3px 3px 13px;min-width:0}
+#music .stream-release-grid::-webkit-scrollbar{display:none}
+#music .stream-release-card{display:flex;flex-direction:column;min-width:0;padding:11px;border:1px solid #7f858a;border-radius:17px;background:linear-gradient(140deg,#fff,#c8cbce 42%,#f9f9f9 62%,#9ea3a7);box-shadow:0 8px 18px #24272a26,inset 0 1px #fff}
+#music .stream-release-art{width:100%;aspect-ratio:1;border-radius:12px}
+#music .stream-release-art img{object-fit:cover}
+#music .stream-release-copy{display:flex;flex:1;flex-direction:column;min-width:0;padding:10px 3px 2px}
+#music .stream-release-artist-row{gap:9px;margin-bottom:8px}
+#music .stream-release-copy h4{min-height:2.5em;margin:4px 0 10px;color:#24212a;font-size:15px;line-height:1.25;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal}
+#music .stream-release-actions{display:flex;align-items:center;gap:7px;margin-top:auto}
+#music .stream-release-actions .track-views{order:0;margin-right:auto;font-size:10px}
+#music .stream-release-actions .track-comment-button{order:1;flex:none}
+#music .stream-release-actions .track-social-like{order:2;margin:0 auto}
+#music .stream-release-actions .like-heart{width:36px;height:36px}
+#music .track-row-meta .like-heart{width:32px;height:32px}
+#music .stream-release-actions .track-more-button{order:3;flex:none;margin:0}
+#music>.track-list-head{margin-top:24px;color:#30243e}
+#music>.track-list-head span{color:#75667e}
+#music>.track-list{display:grid;gap:6px}
+#music>.track-list .track-row{min-height:69px;border:1px solid #fff;border-radius:12px;background:linear-gradient(105deg,#fff,#d6d8da 38%,#f8f8f8 65%,#9ba0a5);box-shadow:0 3px 9px #292b2e24}
+#music>.track-list .track-row-copy strong{color:#24212a}
+#music>.track-list .track-row-copy small{color:#725291}
+#music .stream-subheading h3,#music>.track-list-head strong{font-size:19px}
+#music .stream-release-copy h4{font-size:19px;line-height:1.35;min-height:2.7em}
+#music .stream-release-artist-details small{font-size:14px}
+#music .stream-release-artist-details>span{font-size:12px}
+#music .stream-release-actions .track-views{font-size:12px}
+#music>.track-list .track-row{min-height:82px}
+#music>.track-list .track-row-copy strong{font-size:18px;line-height:1.35;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal}
+#music>.track-list .track-row-copy small{font-size:13px}
+#music>.track-list .track-row-meta{font-size:11px}
+@media(max-width:760px){#music .stream-release-grid{gap:7px}#music .stream-release-card{padding:6px;border-radius:12px}#music .stream-release-art{border-radius:8px}#music .stream-release-copy{padding:7px 0 0}#music .stream-release-artist-row{gap:4px;margin-bottom:5px}#music .stream-release-artist-avatar{flex-basis:22px;width:22px;height:22px}#music .stream-release-artist-details small{font-size:9px}#music .stream-release-artist-details>span{font-size:8px}#music .stream-release-copy h4{min-height:2.5em;margin:3px 0 6px;font-size:11px}#music .stream-release-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px}#music .stream-release-actions .track-views{grid-column:1/-1;margin:0;font-size:9px}#music .stream-release-actions .track-comment-button,#music .stream-release-actions .track-more-button{width:26px;height:26px;min-height:26px;justify-self:center}#music .stream-release-actions .track-social-like{min-width:0;min-height:26px;padding:0;gap:1px;justify-self:center}#music .stream-release-actions .like-heart{width:25px;height:25px}#music .stream-release-actions .track-social-like b{font-size:9px}#music>.track-list .track-row{min-width:0}}
+#music>.track-list-head span{font-size:12px}
+@media(max-width:760px){#music .stream-release-copy h4{font-size:13px}#music .stream-release-artist-details small{font-size:10px}#music .stream-release-artist-details>span{font-size:9px}#music .stream-release-actions .track-views{font-size:10px}#music>.track-list .track-row-copy strong{font-size:16px}#music>.track-list .track-row-copy small{font-size:12px}}

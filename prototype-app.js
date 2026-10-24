@@ -107,6 +107,7 @@
   function openComposer() {
     openModal(`
       <div class="composer-heading">
+        <div class="composer-soundwave" aria-hidden="true">${Array.from({ length: 30 }, (_, i) => `<i style="--wave:${12 + ((i * 17 + 9) % 29)}px"></i>`).join('')}</div>
         <div class="composer-brand-row">
           <span class="composer-brand-lockup">
             <span class="composer-brand-mark" aria-hidden="true">

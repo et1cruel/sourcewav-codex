@@ -233,7 +233,12 @@
     const date = new Intl.DateTimeFormat('th-TH', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(post.created_at));
     const saved = savedSet?.has(post.id);
     const avatarUrl = (() => { try { const url = new URL(author.avatar_url || ''); return ['http:', 'https:'].includes(url.protocol) ? url.href : ''; } catch { return ''; } })();
-    return `<article class="post-card live-post-card" data-live-post="${esc(post.id)}" data-kind="${esc(post.kind)}"><div class="post-top"><div class="avatar avatar-purple live-post-avatar">${esc(initials(author.display_name || author.username))}${avatarUrl ? `<img src="${esc(avatarUrl)}" alt="" loading="lazy" />` : ''}</div><div class="post-author"><strong>${esc(author.display_name || author.username || 'ศิลปิน')}</strong><small>${esc(kind)} · ${esc(date)}</small></div></div>${post.title ? `<h3 class="live-post-title">${esc(post.title)}</h3>` : ''}<p class="post-copy">${esc(post.body).replace(/\n/g, '<br>')}</p><div class="post-actions"><button class="live-like-btn ${liked ? 'liked' : ''}" data-live-like="${esc(post.id)}" aria-pressed="${Boolean(liked)}" aria-label="${liked ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} โพสต์นี้"><img class="like-heart" src="${liked ? LIKE_HEART.liked : LIKE_HEART.idle}" width="24" height="24" alt="" aria-hidden="true" draggable="false" /><span>ถูกใจ</span><b>${likes.length}</b></button><button data-live-comment="${esc(post.id)}" aria-expanded="false" aria-label="แสดงความคิดเห็น"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg><span>ความคิดเห็น</span><b>${comments}</b></button><button data-live-share="${esc(post.id)}" aria-label="แชร์โพสต์"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg><span>แชร์</span></button><button class="${saved ? 'liked' : ''}" data-live-save="${esc(post.id)}" aria-pressed="${Boolean(saved)}" aria-label="${saved ? 'นำโพสต์ออกจากรายการที่บันทึก' : 'บันทึกโพสต์'}"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h12v16l-6-4-6 4v-16Z"/></svg><span>${saved ? 'บันทึกแล้ว' : 'เก็บไว้'}</span></button></div></article>`;
+    const authorName = author.display_name || author.username || 'สมาชิก';
+    const profileHref = author.username ? `#profile/${encodeURIComponent(author.username)}` : '';
+    const avatar = `<span class="avatar avatar-purple live-post-avatar">${esc(initials(authorName))}${avatarUrl ? `<img src="${esc(avatarUrl)}" alt="" loading="lazy" />` : ''}</span>`;
+    const authorAvatar = profileHref ? `<a class="post-profile-link" href="${esc(profileHref)}" aria-label="เปิดโปรไฟล์ ${esc(authorName)}">${avatar}</a>` : avatar;
+    const authorLabel = profileHref ? `<a class="post-author-link" href="${esc(profileHref)}">${esc(authorName)}</a>` : esc(authorName);
+    return `<article class="post-card live-post-card" data-live-post="${esc(post.id)}" data-kind="${esc(post.kind)}"><div class="post-top">${authorAvatar}<div class="post-author"><strong>${authorLabel}</strong><small>${esc(kind)} · ${esc(date)}</small></div></div>${post.title ? `<h3 class="live-post-title">${esc(post.title)}</h3>` : ''}<p class="post-copy">${esc(post.body).replace(/\n/g, '<br>')}</p><div class="post-actions"><button class="live-like-btn ${liked ? 'liked' : ''}" data-live-like="${esc(post.id)}" aria-pressed="${Boolean(liked)}" aria-label="${liked ? 'ยกเลิกถูกใจ' : 'ถูกใจ'} โพสต์นี้"><img class="like-heart" src="${liked ? LIKE_HEART.liked : LIKE_HEART.idle}" width="24" height="24" alt="" aria-hidden="true" draggable="false" /><span>ถูกใจ</span><b>${likes.length}</b></button><button data-live-comment="${esc(post.id)}" aria-expanded="false" aria-label="แสดงความคิดเห็น"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-9.5A7.5 7.5 0 0 1 10.5 4H12a8 8 0 0 1 8 7.5Z"/><path d="M8 11h8M8 14.5h5"/></svg><span>ความคิดเห็น</span><b>${comments}</b></button><button data-live-share="${esc(post.id)}" aria-label="แชร์โพสต์"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M8 7h9v9"/></svg><span>แชร์</span></button><button class="${saved ? 'liked' : ''}" data-live-save="${esc(post.id)}" aria-pressed="${Boolean(saved)}" aria-label="${saved ? 'นำโพสต์ออกจากรายการที่บันทึก' : 'บันทึกโพสต์'}"><svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4.5h12v16l-6-4-6 4v-16Z"/></svg><span>${saved ? 'บันทึกแล้ว' : 'เก็บไว้'}</span></button></div></article>`;
   }
 
   async function loadFeed() {
@@ -1032,12 +1037,21 @@
     if (!list) return;
     list.innerHTML = '<p class="post-comments-status" role="status">กำลังโหลดความคิดเห็น…</p>';
     try {
-      const { data, error } = await db.from('comments').select('body,created_at,profiles!comments_author_id_fkey(display_name)')
+      const { data, error } = await db.from('comments').select('body,created_at,profiles!comments_author_id_fkey(display_name,username,avatar_url)')
         .eq('post_id', postId).is('deleted_at', null).order('created_at');
       if (error) throw error;
       if (!panel.isConnected) return;
-      list.innerHTML = (data || []).map(comment => `<article class="post-comment-entry"><b>${esc(comment.profiles?.display_name || 'สมาชิก')}</b><p>${esc(comment.body)}</p><time datetime="${esc(comment.created_at)}">${esc(new Date(comment.created_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }))}</time></article>`).join('')
+      list.innerHTML = (data || []).map(comment => {
+        const name = esc(comment.profiles?.display_name || comment.profiles?.username || 'สมาชิก');
+        const href = comment.profiles?.username ? `#profile/${encodeURIComponent(comment.profiles.username)}` : '';
+        const image = safeImageUrl(comment.profiles?.avatar_url);
+        const avatar = `<span class="comment-avatar">${esc(initials(comment.profiles?.display_name || comment.profiles?.username || 'สมาชิก'))}${image ? `<img src="${esc(image)}" alt="" loading="lazy" />` : ''}</span>`;
+        const author = href ? `<a href="${esc(href)}" aria-label="เปิดโปรไฟล์ ${name}">${name}</a>` : name;
+        const avatarLink = href ? `<a class="comment-avatar-link" href="${esc(href)}" aria-label="เปิดโปรไฟล์ ${name}">${avatar}</a>` : avatar;
+        return `<article class="post-comment-entry"><div class="comment-author-row">${avatarLink}<b>${author}</b></div><p>${esc(comment.body)}</p><time datetime="${esc(comment.created_at)}">${esc(new Date(comment.created_at).toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' }))}</time></article>`;
+      }).join('')
         || '<p class="post-comments-status">ยังไม่มีความคิดเห็น เริ่มคุยได้เลย</p>';
+      list.querySelectorAll('.comment-avatar img').forEach(image => image.addEventListener('error', () => image.remove(), { once: true }));
     } catch (error) {
       console.error('Unable to load post comments:', error?.message || error);
       if (!panel.isConnected) return;

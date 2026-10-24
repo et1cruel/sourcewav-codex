@@ -38,7 +38,24 @@
 
   client.auth.onAuthStateChange((authEvent, session) => announceAuth(session, authEvent));
 
-  const MEDIA_PUBLIC_URL = 'https://pub-667ffd230d2844b3b68665deae178321.r2.dev'; // อ่านรูป/เสียงหลักจาก Cloudflare R2 (แก้จุดนี้จุดเดียวเพื่อสลับ read base)
+  const MEDIA_PUBLIC_URL = 'https://sourcewav-community.pages.dev/media'; // Pages Function reads R2 with byte-range support.
+  async function verifyPublishedFile(kind, key) {
+    const fileUrl = `${MEDIA_PUBLIC_URL}/${key.split('/').map(encodeURIComponent).join('/')}`;
+    let lastError;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        const response = await fetch(fileUrl, {
+          headers: { Range: 'bytes=0-0' }, cache: 'no-store', signal: AbortSignal.timeout(10000)
+        });
+        await response.body?.cancel();
+        const contentType = response.headers.get('content-type') || '';
+        if (response.status === 206 && contentType.startsWith(`${kind}/`)) return;
+        lastError = new Error(`ไฟล์ยังอ่านกลับจาก R2 ไม่ได้ (HTTP ${response.status}, ${contentType || 'ไม่มีชนิดไฟล์'})`);
+      } catch (error) { lastError = error; }
+      if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)));
+    }
+    throw lastError || new Error('ตรวจสอบไฟล์หลังอัปโหลดไม่สำเร็จ');
+  }
   const signS3 = async (payload) => {
     const { data: sessionData } = await client.auth.getSession();
     if (!sessionData.session) throw new Error('กรุณาเข้าสู่ระบบก่อนทำรายการนี้');
@@ -64,10 +81,16 @@
         if (!putResponse.ok) throw new Error(`อัปโหลดไฟล์ไม่สำเร็จ (สถานะ ${putResponse.status})`);
       });
       // Dual upload: ยิงคู่ R2 (หลัก) + S3 (สำรอง) — ทั้งสองฝั่งต้องสำเร็จ ค่อยถือว่าอัปโหลดสำเร็จ
-      const results = await Promise.allSettled([put(signed.uploads.r2), put(signed.uploads.s3)]);
-      const failed = results.find(result => result.status === 'rejected');
-      if (failed) throw failed.reason;
-      return { key: signed.key, publicUrl: signed.publicUrl };
+      try {
+        const results = await Promise.allSettled([put(signed.uploads.r2), put(signed.uploads.s3)]);
+        const failed = results.find(result => result.status === 'rejected');
+        if (failed) throw failed.reason;
+        await verifyPublishedFile(kind, signed.key);
+        return { key: signed.key, publicUrl: `${MEDIA_PUBLIC_URL}/${signed.key}` };
+      } catch (error) {
+        await signS3({ action: 'delete', keys: [signed.key] }).catch(cleanupError => console.warn('Unable to clean up failed media upload:', cleanupError));
+        throw error;
+      }
     },
     remove: async (keys) => {
       const ownedKeys = (Array.isArray(keys) ? keys : []).filter(Boolean);

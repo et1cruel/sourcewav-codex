@@ -94,7 +94,7 @@
     'ไฟล์นี้เล่นไม่ได้ในเบราว์เซอร์': 'This file cannot be played in your browser',
     'ดูสถานที่นี้บนแผนที่': 'View this venue on the map', 'แผนที่สถานที่จัดงาน': 'Event venue map',
     'เปิดเส้นทาง ↗': 'Get directions ↗', 'เจ้าของบัญชี': 'Account owner',
-    'นักฟังเพลง': 'Music fan', 'ศิลปิน / นักวาด': 'Artist / illustrator', 'คนทำงานเบื้องหลัง': 'Crew member',
+    'นักฟังเพลง': 'Music fan', 'ศิลปิน / นักวาด': 'Artist / illustrator', 'ช่างสัก': 'Tattoo artist', 'แฟชั่นดีไซเนอร์': 'Fashion designer', 'คนทำงานเบื้องหลัง': 'Crew member',
     'แชร์ให้คอมมูนิตี้': 'Share with the community', 'เดโม ไอเดีย หรือกำลังหาใครมาร่วมทำอะไรอยู่?': 'A demo, an idea, or looking for a collaborator?',
     'เล่าให้คนอื่นรู้จักคุณ': 'Tell people a little about yourself', 'โปรไฟล์ของฉัน': 'My profile',
     'โปรไฟล์ที่จัดเก็บใน Sourcewav': 'Your profile on Sourcewav', 'แก้ไขโปรไฟล์': 'Edit profile',
@@ -302,7 +302,71 @@
     'ฐานข้อมูลเชื่อมต่อแล้ว': 'Database connected', 'เชื่อมต่อบริการไม่สำเร็จ': 'Could not connect to the service'
   };
 
+  Object.assign(translations, {
+    'ผู้เยี่ยมชมเว็บไซต์': 'Website visitor',
+    '# แชร์เดโมกัน': '# Share demos',
+    '# แรปสดวันศุกร์': '# Friday rap session',
+    '# หางานอาร์ต': '# Art gigs',
+    'โตไปด้วยกัน': 'Grow together',
+    'อัปโหลดเพลง': 'Upload music',
+    'เพลงใหม่ล่าสุด': 'Latest releases',
+    'คลังเพลง': 'Music library',
+    'กระดานจ้างงานศิลปิน': 'Artist Booking Board',
+    'ร้านหา DJ, Rapper, Producer, Photographer, Editor, Tattooist, VJ หรือทีมจัดงานได้ในที่เดียว ฝั่งศิลปินใส่ราคา ตัวอย่างผลงาน วันว่าง และรับข้อเสนอจ้างงานได้ทันที': 'Find DJs, rappers, producers, photographers, editors, tattoo artists, VJs, and event crews in one place. Artists can share rates, work samples, and availability, and receive booking requests.',
+    'เปิดรับงานใหม่': 'List your services',
+    'ยังไม่มีงานจองในหมวดหมู่นี้': 'No booking listings in this category yet',
+    'ลองเลือกหมวดอื่น หรือเปิดรับงานเพื่อให้คนในวงการค้นพบคุณ': 'Try another category or list your services so the community can find you.',
+    'หลังบ้านผู้จัดงาน': 'Organizer Command Center',
+    'ยังไม่มีอีเวนต์ของบัญชีผู้จัดให้แสดง': 'No organizer events to show yet',
+    'ยังไม่มีสินค้าในหมวดหมู่นี้': 'No products in this category yet',
+    'เปิดหน้าร้านของคุณ แล้วให้ผลงานชิ้นต่อไปได้เจอเจ้าของคนใหม่': 'Open your store and help your next creation find a new home.',
+    'ARTIST STORE · ร้านขายของศิลปิน': 'ARTIST STORE · Artist merchandise',
+    'ยังไม่มีการแจ้งเตือนใหม่': 'No new alerts',
+    'คนทำของน่าสนใจ': 'Creators to discover',
+    'ยังไม่มีศิลปินที่เปิดรับงานจากโปรไฟล์สมาชิกจริง': 'No artists have listed their services yet',
+    'มาใหม่ที่สุด': 'Newest first',
+    'กำลังค้นหาศิลปินจากโปรไฟล์จริง…': 'Finding artists from member profiles…',
+    'วิว': 'views',
+    'เมนูหลัก': 'Main menu',
+    'กรองประเภทศิลปิน': 'Filter artist types',
+    'กรองประเภทสินค้า': 'Filter product types',
+    'ศูนย์รวมบัตรอีเวนต์': 'Event ticket hub',
+    'ปกเพลง': 'Track artwork',
+    'เล่น': 'Play',
+    'ความคิดเห็นเพลง': 'Track comments',
+    'ถูกใจเพลง': 'Like track',
+    'ตัวเลือกเพลง': 'Track options',
+    'เปิดโปรไฟล์ผู้ปล่อยเพลง': 'Open artist profile',
+    'ตำแหน่งเพลง': 'Track position',
+    'สลับเพลง': 'Shuffle tracks',
+    'เล่นเพลงก่อนหน้า': 'Previous track',
+    'เล่นเพลงถัดไป': 'Next track',
+    'ถูกใจเพลงที่เล่น': 'Like current track',
+    'ปรับระดับเสียง': 'Adjust volume',
+    'ปรับระดับเสียงเพลง': 'Adjust music volume',
+    'ลากเพื่อปรับระดับเสียง': 'Drag to adjust volume',
+    'การแจ้งเตือน': 'Notifications', 'โปรไฟล์': 'Profile',
+    'เว็บไซต์วันเเรก': 'Website day one',
+    'ตู้เพาะพืชเรืองแสงสามมิติ': 'Three-dimensional glowing terrarium',
+    'แชร์ให้เพื่อนฟัง': 'Share with a friend',
+    'กรองประเภทสถานที่': 'Filter venue types',
+    'คำอธิบายหมุดบนแผนที่': 'Map marker legend',
+    'แผนที่แบบโต้ตอบของกรุงเทพมหานคร': 'Interactive map of Bangkok',
+    'เปิดรายละเอียด': 'Open details',
+    'ขยายแผนที่สถานที่เคยจัดงานในกรุงเทพฯ และปริมณฑล': 'Expand map of past venues in Bangkok and vicinity',
+    'รายชื่อสถานที่บนแผนที่': 'Venues on the map',
+    'ที่มาภาพ': 'Image source',
+    'โปสเตอร์': 'Poster',
+    'เปิดโปรไฟล์': 'Open profile',
+    'แสดงความคิดเห็น': 'Comment',
+    'แชร์โพสต์': 'Share post',
+    'บันทึกโพสต์': 'Save post',
+    'ถูกใจ โพสต์นี้': 'Like this post',
+    'โพสต์นี้': 'this post'
+  });
+
   const originalText = new WeakMap();
+  const translatedText = new WeakMap();
   const originalAttributes = new WeakMap();
   const excluded = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT', 'TEXTAREA', 'INPUT']);
   let currentLanguage = 'th';
@@ -310,7 +374,33 @@
   function translateValue(value) {
     const exact = translations[value.trim()];
     if (exact) return value.replace(value.trim(), exact);
-    let match = value.match(/^(\s*)(\d+) เพลง(\s*)$/);
+    let match = value.match(/^(\s*)([＋+✉]\s*)(.+?)(\s*)$/);
+    if (match && translations[match[3]]) return `${match[1]}${match[2]}${translations[match[3]]}${match[4]}`;
+    match = value.match(/^(\s*)(.+?)(\s*↗\s*)$/);
+    if (match && translations[match[2]]) return `${match[1]}${translations[match[2]]}${match[3]}`;
+    match = value.match(/^(\s*)(.+?)(⌄\s*)$/);
+    if (match && translations[match[2]]) return `${match[1]}${translations[match[2]]}${match[3]}`;
+    for (const prefix of ['ความคิดเห็นเพลง', 'ตัวเลือกเพลง', 'ปกเพลง', 'เล่น', 'ถูกใจ', 'โปรไฟล์', 'เปิดโปรไฟล์', 'โปสเตอร์', 'ที่มาภาพ']) {
+      if (value.trimStart().startsWith(`${prefix} `) || value.trimStart().startsWith(`${prefix}: `)) {
+        return value.replace(prefix, translations[prefix] || prefix);
+      }
+    }
+    match = value.match(/^(\s*)ปิดเสียง · (\d+%)(\s*)$/);
+    if (match) return `${match[1]}Mute · ${match[2]}${match[3]}`;
+    if (value.includes(' — ') && value.includes('เปิดรายละเอียด')) {
+      return value.replaceAll('ดนตรีสด', 'Live music').replaceAll('คลับ', 'Club').replaceAll('ดนตรีอิเล็กทรอนิกส์', 'electronic music').replaceAll('เปิดรายละเอียด', 'Open details');
+    }
+    match = value.match(/^(\s*)(\d+) วิว(\s*)$/);
+    if (match) return `${match[1]}${match[2]} views${match[3]}`;
+    match = value.match(/^(\s*)© (\d{4}) Sourcewav · พื้นที่อิสระของเรา(\s*)$/);
+    if (match) return `${match[1]}© ${match[2]} Sourcewav · An independent space for us${match[3]}`;
+    match = value.match(/^(\s*)(@\S+) · ผู้เยี่ยมชมเว็บไซต์(\s*)$/);
+    if (match) return `${match[1]}${match[2]} · Website visitor${match[3]}`;
+    match = value.match(/^(\s*)(\d+) (ต\.ค\.|ธ\.ค\.)(\s*)$/);
+    if (match) return `${match[1]}${match[2]} ${match[3] === 'ต.ค.' ? 'Oct' : 'Dec'}${match[4]}`;
+    match = value.match(/^(\s*)(ต\.ค\.|ธ\.ค\.) · (.+?)(\s*)$/);
+    if (match) return `${match[1]}${match[2] === 'ต.ค.' ? 'Oct' : 'Dec'} · ${match[3]}${match[4]}`;
+    match = value.match(/^(\s*)(\d+) เพลง(\s*)$/);
     if (match) return `${match[1]}${match[2]} tracks${match[3]}`;
     match = value.match(/^(\s*)(\d+) ผลงาน(\s*)$/);
     if (match) return `${match[1]}${match[2]} listings${match[3]}`;
@@ -346,15 +436,19 @@
     if (match) return `${match[1]}Could not open camera: ${match[2]}${match[3]}`;
     match = value.match(/^(\s*)อัปโหลดรูปไม่สำเร็จ: (.+)(\s*)$/);
     if (match) return `${match[1]}Could not upload photo: ${match[2]}${match[3]}`;
+    const months = { 'ม.ค.': 'Jan', 'ก.พ.': 'Feb', 'มี.ค.': 'Mar', 'เม.ย.': 'Apr', 'พ.ค.': 'May', 'มิ.ย.': 'Jun', 'ก.ค.': 'Jul', 'ส.ค.': 'Aug', 'ก.ย.': 'Sep', 'ต.ค.': 'Oct', 'พ.ย.': 'Nov', 'ธ.ค.': 'Dec' };
+    const dated = value.replace(/(\d{1,2}) (ม\.ค\.|ก\.พ\.|มี\.ค\.|เม\.ย\.|พ\.ค\.|มิ\.ย\.|ก\.ค\.|ส\.ค\.|ก\.ย\.|ต\.ค\.|พ\.ย\.|ธ\.ค\.)(?: (\d{4}))?/g, (_, day, month, year) => `${day} ${months[month]}${year ? ` ${Number(year) > 2400 ? Number(year) - 543 : year}` : ''}`);
+    if (dated !== value) return dated.replace(/^(\s*)(เพลง|พูดคุย|ศิลปะ)( · )/, (_, space, category, separator) => `${space}${translations[category] || category}${separator}`);
     return value;
   }
 
   function translateText(node) {
-    if (!originalText.has(node)) originalText.set(node, node.nodeValue);
+    if (!originalText.has(node) || (node.nodeValue !== originalText.get(node) && node.nodeValue !== translatedText.get(node))) originalText.set(node, node.nodeValue);
     const source = originalText.get(node);
     const option = node.parentElement?.closest('option');
     if (option && currentLanguage === 'en' && !option.hasAttribute('value')) option.value = source.trim();
     const nextValue = currentLanguage === 'en' ? translateValue(source) : source;
+    translatedText.set(node, nextValue);
     if (node.nodeValue !== nextValue) node.nodeValue = nextValue;
   }
 
@@ -377,8 +471,8 @@
     }
     if (root.nodeType !== Node.ELEMENT_NODE && root !== document) return;
     if (root.nodeType === Node.ELEMENT_NODE) {
-      if (excluded.has(root.tagName)) return;
       translateAttributes(root);
+      if (excluded.has(root.tagName)) return;
     }
     root.childNodes.forEach(visit);
   }

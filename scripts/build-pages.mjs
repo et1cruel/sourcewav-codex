@@ -1,4 +1,4 @@
-import { cp, mkdir, rm } from 'node:fs/promises';
+import { cp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -28,5 +28,9 @@ for (const file of rootFiles) {
 for (const directory of ['assets', 'features']) {
   await cp(join(projectRoot, directory), join(outputDir, directory), { recursive: true });
 }
+
+await writeFile(join(outputDir, '_routes.json'), JSON.stringify({
+  version: 1, include: ['/media/*'], exclude: []
+}));
 
 console.log(`Prepared Cloudflare Pages assets in ${outputDir}`);
