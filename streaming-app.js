@@ -902,6 +902,19 @@
     const roomPlayer = roomPage?.querySelector('.listening-room-player');
     roomPage?.classList.toggle('has-docked-player', selected);
     roomPlayer?.classList.toggle('is-docked', selected);
+    const repeat = $('#roomRepeatButton');
+    if (repeat) {
+      repeat.disabled = !selected;
+      repeat.setAttribute('aria-pressed', String(audio.loop));
+      repeat.setAttribute('aria-label', audio.loop ? 'ปิดเล่นวนซ้ำ' : 'เปิดเล่นวนซ้ำ');
+      repeat.title = audio.loop ? 'ปิดเล่นวนซ้ำ' : 'เปิดเล่นวนซ้ำ';
+    }
+    const volumeDown = $('#roomVolumeDown');
+    const volumeUp = $('#roomVolumeUp');
+    if (volumeDown) volumeDown.disabled = !selected || audio.volume <= 0;
+    if (volumeUp) volumeUp.disabled = !selected || audio.volume >= 1;
+    const mainRepeat = $('[data-stream-action="repeat"]');
+    if (mainRepeat) mainRepeat.setAttribute('aria-pressed', String(audio.loop));
     title.textContent = currentTrack?.title || 'เลือกเพลงเพื่อเริ่มฟัง';
     if (artist) artist.textContent = currentTrack?.artist_profile?.display_name || currentTrack?.artist || 'เพลงจากชุมชนคนทำเพลงอิสระ';
     if (genre) genre.textContent = currentTrack?.genre || 'SOURCEWAV COMMUNITY';
@@ -1012,6 +1025,7 @@
     renderTracks();
     updateRoomTrackInfo();
     updateArtistMini();
+    updateListeningRoomPlayer();
     if (autoplay) audio.play().catch(() => toast('ไฟล์นี้เล่นไม่ได้ในเบราว์เซอร์ ลองไฟล์ MP3, WAV หรือ OGG'));
   }
 
@@ -1413,6 +1427,7 @@
         const repeat = action.getAttribute('aria-pressed') !== 'true';
         action.setAttribute('aria-pressed', String(repeat));
         audio.loop = repeat;
+        updateListeningRoomPlayer();
       }
       return;
     }
@@ -1565,6 +1580,16 @@
     if (audio.paused) audio.play().catch(() => toast('ไฟล์นี้เล่นไม่ได้ในเบราว์เซอร์'));
     else audio.pause();
   });
+  $('#roomRepeatButton')?.addEventListener('click', () => {
+    audio.loop = !audio.loop;
+    updateListeningRoomPlayer();
+  });
+  const adjustRoomVolume = delta => {
+    audio.volume = Math.max(0, Math.min(1, Math.round((audio.volume + delta) * 100) / 100));
+    if (audio.volume > 0 && audio.muted) audio.muted = false;
+  };
+  $('#roomVolumeDown')?.addEventListener('click', () => adjustRoomVolume(-0.1));
+  $('#roomVolumeUp')?.addEventListener('click', () => adjustRoomVolume(0.1));
   $('#roomSeek')?.addEventListener('input', event => { if (audio.duration) audio.currentTime = Number(event.target.value) / 1000 * audio.duration; });
   $('#roomTrackList')?.addEventListener('click', event => {
     const target = event.target instanceof Element ? event.target : null;
@@ -1615,6 +1640,7 @@
       slider.setAttribute('aria-valuetext', `${percent}%${audio.muted ? ' ปิดเสียง' : ''}`);
     }
     updateArtistMini();
+    updateListeningRoomPlayer();
   };
   $('#streamMute')?.addEventListener('click', () => { audio.muted = !audio.muted; });
   $('#streamVolume')?.addEventListener('input', event => {

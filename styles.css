@@ -2912,7 +2912,7 @@ body:has(.listening-room-page:not([hidden])) .listening-aside-foot{font-size:11p
 /* Keep the selected Listening Room track within reach while browsing the gallery. */
 body:has(.listening-room-page:not([hidden])) .listening-room-page.has-docked-player{padding-bottom:132px}
 body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked{
-  position:fixed;z-index:40;right:0;bottom:0;left:0;display:grid;grid-template-columns:62px minmax(170px,min(34vw,380px)) 48px minmax(130px,1fr);align-items:center;gap:14px;
+  position:fixed;z-index:40;right:0;bottom:0;left:0;display:grid;grid-template-columns:62px minmax(170px,min(31vw,360px)) 48px auto minmax(130px,1fr);align-items:center;gap:14px;
   margin:0;padding:11px clamp(14px,2.5vw,32px) max(11px,env(safe-area-inset-bottom));overflow:visible;border:1px solid #ffffff28;border-bottom:0;border-radius:14px 14px 0 0;
   background:#171317f2;box-shadow:0 -10px 36px #0009;backdrop-filter:blur(18px);box-sizing:border-box
 }
@@ -2922,14 +2922,23 @@ body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .l
 body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-cover{grid-column:1;width:62px;border-radius:8px}
 body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-copy{grid-column:2}
 body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-play{grid-column:3;width:46px;height:46px}
-body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-progress{grid-column:4;min-width:0}
+body:has(.listening-room-page:not([hidden])) .listening-room-extra-controls{grid-column:4;display:flex;align-items:center;gap:6px}
+body:has(.listening-room-page:not([hidden])) .listening-room-extra-button{display:grid;width:34px;height:34px;place-items:center;border:1px solid #ffffff2b;border-radius:50%;background:#ffffff08;color:#eee7ed;font:700 19px/1 var(--font);cursor:pointer;transition:color .16s ease,background .16s ease,border-color .16s ease}
+body:has(.listening-room-page:not([hidden])) .listening-room-extra-button:hover:not(:disabled){border-color:#ed42d6a8;background:#ed42d61c;color:#ff9be9}
+body:has(.listening-room-page:not([hidden])) .listening-room-extra-button:focus-visible{outline:2px solid #ed42d6;outline-offset:2px}
+body:has(.listening-room-page:not([hidden])) .listening-room-extra-button:disabled{opacity:.38;cursor:not-allowed}
+body:has(.listening-room-page:not([hidden])) .listening-room-repeat[aria-pressed="true"]{border-color:#ed42d6;background:#ed42d62b;color:#ff9be9;box-shadow:0 0 12px #ed42d633}
+body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-progress{grid-column:5;min-width:0}
 body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-copy h2{font-size:16px}
 body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-copy p{font-size:12px}
 @media(max-width:680px){
   body:has(.listening-room-page:not([hidden])) .listening-room-page.has-docked-player{padding-bottom:calc(116px + env(safe-area-inset-bottom))}
-  body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked{grid-template-columns:48px minmax(0,1fr) 42px;grid-template-rows:48px 16px;gap:7px 10px;padding:8px 12px max(9px,env(safe-area-inset-bottom));border-radius:12px 12px 0 0}
+  body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked{grid-template-columns:48px minmax(0,1fr) 40px auto;grid-template-rows:48px 16px;gap:7px 8px;padding:8px 12px max(9px,env(safe-area-inset-bottom));border-radius:12px 12px 0 0}
   body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-cover{width:48px}
   body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-play{width:40px;height:40px}
+  body:has(.listening-room-page:not([hidden])) .listening-room-extra-controls{gap:3px}
+  body:has(.listening-room-page:not([hidden])) .listening-room-extra-button{width:30px;height:30px;font-size:17px}
+  body:has(.listening-room-page:not([hidden])) .listening-room-repeat{width:32px;height:32px}
   body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-progress{grid-column:1/-1;grid-row:2;grid-template-columns:34px minmax(0,1fr) 34px;gap:8px;font-size:10px}
   body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-copy h2{font-size:14px}
   body:has(.listening-room-page:not([hidden])) .listening-room-player.is-docked .listening-room-player-copy p{font-size:11px}
