@@ -583,7 +583,7 @@
       const artistName = artist.username
         ? `<a href="#artist/${encodeURIComponent(artist.username)}" data-artist-profile="${escapeHTML(artist.username)}">${escapeHTML(artist.name)}</a>`
         : `<span>${escapeHTML(artist.name)}</span>`;
-      return `<article class="listening-track-row listening-gallery-card${isPlaying ? ' is-playing' : ''}" data-room-track-row="${escapeHTML(track.id)}"><div class="listening-gallery-artist-bar">${artist.username ? `<a class="listening-gallery-avatar-link" href="#artist/${encodeURIComponent(artist.username)}" data-artist-profile="${escapeHTML(artist.username)}">${avatarMarkup}</a>` : avatarMarkup}<span class="listening-gallery-artist-name">${artistName}</span><span class="listening-gallery-index">${String(trackIndex + 1).padStart(2, '0')}</span></div><button type="button" class="listening-track-cover listening-gallery-art" data-room-track-play="${escapeHTML(track.id)}" aria-label="${isPlaying ? 'หยุด' : 'เล่น'} ${escapeHTML(track.title)}">${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="ปกเพลง ${escapeHTML(track.title)}" loading="lazy">` : '<span>♫</span>'}<i>${isPlaying ? 'Ⅱ' : '▶'}</i></button><div class="listening-track-copy listening-gallery-copy"><strong title="${escapeHTML(track.title)}">${escapeHTML(track.title)}</strong><div class="listening-gallery-meta"><span class="listening-track-genre">${escapeHTML(track.genre)}</span><span class="listening-track-plays">${Number(track.play_count || 0).toLocaleString('th-TH')} plays</span></div></div><button type="button" class="listening-track-open listening-gallery-play" data-room-track-play="${escapeHTML(track.id)}" aria-label="${isPlaying ? 'หยุด' : 'เล่น'} เพลง ${escapeHTML(track.title)}">${isPlaying ? 'Ⅱ' : '▶'}</button></article>`;
+      return `<article class="listening-track-row listening-gallery-card${isPlaying ? ' is-playing' : ''}" data-room-track-row="${escapeHTML(track.id)}" tabindex="0" role="group" aria-label="เล่นเพลง ${escapeHTML(track.title)}"><div class="listening-gallery-artist-bar">${artist.username ? `<a class="listening-gallery-avatar-link" href="#artist/${encodeURIComponent(artist.username)}" data-artist-profile="${escapeHTML(artist.username)}">${avatarMarkup}</a>` : avatarMarkup}<span class="listening-gallery-artist-name">${artistName}</span><span class="listening-gallery-index">${String(trackIndex + 1).padStart(2, '0')}</span></div><div class="listening-track-cover listening-gallery-art" aria-hidden="true">${track.cover_url ? `<img src="${escapeHTML(track.cover_url)}" alt="" loading="lazy">` : '<span>♫</span>'}</div><div class="listening-track-copy listening-gallery-copy"><strong title="${escapeHTML(track.title)}">${escapeHTML(track.title)}</strong><div class="listening-gallery-meta"><span class="listening-track-genre">${escapeHTML(track.genre)}</span><span class="listening-track-plays">${Number(track.play_count || 0).toLocaleString('th-TH')} plays</span></div></div></article>`;
     })).join('')}</div>`;
   }
 
@@ -879,10 +879,6 @@
     document.querySelectorAll('.listening-track-row').forEach(row => {
       const isPlaying = row.dataset.roomTrackRow === currentTrack?.id && playing;
       row.classList.toggle('is-playing', isPlaying);
-      const indicator = $('.listening-track-cover i', row);
-      if (indicator) indicator.textContent = isPlaying ? 'Ⅱ' : '▶';
-      const button = $('.listening-track-cover', row);
-      if (button) button.setAttribute('aria-label', `${isPlaying ? 'หยุด' : 'เล่น'} ${$('.listening-track-copy strong', row)?.textContent || 'เพลง'}`);
     });
     updateRoomTrackInfo();
     updateListeningRoomPlayer();
@@ -1567,9 +1563,25 @@
   });
   $('#roomSeek')?.addEventListener('input', event => { if (audio.duration) audio.currentTime = Number(event.target.value) / 1000 * audio.duration; });
   $('#roomTrackList')?.addEventListener('click', event => {
-    const button = event.target.closest('[data-room-track-play]');
-    if (!button) return;
-    const track = tracks.find(item => item.id === button.dataset.roomTrackPlay);
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target || target.closest('a')) return;
+    const card = target.closest('[data-room-track-row]');
+    if (!card) return;
+    const track = tracks.find(item => item.id === card.dataset.roomTrackRow);
+    if (!track) return;
+    if (currentTrack?.id === track.id) {
+      if (audio.paused) audio.play().catch(() => toast('ไฟล์นี้เล่นไม่ได้ในเบราว์เซอร์'));
+      else audio.pause();
+    } else selectTrack(track, true);
+  });
+  $('#roomTrackList')?.addEventListener('keydown', event => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const target = event.target instanceof Element ? event.target : null;
+    if (!target || target.closest('a')) return;
+    const card = target.closest('[data-room-track-row]');
+    if (!card) return;
+    event.preventDefault();
+    const track = tracks.find(item => item.id === card.dataset.roomTrackRow);
     if (!track) return;
     if (currentTrack?.id === track.id) {
       if (audio.paused) audio.play().catch(() => toast('ไฟล์นี้เล่นไม่ได้ในเบราว์เซอร์'));
